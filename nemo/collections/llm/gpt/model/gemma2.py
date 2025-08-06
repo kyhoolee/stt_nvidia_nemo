@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -172,10 +172,10 @@ class Gemma2Model(GPTModel):
         from nemo.collections.common.parts.utils import extend_instance
 
         super().configure_model()
-        if parallel_state.is_pipeline_first_stage(ignore_virtual=False):
+        if parallel_state.is_pipeline_first_stage():
             # Apply Embedding Scaling: sqrt(hidden_size)
             extend_instance(self.module.embedding, EmbeddingScalingMixin)
-        if parallel_state.is_pipeline_last_stage(ignore_virtual=False):
+        if parallel_state.is_pipeline_last_stage():
             # Prevents final logits from growing excessively by scaling them to a fixed range
             extend_instance(self.module.output_layer, Gemma2OutputLayer)
 
@@ -357,7 +357,7 @@ class HFGemmaExporter(io.ModelConnector[Gemma2Model, "GemmaForCausalLM"]):
     def config(self) -> "Gemma2Config":
         """ """
 
-        source: Gemma2Config = io.load_context(str(self), subpath="model.config")
+        source: Gemma2Config = io.load_context(str(self)).model.config
 
         from transformers import Gemma2Config as HFGemmaConfig
 
@@ -597,13 +597,23 @@ class TERowParallelLinearLayerNorm(TERowParallelLinear):
         output_size: int,
         *,
         config: TransformerConfig,
-        **kwargs,
+        init_method: Callable,
+        bias: bool,
+        input_is_parallel: bool,
+        skip_bias_add: bool,
+        is_expert: bool,
+        tp_comm_buffer_name: str = None,
     ):
         super().__init__(
             input_size,
             output_size,
             config=config,
-            **kwargs,
+            init_method=init_method,
+            bias=bias,
+            input_is_parallel=input_is_parallel,
+            skip_bias_add=skip_bias_add,
+            is_expert=is_expert,
+            tp_comm_buffer_name=tp_comm_buffer_name,
         )
         self.post_layernorm = TENorm(config, output_size)
 

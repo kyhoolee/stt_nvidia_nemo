@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import lightning.pytorch as pl
 import torch
 import torch.distributed as dist
 from torch.distributed.device_mesh import _mesh_resources
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 
 from nemo.automodel.dist_utils import FirstRankPerNode
 from nemo.automodel.loss import masked_cross_entropy
@@ -30,36 +30,6 @@ from nemo.collections.llm import fn
 from nemo.lightning import io
 from nemo.utils import logging
 from nemo.utils.import_utils import safe_import
-
-
-@torch.no_grad()
-def count_tail_padding(labels, ignore_label=-100):
-    """Counts the total number of padding token in the tail of labels
-
-    e.g.
-        labels = torch.tensor([
-            [-100, 1, 1, -100, -100],   # 2 tail -100s
-            [-100, -100, 2, 3, 4],      # 0 tail -100s
-            [5, 6, -100, -100, -100],   # 3 tail -100s
-        ])
-        count_tail_padding will return 5. Please do note there's more than 5 ignore labels.
-    Args:
-        labels (torch.Tensor): the labels
-        ignore_label (int, optional): ignore label index. Defaults to -100.
-
-    Returns:
-        int: total number of ignored tokens in the `labels` input.
-    """
-
-    # Flip along the last dimension (seq_len)
-    flipped = labels.flip(dims=[1])
-    tail_mask = flipped == ignore_label
-
-    # Compute cumulative product to "break" on first non ignore_label
-    prod_mask = torch.cumprod(tail_mask.int(), dim=1)
-
-    # Count tail -100s by summing cumprod mask along the sequence dimension
-    return prod_mask.view(-1).sum().item()
 
 
 class HFAutoModelForCausalLM(pl.LightningModule, io.IOMixin, fn.FNMixin):
@@ -187,10 +157,16 @@ class HFAutoModelForCausalLM(pl.LightningModule, io.IOMixin, fn.FNMixin):
     def _configure_model(self, attn_implementation):
         """helper method; see also configure_model."""
         # create all your layers here
+        auto_cls = AutoModelForCausalLM
+        if self.use_liger_kernel:
+            liger_kernel_trf, HAS_LIGER_KERNEL = safe_import('liger_kernel.transformers')
+            if not HAS_LIGER_KERNEL:
+                logging.warning("Asked to use Liger Kernel, but could not import")
+            else:
+                auto_cls = liger_kernel_trf.AutoLigerKernelForCausalLM
+
         quantization_config = None
         if self.load_in_4bit:
-            from transformers import BitsAndBytesConfig
-
             quantization_config = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_quant_type="nf4",
@@ -200,7 +176,7 @@ class HFAutoModelForCausalLM(pl.LightningModule, io.IOMixin, fn.FNMixin):
             )
 
         if self.load_pretrained_weights:
-            return AutoModelForCausalLM.from_pretrained(
+            m = auto_cls.from_pretrained(
                 self.model_name,
                 torch_dtype=self.default_dtype,
                 device_map=None if self.load_in_4bit else self.device_map,
@@ -208,12 +184,13 @@ class HFAutoModelForCausalLM(pl.LightningModule, io.IOMixin, fn.FNMixin):
                 attn_implementation=attn_implementation,
                 quantization_config=quantization_config,
             )
+            return m
         else:
             from transformers import AutoConfig
 
             config = AutoConfig.from_pretrained(self.model_name, trust_remote_code=self.trust_remote_code)
             dtype = getattr(config, 'torch_dtype', self.default_dtype)
-            return AutoModelForCausalLM.from_config(
+            return auto_cls.from_config(
                 config,
                 torch_dtype=dtype,
                 trust_remote_code=self.trust_remote_code,
@@ -235,24 +212,19 @@ class HFAutoModelForCausalLM(pl.LightningModule, io.IOMixin, fn.FNMixin):
         """
         try:
             self.model = self._configure_model(attn_implementation=self.attn_implementation)
-            logging.info("Configuring model with attn_implementation: {}".format(self.attn_implementation))
+            logging.info("Configuring model with attn_implementation:", self.attn_implementation)
         except ValueError as e:
             # 'does not support an attention implementation through torch.nn.functional.scaled_dot_product_attention'
-            # does not support Flash Attention 2.0 yet.
-            if 'does not support' in str(e):
+            if 'does not support an attention' in str(e):
                 logging.warning("Falling back to 'eager' attention implementation.")
                 self.model = self._configure_model(attn_implementation="eager")
             else:
                 raise e
         if self.use_liger_kernel:
-            liger_kernel_trf, HAS_LIGER_KERNEL = safe_import('liger_kernel.transformers')
+            from liger_kernel.transformers import _apply_liger_kernel_to_instance
 
             try:
-                if HAS_LIGER_KERNEL:
-                    liger_kernel_trf._apply_liger_kernel_to_instance(model=self.model)
-                else:
-                    self.use_liger_kernel = False
-                    logging.warning("Asked to use Liger Kernel, but could not import")
+                _apply_liger_kernel_to_instance(model=self.model)
             except Exception as e:
                 logging.warning("Liger failed with: {}. Switching to non-liger path.".format(e))
                 self.use_liger_kernel = False
@@ -336,17 +308,9 @@ class HFAutoModelForCausalLM(pl.LightningModule, io.IOMixin, fn.FNMixin):
             batch['input_ids'] = batch['tokens']
 
         # TODO(@boxiangw): Refractor. Needed for SP support
-        # If 'position_ids' does not exist in batch already then override it. batch in case of Packed sequence
-        # contains 'position_ids' and we don't want to override it.
-        if 'position_ids' not in batch:
-            batch["position_ids"] = torch.arange(0, batch['input_ids'].shape[1]).unsqueeze(0).to(self.model.device)
+        batch["position_ids"] = torch.arange(0, batch['input_ids'].shape[1]).unsqueeze(0).to(self.model.device)
 
         batch = self._remove_extra_batch_keys(batch)
-        # if attn_mask exists in the batch convert to float. For some reason although torch.bool when created,
-        # inside training step it becomes torch.int64 which can lead to error during transformers sdpa call,
-        # convert to float.
-        if 'attention_mask' in batch:
-            batch['attention_mask'] = batch['attention_mask'].float()
 
         # based on https://github.com/pytorch/torchtitan/blob/main/torchtitan/train.py#L336
         if context_parallel:
@@ -405,7 +369,7 @@ class HFAutoModelForCausalLM(pl.LightningModule, io.IOMixin, fn.FNMixin):
                 logit_softcapping = 0
                 loss = fused_linear_cross_entropy(
                     hidden_states=hidden_states,
-                    lm_weight=lm_head.full_tensor() if hasattr(lm_head, 'full_tensor') else lm_head,
+                    lm_weight=lm_head,
                     labels=labels,
                     num_items_in_batch=num_items_in_batch,
                     logit_softcapping=logit_softcapping,
@@ -416,7 +380,7 @@ class HFAutoModelForCausalLM(pl.LightningModule, io.IOMixin, fn.FNMixin):
             loss.detach().copy_(torch.zeros_like(loss))
 
         self.loss_buffer.append(loss.item())
-        self.n_tok += labels.numel() - count_tail_padding(labels.view_as(batch['input_ids']))
+        self.n_tok += labels.numel()
 
         return loss
 
@@ -582,8 +546,6 @@ class HFAutoModelForCausalLM(pl.LightningModule, io.IOMixin, fn.FNMixin):
         }
 
         if self.load_in_4bit:
-            from transformers import BitsAndBytesConfig
-
             d["quantization_config"] = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_quant_type="nf4",

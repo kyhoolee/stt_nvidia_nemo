@@ -96,7 +96,6 @@ def trainer(
         strategy=strategy,
         use_distributed_sampler=False,
         val_check_interval=2000,
-        num_sanity_val_steps=0,
     )
 
     return trainer

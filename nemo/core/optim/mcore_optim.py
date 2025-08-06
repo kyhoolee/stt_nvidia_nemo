@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -64,14 +64,11 @@ class McoreDistributedOptimizer(torch.optim.Optimizer):
         """
         self.mcore_optimizer.zero_grad(set_to_none)
 
-    def reload_model_params(self, state_dict=None):
+    def reload_model_params(self):
         """
         Reloads model parameters from the optimizer.
         """
-        if state_dict is None:
-            self.mcore_optimizer.reload_model_params()
-        else:
-            self.mcore_optimizer.reload_model_params(state_dict=state_dict)
+        self.mcore_optimizer.reload_model_params()
 
     def state_dict(self):
         """

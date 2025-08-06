@@ -11,9 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# flake8: noqa
-# pylint: skip-file
 
 import itertools
 import json
@@ -89,7 +86,7 @@ try:
 
     HAVE_MEGATRON_CORE = True
 
-except (AttributeError, ImportError, ModuleNotFoundError):
+except (ImportError, ModuleNotFoundError):
 
     TransformerConfig = ApexGuardDefaults
     RetroConfig = ApexGuardDefaults

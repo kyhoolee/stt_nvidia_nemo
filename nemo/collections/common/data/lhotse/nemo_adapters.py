@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -402,11 +402,7 @@ class LazyNeMoTarredIterator:
             tar_path = self.shard_id_to_tar_path[sid]
             try:
                 for data, raw_audio, tar_info in self._iter_sequential(tar_path, shard_manifest, manifest_path):
-                    try:
-                        meta = soundfile.info(BytesIO(raw_audio))
-                    except Exception:
-                        logging.warning(f"Skipped corrupted file '{tar_info.path}' in {tar_path=}.")
-                        continue
+                    meta = soundfile.info(BytesIO(raw_audio))
                     recording = Recording(
                         id=tar_info.path,
                         sources=[AudioSource(type="memory", channels=list(range(meta.channels)), source=raw_audio)],

@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,17 +24,15 @@ from megatron.core.packed_seq_params import PackedSeqParams
 from megatron.core.transformer.attention import SelfAttention as MCoreSelfAttention
 from megatron.core.transformer.spec_utils import ModuleSpec
 from megatron.core.transformer.torch_norm import L2Norm
-from megatron.core.utils import deprecate_inference_params, is_fa_min_version
+from megatron.core.utils import deprecate_inference_params
 from torch import Tensor
 
 try:
-    from flashattn_hopper.flash_attn_interface import _flash_attn_forward
-
-    HAVE_FA3 = True
+    from nvidia_chunked_flash_attn.flash_attn_interface import (
+        flash_attn_varlen_func as flash_decode_and_prefill_kernel,
+    )
 except ImportError:
-    _flash_attn_forward = None
-
-    HAVE_FA3 = False
+    flash_decode_and_prefill_kernel = None
 
 
 def chunkify_cu_seqlens(cu_seqlens, cu_seqlens_padded, attention_chunk_size):
@@ -121,19 +119,17 @@ def chunkify(x, attention_chunk_size):
     return x
 
 
-def get_llama4_layer_spec(config, vp_stage: Optional[int] = None, gpt_decoder_block_spec=None) -> ModuleSpec:
+def get_llama4_layer_spec(config) -> ModuleSpec:
     """Get llama4 layer spec"""
 
     from megatron.core.transformer.enums import AttnMaskType
     from megatron.core.transformer.transformer_layer import get_transformer_layer_offset
 
     # Use decoder_block_spec: set layer_specs as a list of individual layer specs
-    if gpt_decoder_block_spec is None:
-        llama4_layer_spec = get_gpt_decoder_block_spec(config, use_transformer_engine=True, vp_stage=vp_stage)
-    else:
-        llama4_layer_spec = gpt_decoder_block_spec
+    llama4_layer_spec = get_gpt_decoder_block_spec(config, use_transformer_engine=True)
+
     updated_layer_specs = []
-    offset = get_transformer_layer_offset(config, vp_stage=vp_stage)
+    offset = get_transformer_layer_offset(config)
     for idx, layer_spec in enumerate(llama4_layer_spec.layer_specs):
         layer_no = idx + offset
         updated_layer_spec = deepcopy(layer_spec)
@@ -207,12 +203,12 @@ class Llama4SelfAttention(MCoreSelfAttention):
         inference_context = deprecate_inference_params(inference_context, inference_params)
 
         if inference_context and inference_context.is_dynamic_batching():
-            assert (HAVE_FA3 and _flash_attn_forward is not None) or is_fa_min_version(
-                "2.7.3"
-            ), "flash attn verion v2.7.3 and above is required for dynamic batching."
+            assert (
+                flash_decode_and_prefill_kernel is not None
+            ), "Internal use only: install package `nvidia_chunked_flash_attn`."
 
         # hidden_states: [sq, b, h]
-        if self.config.flash_decode and not self.training and inference_context is not None:
+        if self.config.flash_decode and not self.training and inference_params is not None:
             rotary_pos_emb = None
         else:
             assert rotary_pos_cos is None and rotary_pos_sin is None
@@ -237,9 +233,8 @@ class Llama4SelfAttention(MCoreSelfAttention):
         if (
             self.config.flash_decode
             and inference_context is not None
-            and inference_context.is_decode_only()
+            and inference_context.decode_mode
             and not self.training
-            and rotary_pos_cos is not None
         ):
             assert self.layer_number in inference_context.key_value_memory_dict
             assert inference_context.sequence_len_offset is not None
@@ -259,7 +254,7 @@ class Llama4SelfAttention(MCoreSelfAttention):
             output, bias = self.linear_proj(context_layer)
             return output, bias
 
-        query, key, value, rotary_pos_emb, attn_mask_type, block_table = self._adjust_key_value_for_inference(
+        query, key, value, rotary_pos_emb, attn_mask_type, *_ = self._adjust_key_value_for_inference(
             inference_context,
             query,
             key,
@@ -328,25 +323,11 @@ class Llama4SelfAttention(MCoreSelfAttention):
             if q_pos_emb is not None:
                 # TODO VIJAY: simplify
                 if inference_context is None or inference_context.is_static_batching():
-                    query = apply_rotary_pos_emb(
-                        query,
-                        q_pos_emb,
-                        config=self.config,
-                        cu_seqlens=cu_seqlens_q,
-                        cp_group=self.model_comm_pgs.cp,
-                    )
+                    query = apply_rotary_pos_emb(query, q_pos_emb, config=self.config, cu_seqlens=cu_seqlens_q)
                 else:
-                    query = inference_context.apply_rotary_emb_query(
-                        query, q_pos_emb, self.config, cu_seqlens_q, self.model_comm_pgs.cp
-                    )
+                    query = inference_context.apply_rotary_emb_query(query, q_pos_emb, self.config, cu_seqlens_q)
             if k_pos_emb is not None:
-                key = apply_rotary_pos_emb(
-                    key,
-                    k_pos_emb,
-                    config=self.config,
-                    cu_seqlens=cu_seqlens_kv,
-                    cp_group=self.model_comm_pgs.cp,
-                )
+                key = apply_rotary_pos_emb(key, k_pos_emb, config=self.config, cu_seqlens=cu_seqlens_kv)
 
             # TODO, can apply positional embedding to value_layer so it has
             # absolute positional embedding.
@@ -384,20 +365,12 @@ class Llama4SelfAttention(MCoreSelfAttention):
                 # Dynamic batching attention kernel.
                 q, k, v = (query, key, value)
                 cu_query_lengths, max_seqlen_q = inference_context.cu_query_lengths()
-                cu_kv_lengths, kv_lengths, kv_lengths_decode_only, max_seqlen_k = inference_context.cu_kv_lengths()
+                cu_kv_lengths, max_seqlen_k = inference_context.cu_kv_lengths()
 
                 core_attn_out = self.flash_decode_and_prefill(
-                    q,
-                    k,
-                    v,
-                    max_seqlen_q,
-                    max_seqlen_k,
-                    cu_query_lengths,
-                    cu_kv_lengths,
-                    kv_lengths,
-                    kv_lengths_decode_only,
-                    block_table,
+                    q, k, v, max_seqlen_q, max_seqlen_k, cu_query_lengths, cu_kv_lengths
                 )
+                core_attn_out = core_attn_out.squeeze(0).unsqueeze(1)
                 core_attn_out = rearrange(core_attn_out, 's b h d -> s b (h d)')
 
         if packed_seq_params is not None and packed_seq_params.qkv_format == 'thd':

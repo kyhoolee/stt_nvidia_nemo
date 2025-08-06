@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,12 +52,6 @@ class FLOPSConfig:
     moe_ffn_hidden_size: Optional[int] = None
     mtp_num_layers: Optional[int] = None
     causal_self_attn: Optional[bool] = None
-    is_hybrid_model: bool = False
-    hybrid_override_pattern: Optional[str] = None
-    mamba_state_dim: Optional[int] = None
-    mamba_head_dim: Optional[int] = None
-    mamba_num_groups: Optional[int] = None
-    mamba_num_heads: Optional[int] = None
 
 
 def gpt3(config: FLOPSConfig):
@@ -151,47 +145,6 @@ def mixtral(config: FLOPSConfig):
     )
 
 
-def qwen3(config: FLOPSConfig):
-    """Model FLOPs for Qwen3 family"""
-    causal_self_attn = True
-    seq_len = config.enc_seq_len
-    hidden_size = config.hs
-    gated_linear_multiplier = 2
-
-    # attention flops for GQA
-    attention_flops = (
-        3
-        * 2
-        * config.gbs
-        * config.layers
-        * seq_len
-        * hidden_size
-        * hidden_size
-        * (
-            (config.query_groups / config.attention_heads * 2 + 1)  # QKV gemm
-            + (seq_len / hidden_size * 2 * (0.5 if causal_self_attn else 1))  # attention
-            + 1  # attention proj gemm
-        )
-    )
-
-    # mlp flops
-    mlp_flops = (
-        3
-        * 2
-        * config.gbs
-        * config.layers
-        * seq_len
-        * hidden_size
-        * (1 + gated_linear_multiplier)
-        * (config.moe_ffn_hidden_size * config.moe_router_topk)  # MoE layers
-    )
-
-    # vocab flops
-    vocab_flops = 3 * 2 * config.gbs * seq_len * hidden_size * config.vocab_size
-
-    return attention_flops + mlp_flops + vocab_flops
-
-
 def bert(config: FLOPSConfig):
     """Model FLOPs for BERT family"""
     vocab_size = LLM_VOCAB_SIZE_MAP["bert"]
@@ -205,108 +158,6 @@ def bert(config: FLOPSConfig):
         * config.hs
         * (1 + (config.enc_seq_len / (6 * config.hs)) + (vocab_size / (12 * config.hs * config.layers)))
     )
-
-
-def transformer(config: FLOPSConfig):
-    """Calculate FLOPs for a standard Transformer model.
-    Note: This does not cover encoder-decoder models.
-    """
-    # Extract parameters from config
-    batch_size = config.gbs
-    hidden_size = config.hs
-    seq_length = config.enc_seq_len
-    num_layers = config.layers
-    num_attention_heads = config.attention_heads
-    ffn_hidden_size = config.ffn_hs
-    vocab_size = config.vocab_size
-
-    if vocab_size is None:
-        raise ValueError("vocab_size is required for transformer FLOPs calculation")
-
-    # Handle optional parameters with reasonable defaults
-    query_groups = config.query_groups if config.query_groups is not None else num_attention_heads
-    causal_self_attn = config.causal_self_attn if config.causal_self_attn is not None else False
-    moe_router_topk = config.moe_router_topk if config.moe_router_topk is not None else 0
-    kv_channels = hidden_size // num_attention_heads  # Standard dimension per head
-
-    # Calculate query projection size and ratio
-    query_projection_size = kv_channels * num_attention_heads
-    query_projection_to_hidden_size_ratio = query_projection_size / hidden_size
-
-    # MoE parameters - simplified for NeMo config
-    # In this implementation, we assume all layers are dense if num_experts is None
-    if moe_router_topk == 0:
-        num_dense_layers = num_layers
-        num_moe_layers = 0
-        num_experts_routed_to = 0
-    else:
-        # Simplified MoE handling - assuming uniform distribution of MoE layers
-        # This can be expanded based on NeMo's actual MoE implementation
-        num_moe_layers = num_layers // 2  # Simplified assumption
-        num_dense_layers = num_layers - num_moe_layers
-        num_experts_routed_to = moe_router_topk
-
-    # Handle SwiGLU vs standard GELU/ReLU
-    # Default to standard activation (no SwiGLU)
-    gated_linear_multiplier = 1
-
-    # Define the expansion factor as described in the paper
-    # 3x: Each GEMM needs forward pass, backward wgrad, and backward dgrad
-    # 2x: GEMMs are stacked twice in standard Transformer architectures
-    # 2x: A GEMM of m*n with n*k requires 2mnk floating-point operations
-    expansion_factor = 3 * 2 * 2
-    # Attention
-    if not causal_self_attn:
-        attention_component = (
-            1
-            + (query_groups / num_attention_heads)
-            # Only half of the attention matrix is non-zero and needs to be multiplied with V
-            + (seq_length / hidden_size)  # If causal self attn -> divide by 2.
-        ) * query_projection_to_hidden_size_ratio
-    else:
-        attention_component = (
-            1
-            + (query_groups / num_attention_heads)
-            # Only half of the attention matrix is non-zero and needs to be multiplied with V
-            + (seq_length / hidden_size / 2)  # If causal self attn -> divide by 2.
-        ) * query_projection_to_hidden_size_ratio
-
-    # Calculate total FLOPs
-    total_flops = (
-        expansion_factor
-        * batch_size
-        * seq_length
-        * num_layers
-        * hidden_size
-        * hidden_size
-        * (
-            attention_component
-            # MLP component
-            + (
-                (
-                    # Dense layers
-                    (ffn_hidden_size * num_dense_layers)
-                    +
-                    # MoE layers
-                    (
-                        (
-                            # Routed experts
-                            ffn_hidden_size
-                            * num_experts_routed_to
-                            # Note: Shared experts are not implemented in this version
-                        )
-                        * num_moe_layers
-                    )
-                )
-                * gated_linear_multiplier
-                / (num_layers * hidden_size)
-            )
-            # Logit component
-            + (vocab_size / (2 * num_layers * hidden_size))
-        )
-    )
-
-    return total_flops
 
 
 def clip_vit_l(config: FLOPSConfig):
@@ -348,7 +199,7 @@ def flux(config: FLOPSConfig):
         * config.layers[0]
         * (
             10 * hs * hs  # hidden size operations
-            + 2 * hs * (config.model_channels + config.inp_s) * (1 + hs * 7)  # channel and context joint attention
+            + 2 * hs * (config.model_channels + config.inp_s) * (1 + hs * 5)  # channel and context joint attention
             + 2 * (config.model_channels + config.inp_s) * hs  # final projection
         )
     )
@@ -435,74 +286,3 @@ def deepseekv3(config: FLOPSConfig):
             per_input_vocab_flops += 6 * config.hs * 2 * config.hs * config.enc_seq_len
 
     return (per_input_attention_flops + per_input_linear_flops + per_input_vocab_flops) * config.gbs
-
-
-def _nemotronh_mlp_layer_flops(config: FLOPSConfig):
-    """Model FLOPs for MLP layer. Assume gated linear unit."""
-    return 6 * config.gbs * config.enc_seq_len * config.hs * config.ffn_hs * 3
-
-
-def _non_mla_attn_layer_flops(config: FLOPSConfig):
-    """Model FLOPs for attention layer"""
-    return (
-        6
-        * config.gbs
-        * config.enc_seq_len
-        * config.hs
-        * (
-            config.hs  # Q
-            + config.query_groups / config.attention_heads * config.hs * 2  # KV
-            + config.enc_seq_len / 2 * 2
-            + config.hs
-        )
-    )
-
-
-def _mamba_layer_flops(config: FLOPSConfig):
-    """Model FLOPs for Mamba layer. We ignore part of the flops of scan because the
-    chunk size is not known from model config."""
-    assert config.mamba_state_dim is not None
-    assert config.mamba_head_dim is not None
-
-    if config.mamba_num_heads:
-        nheads = config.mamba_num_heads
-    else:
-        nheads = 2 * config.hs // config.mamba_head_dim  # default expand is 2
-    d_in = nheads * config.mamba_head_dim
-    return (
-        (
-            6
-            * config.gbs
-            * config.enc_seq_len
-            * config.hs
-            * (2 * d_in + 2 * config.mamba_num_groups * config.mamba_state_dim + nheads)
-        )
-        + (3 * 2 * config.gbs * config.enc_seq_len * d_in * config.mamba_state_dim)
-        + (6 * config.gbs * config.enc_seq_len * d_in * config.hs)
-    )
-
-
-def _hybrid_model_flops(config: FLOPSConfig):
-    """Model FLOPs for hybrid model"""
-    assert config.is_hybrid_model == True
-    assert config.hybrid_override_pattern is not None
-
-    num_attn_layers, num_mamba_layers, num_mlp_layers = 0, 0, 0
-    for c in config.hybrid_override_pattern:
-        if c == 'M':
-            num_mamba_layers += 1
-        elif c == '-':
-            num_mlp_layers += 1
-        elif c == '*':
-            num_attn_layers += 1
-    return (
-        num_attn_layers * _non_mla_attn_layer_flops(config)
-        + num_mamba_layers * _mamba_layer_flops(config)
-        + num_mlp_layers * _nemotronh_mlp_layer_flops(config)
-        + 6 * config.gbs * config.enc_seq_len * config.hs * config.vocab_size
-    )
-
-
-def nemotronh(config: FLOPSConfig):
-    """Model FLOPs for NemotronH"""
-    return _hybrid_model_flops(config)

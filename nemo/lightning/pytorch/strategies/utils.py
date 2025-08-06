@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@ import contextlib
 import io
 import signal
 from dataclasses import dataclass
-from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Generator, Iterable, List, Optional, Set, Tuple, Union, cast
 
@@ -40,11 +39,10 @@ from nemo.utils.callbacks.dist_ckpt_io import AsyncFinalizableCheckpointIO
 from nemo.utils.import_utils import safe_import_from
 
 MixedPrecisionPolicy, HAS_MIXED_PRECISION_POLICY = safe_import_from(
-    "torch.distributed.fsdp", "MixedPrecisionPolicy", fallback_module="torch.distributed._composable.fsdp"
+    "torch.distributed._composable.fsdp", "MixedPrecisionPolicy"
 )
-fully_shard, HAS_FULLY_SHARD = safe_import_from(
-    "torch.distributed.fsdp", "fully_shard", fallback_module="torch.distributed._composable.fsdp"
-)
+fully_shard, HAS_FULLY_SHARD = safe_import_from("torch.distributed._composable.fsdp.fully_shard", "fully_shard")
+
 CPUOffloadPolicy, HAS_CPU_OFFLOAD_POLICY = safe_import_from(
     "torch.distributed.fsdp", "CPUOffloadPolicy", fallback_module="torch.distributed._composable.fsdp"
 )
@@ -57,12 +55,14 @@ class RestoreConfig:
 
     Attributes:
         path (str): Path to the checkpoint directory.
+        adapter_path (Optional[str]): Path to adapter checkpoint, if any.
         load_model_state (bool): Whether to load model weights.
         load_optim_state (bool): Whether to load optimizer state.
         load_artifacts (bool): Whether to load additional artifacts (e.g., tokenizer).
     """
 
     path: str
+    adapter_path: Optional[str] = None
     load_model_state: bool = True
     load_optim_state: bool = False
     # eg tokenizer, etc.
@@ -452,7 +452,6 @@ def fsdp2_strategy_parallelize(
     model,
     device_mesh: DeviceMesh = None,
     mp_policy: MixedPrecisionPolicy = None,
-    use_hf_tp_plan: bool = False,
     tp_shard_plan: Optional[Dict[str, Union[RowwiseParallel, ColwiseParallel, SequenceParallel]]] = None,
     offload_policy: 'CPUOffloadPolicy' = None,
 ):
@@ -503,14 +502,11 @@ def fsdp2_strategy_parallelize(
         ("dp_cp" if "dp_cp" in _mesh_resources.root_to_flatten_mapping.get(device_mesh, {}) else "data_parallel")
     ]
     tp_mesh = device_mesh["tensor_parallel"]
-
     if dp_mesh.size() > 1:
         assert dp_mesh.ndim == 1, "Hybrid-sharding not supported"
 
     # TP sharding
     if tp_mesh.size() > 1:
-        if tp_shard_plan is None and use_hf_tp_plan:
-            tp_shard_plan = get_hf_tp_shard_plan(model)
         parallelize_module(model, tp_mesh, tp_shard_plan)
 
     # FSDP sharding
@@ -527,44 +523,6 @@ def fsdp2_strategy_parallelize(
     )
 
     return model
-
-
-def get_hf_tp_shard_plan(model):
-    """
-    Get the tensor parallel sharding plan from the model.
-    """
-    hf_tp_shard_plan = {}
-    if hasattr(model, '_tp_plan') and model._tp_plan is not None:
-        hf_tp_shard_plan.update(model._tp_plan)
-    if hasattr(model.model, '_tp_plan') and model.model._tp_plan is not None:
-        hf_tp_shard_plan.update({f"model.{k}": v for k, v in model.model._tp_plan.items()})
-
-    hf_tp_shard_plan = {k: translate_to_torch_parallel_style(v) for k, v in hf_tp_shard_plan.items()}
-    return hf_tp_shard_plan
-
-
-@lru_cache
-def translate_to_torch_parallel_style(style: str):
-    """
-    In model configurations, we use a neutral type (string) to specify parallel
-    styles, here we translate them into torch.distributed tensor-parallel
-    types.
-    """
-    if not isinstance(style, str):
-        raise ValueError(f"Unsupported parallel style type {type(style)}, expected str")
-
-    if style == "colwise":
-        return ColwiseParallel()
-    elif style == "rowwise":
-        return RowwiseParallel()
-    elif style == "colwise_rep":
-        return ColwiseParallel(output_layouts=Replicate())
-    elif style == "rowwise_rep":
-        return RowwiseParallel(input_layouts=Replicate())
-    elif style == "sequence_parallel":
-        return SequenceParallel()
-    else:
-        raise ValueError(f"Unsupported parallel style value: {style}")
 
 
 def to_cpu(v):
@@ -596,9 +554,9 @@ def to_cpu(v):
         tensor([4, 5, 6])
     """
     if isinstance(v, DTensor):
-        if v.device.type == "cuda":
+        if v.device.type == 'cuda':
             return v.full_tensor().cpu()
-        elif v.device.type == "cpu":
+        elif v.device.type == 'cpu':
             return v._local_tensor
         else:
             raise ValueError("Unknown device " + str(v.device))

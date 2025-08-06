@@ -27,7 +27,6 @@ import hydra
 import torch
 
 from nemo.core.classes.module import NeuralModule
-from nemo.utils.msc_utils import import_multistorageclient, is_multistorageclient_url
 
 try:
     from megatron.core.optimizer import OptimizerConfig, get_megatron_optimizer
@@ -227,9 +226,6 @@ class ModelPT(LightningModule, Model):
         cls._save_restore_connector = SaveRestoreConnector()
 
     def on_fit_start(self) -> None:
-        """
-        Register debug hooks.
-        """
         if self.cfg.get("dump_debug_info", False):
             register_debug_hooks(self.model, self.trainer, self.log, self.cfg.get("dump_debug_info_to_file", False))
         return super().on_fit_start()
@@ -406,13 +402,11 @@ class ModelPT(LightningModule, Model):
             save_path: Path to .nemo file where model instance should be saved
         """
 
-        def maybe_make_save_dir(path: Union[str, 'pathlib.Path']):
-            if not is_multistorageclient_url(path):
-                if not path.parent.exists():
-                    path.parent.mkdir(parents=True)
+        def maybe_make_save_dir(path: 'pathlib.Path'):
+            if not path.parent.exists():
+                path.parent.mkdir(parents=True)
 
-        if not is_multistorageclient_url(save_path):
-            save_path = Path(save_path).expanduser().resolve()
+        save_path = Path(save_path).expanduser().resolve()
         app_state = AppState()
         if app_state.model_parallel_size is not None:
             if app_state.model_parallel_size > 1:
@@ -473,18 +467,13 @@ class ModelPT(LightningModule, Model):
         if save_restore_connector is None:
             save_restore_connector = SaveRestoreConnector()
 
-        if is_multistorageclient_url(restore_path):
-            msc = import_multistorageclient()
-            if not msc.os.path.exists(restore_path):
-                raise FileNotFoundError(f"Can't find {restore_path}")
+        if save_restore_connector.model_extracted_dir is None:
+            restore_path = os.path.abspath(os.path.expanduser(restore_path))
         else:
-            if save_restore_connector.model_extracted_dir is None:
-                restore_path = os.path.abspath(os.path.expanduser(restore_path))
-            else:
-                restore_path = os.path.abspath(os.path.expanduser(save_restore_connector.model_extracted_dir))
+            restore_path = os.path.abspath(os.path.expanduser(save_restore_connector.model_extracted_dir))
 
-            if not path.exists(restore_path):
-                raise FileNotFoundError(f"Can't find {restore_path}")
+        if not path.exists(restore_path):
+            raise FileNotFoundError(f"Can't find {restore_path}")
 
         app_state = AppState()
         app_state.model_restore_path = restore_path
@@ -887,9 +876,6 @@ class ModelPT(LightningModule, Model):
         self._optimizer_param_groups = param_groups
 
     def configure_optimizers(self):
-        """
-        Configure the optimizer and scheduler.
-        """
         self.setup_optimization()
 
         if self._scheduler is None:
@@ -956,16 +942,10 @@ class ModelPT(LightningModule, Model):
                 self.setup_multiple_test_data(test_data_config=self._cfg.test_ds)
 
     def train_dataloader(self):
-        """
-        Get the training dataloader.
-        """
         if self._train_dl is not None:
             return self._train_dl
 
     def val_dataloader(self):
-        """
-        Get the validation dataloader.
-        """
         if self._validation_dl is None:
             # None dataloader no longer supported in PTL2.0
             self._validation_dl = []
@@ -973,9 +953,6 @@ class ModelPT(LightningModule, Model):
         return self._validation_dl
 
     def test_dataloader(self):
-        """
-        Get the test dataloader.
-        """
         if self._test_dl is None:
             # None dataloader no longer supported in PTL2.0
             self._test_dl = []
@@ -1244,9 +1221,7 @@ class ModelPT(LightningModule, Model):
         return self._test_names[dataloader_idx]
 
     def load_part_of_state_dict(self, state_dict, include, exclude, load_from_string=None):
-        """
-        Load a part of the state dict into the model.
-        """
+
         excluded_param_names = []
         # create dict
         dict_to_load = {}
@@ -1675,9 +1650,6 @@ class ModelPT(LightningModule, Model):
 
     @LightningModule.trainer.getter
     def trainer(self):
-        """
-        Get the trainer object.
-        """
         return self._trainer
 
     @cfg.setter
@@ -1797,9 +1769,6 @@ class ModelPT(LightningModule, Model):
 
     @classmethod
     def update_save_restore_connector(cls, save_restore_connector):
-        """
-        Update the save_restore_connector for the model.
-        """
         if hasattr(cls, '_save_restore_connector'):
             cls._save_restore_connector = save_restore_connector
         else:
@@ -2108,6 +2077,38 @@ class ModelPT(LightningModule, Model):
         """
 
         self._cleanup_on_execution_end()
+
+    # TODO: Remove in PTL 1.7.2
+    def cuda(self, device=None):
+        """PTL is overriding this method and changing the pytorch behavior of a module.
+            The PTL LightingModule override will move the module to device 0 if device is None.
+            See the PTL method here:
+            https://github.com/Lightning-AI/lightning/blob/master/src/pytorch_lightning/core/mixins/device_dtype_mixin.py#L113
+
+            Here we are overriding this to maintain the default Pytorch nn.module behavior:
+            https://github.com/pytorch/pytorch/blob/master/torch/nn/modules/module.py#L728
+
+        Moves all model parameters and buffers to the GPU.
+
+        This also makes associated parameters and buffers different objects. So
+        it should be called before constructing optimizer if the module will
+        live on GPU while being optimized.
+
+        .. note::
+            This method modifies the module in-place.
+
+        Args:
+            device (int, optional): if specified, all parameters will be
+                copied to that device
+
+        Returns:
+            Module: self
+        """
+        if device is None:
+            device = torch.device("cuda", torch.cuda.current_device())
+        elif isinstance(device, int):
+            device = torch.device("cuda", index=device)
+        return super().cuda(device=device)
 
     def _optim_config_copy(self, optim_config: Optional[Union[DictConfig, Dict]]) -> Optional[DictConfig]:
         """

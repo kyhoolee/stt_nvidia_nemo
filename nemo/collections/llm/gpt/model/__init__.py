@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -51,14 +51,6 @@ from nemo.collections.llm.gpt.model.gemma2 import (
     Gemma2Config27B,
     Gemma2Model,
 )
-from nemo.collections.llm.gpt.model.gemma3 import (
-    Gemma3Config,
-    Gemma3Config1B,
-    Gemma3Config4B,
-    Gemma3Config12B,
-    Gemma3Config27B,
-    Gemma3Model,
-)
 from nemo.collections.llm.gpt.model.hf_auto_model_for_causal_lm import HFAutoModelForCausalLM
 from nemo.collections.llm.gpt.model.hf_llama_embedding import get_llama_bidirectional_hf_model
 from nemo.collections.llm.gpt.model.hyena import (
@@ -97,11 +89,7 @@ from nemo.collections.llm.gpt.model.llama import (
     LlamaModel,
     MLPerfLoRALlamaModel,
 )
-from nemo.collections.llm.gpt.model.llama_embedding import (
-    Llama32EmbeddingConfig1B,
-    Llama32EmbeddingConfig3B,
-    LlamaEmbeddingModel,
-)
+from nemo.collections.llm.gpt.model.llama_embedding import Llama32EmbeddingConfig1B, LlamaEmbeddingModel
 from nemo.collections.llm.gpt.model.llama_nemotron import (
     Llama31Nemotron70BConfig,
     Llama31NemotronNano8BConfig,
@@ -135,26 +123,12 @@ from nemo.collections.llm.gpt.model.qwen2 import (
     Qwen2Config500M,
     Qwen2Model,
     Qwen25Config1P5B,
-    Qwen25Config3B,
     Qwen25Config7B,
     Qwen25Config14B,
     Qwen25Config32B,
     Qwen25Config72B,
     Qwen25Config500M,
 )
-from nemo.collections.llm.gpt.model.qwen3 import (
-    Qwen3Config,
-    Qwen3Config1P7B,
-    Qwen3Config4B,
-    Qwen3Config8B,
-    Qwen3Config14B,
-    Qwen3Config30B_A3B,
-    Qwen3Config32B,
-    Qwen3Config235B_A22B,
-    Qwen3Config600M,
-    Qwen3Model,
-)
-from nemo.collections.llm.gpt.model.reranker import Llama32Reranker1BConfig, Llama32Reranker500MConfig, ReRankerModel
 from nemo.collections.llm.gpt.model.ssm import (
     BaseMambaConfig1_3B,
     BaseMambaConfig2_7B,
@@ -162,7 +136,6 @@ from nemo.collections.llm.gpt.model.ssm import (
     BaseMambaConfig370M,
     BaseMambaConfig780M,
     MambaModel,
-    NemotronHConfig4B,
     NemotronHConfig8B,
     NemotronHConfig47B,
     NemotronHConfig56B,
@@ -223,8 +196,6 @@ __all__ = [
     "Llama33NemotronSuper49BConfig",
     "Llama31NemotronUltra253BConfig",
     "Llama31Nemotron70BConfig",
-    "Llama32Reranker1BConfig",
-    "Llama32Reranker500MConfig",
     "NemotronConfig",
     "Nemotron3Config4B",
     "Nemotron3Config8B",
@@ -234,7 +205,6 @@ __all__ = [
     "NemotronModel",
     "LlamaEmbeddingModel",
     "Llama32EmbeddingConfig1B",
-    "Llama32EmbeddingConfig3B",
     "Phi3Config",
     "Phi3ConfigMini",
     "Phi3Model",
@@ -253,12 +223,6 @@ __all__ = [
     "Gemma2Config2B",
     "Gemma2Config9B",
     "Gemma2Model",
-    "Gemma3Config",
-    "Gemma3Config1B",
-    "Gemma3Config4B",
-    "Gemma3Config12B",
-    "Gemma3Config27B",
-    "Gemma3Model",
     "LlamaModel",
     "MLPerfLoRALlamaModel",
     "Baichuan2Config",
@@ -271,7 +235,6 @@ __all__ = [
     "Qwen2Config",
     "Qwen2Config500M",
     "Qwen2Config1P5B",
-    "Qwen25Config3B",
     "Qwen2Config7B",
     "Qwen2Config72B",
     "Qwen25Config72B",
@@ -281,17 +244,6 @@ __all__ = [
     "Qwen25Config500M",
     "Qwen25Config1P5B",
     "Qwen2Model",
-    "Qwen3Config",
-    "Qwen3Config600M",
-    "Qwen3Config1P7B",
-    "Qwen3Config4B",
-    "Qwen3Config8B",
-    "Qwen3Config14B",
-    "Qwen3Config32B",
-    "Qwen3Config30B_A3B",
-    "Qwen3Config235B_A22B",
-    "Qwen3Model",
-    "ReRankerModel",
     "SSMConfig",
     "BaseMambaConfig130M",
     "BaseMambaConfig370M",
@@ -300,7 +252,6 @@ __all__ = [
     "BaseMambaConfig2_7B",
     "NVIDIAMambaConfig8B",
     "NVIDIAMambaHybridConfig8B",
-    "NemotronHConfig4B",
     "NemotronHConfig8B",
     "NemotronHConfig47B",
     "NemotronHConfig56B",

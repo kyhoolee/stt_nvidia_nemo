@@ -1,4 +1,4 @@
-# Copyright (c) 2025, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import ExitStack, contextmanager, nullcontext
+from contextlib import ExitStack, contextmanager
 from datetime import timedelta
 from typing import (
     TYPE_CHECKING,
@@ -47,20 +47,15 @@ from megatron.core.optimizer import OptimizerConfig
 from torch import Tensor, nn
 from torch.distributed.algorithms.ddp_comm_hooks.debugging_hooks import noop_hook
 from torch.nn import Module
-from torch.nn.parallel import DistributedDataParallel
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from typing_extensions import override
 
 from nemo.lightning import _strategy_lib
 from nemo.lightning.fabric.conversion import to_fabric
-from nemo.lightning.io.pl import MegatronCheckpointIO, ckpt_to_weights_subdir
+from nemo.lightning.io.pl import MegatronCheckpointIO
 from nemo.lightning.megatron_parallel import CallbackConnector, MegatronParallel
 from nemo.lightning.pytorch.strategies import MegatronStrategy
-from nemo.utils.import_utils import safe_import
-from nemo.utils.model_utils import unwrap_model
-
-mto, HAVE_MODELOPT = safe_import("modelopt.torch.opt")
 
 if TYPE_CHECKING:
     from nemo.lightning.pytorch.plugins.data_sampler import DataSampler
@@ -104,8 +99,6 @@ class FabricMegatronStrategy(DDPStrategy):
         pipeline_dtype: Optional[torch.dtype] = None,
         init_model_parallel: bool = True,
         use_tp_pp_dp_mapping: bool = False,
-        num_distributed_optimizer_instances: int = 1,
-        nccl_communicator_config_path: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(
@@ -140,8 +133,6 @@ class FabricMegatronStrategy(DDPStrategy):
         self.pipeline_dtype = pipeline_dtype
         self._init_model_parallel = init_model_parallel
         self.use_tp_pp_dp_mapping = use_tp_pp_dp_mapping
-        self.num_distributed_optimizer_instances = num_distributed_optimizer_instances
-        self.nccl_communicator_config_path = nccl_communicator_config_path
         self.no_ddp_communication_hook = no_ddp_communication_hook
         self.megatron_callbacks = CallbackConnector()
         if megatron_callbacks:
@@ -366,20 +357,7 @@ class FabricMegatronStrategy(DDPStrategy):
         """
         if isinstance(state, Optimizer):
             raise NotImplementedError("Optimizer loading is not supported, pass it as a dict including the model")
-        unwrapped_model = unwrap_model(state["state_dict"])
 
-        from nemo.collections.vlm.llama4.model.base import Llama4OmniBaseModel
-
-        if HAVE_MODELOPT and isinstance(unwrapped_model, Llama4OmniBaseModel):
-            # If present, first restore and modify the model according to the ModelOpt state.
-            # Avoid quantizers being added to teacher model if model is a distillation model.
-            core_model = unwrapped_model.language_model
-            with core_model.hide_teacher_model() if hasattr(core_model, "hide_teacher_model") else nullcontext():
-                mto.plugins.restore_sharded_modelopt_state(
-                    [core_model], ckpt_to_weights_subdir(path, is_saving=False), prefix="module.language_model."
-                )
-            if mto.ModeloptStateManager.is_converted(core_model):
-                print("Restored Model-Optimizer state from checkpoint.")
         torch.cuda.empty_cache()
 
         # After dist_checkpointing.load, sharded tensors will be replaced with tensors
@@ -387,8 +365,6 @@ class FabricMegatronStrategy(DDPStrategy):
         if isinstance(state, Module):
             sharded_state_dict["state_dict"] = state.sharded_state_dict()
         elif strict:
-            if isinstance(state['state_dict'], DistributedDataParallel):
-                state["state_dict"] = state['state_dict'].module
             sharded_state_dict["state_dict"] = state["state_dict"].sharded_state_dict()
             if "optimizer" in state:
                 sharded_state_dict["optimizer"] = _strategy_lib.optimizer_sharded_state_dict(
@@ -494,8 +470,6 @@ class FabricMegatronStrategy(DDPStrategy):
             encoder_pipeline_model_parallel_size=self.encoder_pipeline_model_parallel_size,
             pipeline_dtype=self.pipeline_dtype,
             use_tp_pp_dp_mapping=self.use_tp_pp_dp_mapping,
-            num_distributed_optimizer_instances=self.num_distributed_optimizer_instances,
-            nccl_communicator_config_path=self.nccl_communicator_config_path,
         )
 
 

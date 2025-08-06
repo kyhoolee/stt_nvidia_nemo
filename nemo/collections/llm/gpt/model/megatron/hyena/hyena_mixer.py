@@ -34,8 +34,7 @@ from megatron.core.transformer.utils import sharded_state_dict_default
 
 from nemo.collections.llm.gpt.model.megatron.hyena.hyena_config import HyenaConfig
 from nemo.collections.llm.gpt.model.megatron.hyena.hyena_utils import (
-    B2BCausalConv1dModule,
-    ParallelCausalDepthwiseConv1dWithState,
+    ParallelCausalDepthwiseConv1d,
     ParallelHyenaOperator,
     ParallelShortHyenaOperator,
     divide,
@@ -68,7 +67,7 @@ except ImportError:
 
 
 def set_format_recipe():
-    """Set the fp8 format recipe. for Hyena."""
+    """Set the fp8 format recipe. for Hyena"""
     fp8_format = Format.HYBRID  # E4M3 during forward pass, E5M2 during backward pass
     fp8_recipe = DelayedScaling(fp8_format=fp8_format, amax_history_len=16, amax_compute_algo="max")
     return fp8_recipe
@@ -76,14 +75,18 @@ def set_format_recipe():
 
 @dataclass
 class HyenaMixerSubmodules:
-    """Contains the module specs for the input and output linear layers."""
+    """
+    Contains the module specs for the input and output linear layers.
+    """
 
     dense_projection: Union[ModuleSpec, type] = None
     dense: Union[ModuleSpec, type] = None
 
 
 class HyenaMixer(MegatronModule):
-    """A class for the HyenaMixer."""
+    """
+    A class for the HyenaMixer.
+    """
 
     def __init__(
         self,
@@ -93,11 +96,13 @@ class HyenaMixer(MegatronModule):
         submodules,
         layer_number=1,
         operator_type="H",
+        is_mlp=False,  # TODO: Check if needed, only used when using Hyena for the MLP block
     ):
 
         super().__init__(transformer_config)
         self.transformer_config = transformer_config
         self.hyena_config = hyena_config
+        self.is_mlp = is_mlp
         self.operator_type = operator_type
         self.layer_number = layer_number
         self.grouped_attention = self.hyena_config.grouped_attention
@@ -105,16 +110,16 @@ class HyenaMixer(MegatronModule):
         self.fast_conv_proj = self.hyena_config.fast_conv_proj
         self.fast_conv_mixer = self.hyena_config.fast_conv_mixer
 
-        # Use b2b causal conv1d
-        self.use_b2b_causal_conv1d = self.transformer_config.use_b2b_causal_conv1d
-
         # Per attention head and per partition values.
         assert torch.distributed.is_initialized()
         self.model_parallel_size = get_tensor_model_parallel_world_size()
         world_size: int = get_tensor_model_parallel_world_size()
 
-        # Width expansion for Hyena
-        self.hyena_width_expansion = self.hyena_config.hyena_width_expansion
+        # Width expansion for Hyena depending on if it's a mixer of mlp
+        if self.is_mlp:
+            self.hyena_width_expansion = self.hyena_config.hyena_mlp_expansion_factor
+        else:
+            self.hyena_width_expansion = self.hyena_config.hyena_width_expansion
 
         # we might expand the hidden size for hyena
         self.input_size = self.transformer_config.hidden_size
@@ -159,14 +164,13 @@ class HyenaMixer(MegatronModule):
 
         hyena_proj_groups = self.proj_groups if not self.grouped_attention else 1
         grouped_proj_size = self.hidden_size_per_partition // hyena_proj_groups
-
-        self.hyena_proj_conv = ParallelCausalDepthwiseConv1dWithState(
+        self.hyena_proj_conv = ParallelCausalDepthwiseConv1d(
             self.hidden_size_per_partition + 2 * grouped_proj_size,
             self.transformer_config,
             self.hyena_config,
             kernel_size=self.hyena_config.short_conv_L,
             init_method=transformer_config.init_method,
-            bias=False,  # bias not currently supported (self.hyena_config.conv_proj_bias),
+            bias=self.hyena_config.conv_proj_bias,
             use_fast_causal_conv=self.fast_conv_proj,
         )
 
@@ -179,19 +183,11 @@ class HyenaMixer(MegatronModule):
                 self.transformer_config,
                 self.hyena_config,
                 self.transformer_config.init_method,
-                short_conv_class=ParallelCausalDepthwiseConv1dWithState,
+                short_conv_class=ParallelCausalDepthwiseConv1d,
                 use_fast_causal_conv=self.fast_conv_mixer,
+                is_mlp=self.is_mlp,
                 use_conv_bias=self.transformer_config.use_short_conv_bias,
             )
-
-            if self.use_b2b_causal_conv1d:
-                # Create a wrapper module that doesn't register parameters
-                # Use the existing weights from the original model
-                self.b2b_kernel = B2BCausalConv1dModule(
-                    self.hyena_proj_conv,
-                    self.mixer,
-                    operator_type=self.operator_type,
-                )
 
         if self.operator_type in [
             "hyena",
@@ -210,16 +206,8 @@ class HyenaMixer(MegatronModule):
                 self.transformer_config.init_method,
                 operator_type,
                 max_sequence_length,
+                downsample_factor=1,
             )
-
-            if self.use_b2b_causal_conv1d and self.operator_type == "hyena_medium_conv":
-                # Create a wrapper module that doesn't register parameters
-                # Use the existing weights from the original model
-                self.b2b_kernel = B2BCausalConv1dModule(
-                    self.hyena_proj_conv,
-                    self.mixer,
-                    operator_type=self.operator_type,
-                )
 
         # Dropout. Note that for a single iteration, this layer will generate
         # different outputs on different number of parallel partitions but
@@ -241,34 +229,25 @@ class HyenaMixer(MegatronModule):
         )
 
     def sharded_state_dict(self, prefix='', sharded_offsets=(), metadata=None):
-        """Sharded state dictionary for the HyenaMixer."""
+        """
+        Sharded state dictionary for the HyenaMixer.
+        """
         sharded_state_dict = {}
         # Submodules
         for name, module in self.named_children():
-            if name != 'attention_dropout' and name != 'b2b_kernel':  # Don't register b2b_kernel (it's a wrapper)
+            if name != 'attention_dropout':
                 module_sharded_sd = sharded_state_dict_default(module, f'{prefix}{name}.', sharded_offsets, metadata)
 
                 sharded_state_dict.update(module_sharded_sd)
 
         return sharded_state_dict
 
-    def _maybe_use_fp8(self, func, *args, **kwargs):
-        if self.transformer_config.vortex_style_fp8:
-            with te.fp8_autocast(enabled=True, fp8_recipe=set_format_recipe()):
-                return func(*args, **kwargs)
-        return func(*args, **kwargs)
-
-    def forward(self, x, layer_past=None, inference_context=None, _hyena_use_cp=True):
-        """Applies the Hyena sequence mixing operation to input embeddings.
+    def forward(self, x, layer_past=None, inference_params=None, _hyena_use_cp=True):
+        """
+        Applies sequence mixing to a sequence of 1-dimensional embeddings: batch_size, seq_len, d_model
 
         Args:
-            x: Input tensor of shape [L, B, D] (seq_len, batch_size, hidden_dim)
-            layer_past: Past layer state for inference (default: None)
-            inference_context: Parameters for inference (default: None)
-            _hyena_use_cp: Whether to use context parallelism (default: True)
-
-        Returns:
-            Tuple of (output tensor, bias)
+            u: input to the operator, in format [B, L, D]
         """
         # CP control
         if _hyena_use_cp:
@@ -280,49 +259,21 @@ class HyenaMixer(MegatronModule):
             _proj_use_cp = True
         else:
             _proj_use_cp = False
-        # Handle padding for FP8 if enabled
         if self.transformer_config.vortex_style_fp8:
-
-            def pad_to_multiple(x, multiple=16):
-                """Pad tensor to make sequence length divisible by multiple."""
-                seq_len = x.size(0)
-                if seq_len % multiple == 0:
-                    return x
-
-                pad_len = multiple - (seq_len % multiple)
-                pad_tensor = torch.zeros(pad_len, *x.shape[1:], device=x.device, dtype=x.dtype)
-                return torch.cat([x, pad_tensor], dim=0)
-
-            # Direct padding without rearrange
-            L = x.shape[0]
-            x = pad_to_multiple(x)
-            features, _ = self._maybe_use_fp8(self.dense_projection, x)
-
-            # Slice back to original sequence length if padding was added
-
-            if features.shape[0] > L:
-                features = features[:L, :, :]
+            with te.fp8_autocast(enabled=True, fp8_recipe=set_format_recipe()):
+                features, _ = self.dense_projection(x)
         else:
             features, _ = self.dense_projection(x)
-        features = rearrange(features, "l b d -> b d l").contiguous()
+        features = rearrange(features, "l b d -> b l d").contiguous()
+        features_L_last = features.permute(0, 2, 1)
+        features_D_last = self.hyena_proj_conv(features_L_last, _use_cp=_proj_use_cp).permute(0, 2, 1)
 
-        if (
-            self.use_b2b_causal_conv1d
-            and self.operator_type in ["hyena_short_conv", "hyena_medium_conv"]
-            and inference_context is None
-        ):
-            # todo: support inference_context for b2b_kernel
-            # Use the B2BCausalConv1dModule wrapper with the existing weights from the original model
-            z = self.b2b_kernel(features, _use_cp=_proj_use_cp)
-        else:
-            features = self.hyena_proj_conv(
-                features, _use_cp=_proj_use_cp, inference_context=inference_context
-            )  # [B, D, L]
-            x1, x2, v = rearrange(features, "b (g dg p) l -> b (g dg) p l", p=3, g=self.num_groups_per_tp_rank).unbind(
-                dim=2
-            )
-            z = self.mixer(x1, x2, v, _hyena_use_cp=_proj_use_cp, inference_context=inference_context)
+        x1, x2, v = rearrange(
+            features_D_last, "b l (g dg p) -> b l g p dg", p=3, g=self.num_groups_per_tp_rank
+        ).unbind(dim=3)
 
-        z = rearrange(z, "b d l -> l b d").contiguous()
+        z = self.mixer(x1, x2, v)
+        z = rearrange(z, "b l d -> l b d").contiguous()
+
         y, bias = self.dense(z)
         return y, bias
