@@ -1,0 +1,2835 @@
+.
+├── CHANGELOG.md
+├── CITATION.cff
+├── codecov.yml
+├── CONTRIBUTING.md
+├── Dockerfile.ci
+├── Dockerfile.speech
+├── docs
+│   ├── _1_transfer_vpb_case.md
+│   └── tree_folder.txt
+├── examples
+│   └── asr
+│       ├── asr_adapters
+│       │   ├── eval_asr_adapter.py
+│       │   ├── README.md
+│       │   ├── scoring_and_analysis.py
+│       │   └── train_asr_adapter.py
+│       ├── asr_cache_aware_streaming
+│       │   └── speech_to_text_cache_aware_streaming_infer.py
+│       ├── asr_chunked_inference
+│       │   ├── aed
+│       │   │   └── speech_to_text_aed_chunked_infer.py
+│       │   ├── ctc
+│       │   │   └── speech_to_text_buffered_infer_ctc.py
+│       │   ├── README.md
+│       │   └── rnnt
+│       │       └── speech_to_text_buffered_infer_rnnt.py
+│       ├── asr_ctc
+│       │   ├── README.md
+│       │   ├── speech_to_text_ctc_bpe.py
+│       │   └── speech_to_text_ctc.py
+│       ├── asr_hybrid_transducer_ctc
+│       │   ├── helpers
+│       │   │   └── convert_nemo_asr_hybrid_to_ctc.py
+│       │   ├── README.md
+│       │   ├── speech_to_text_hybrid_rnnt_ctc_bpe.py
+│       │   └── speech_to_text_hybrid_rnnt_ctc_char.py
+│       ├── asr_transducer
+│       │   ├── README.md
+│       │   ├── speech_to_text_rnnt_bpe.py
+│       │   └── speech_to_text_rnnt.py
+│       ├── asr_vad
+│       │   ├── README.md
+│       │   └── speech_to_text_with_vad.py
+│       ├── asr_with_tts
+│       │   ├── speech_to_text_bpe_with_text_finetune.py
+│       │   └── speech_to_text_bpe_with_text.py
+│       ├── conf
+│       │   ├── asr_adapters
+│       │   │   ├── asr_adaptation_hp.yaml
+│       │   │   └── asr_adaptation.yaml
+│       │   ├── asr_finetune
+│       │   │   ├── speech_to_text_finetune.yaml
+│       │   │   └── speech_to_text_hf_finetune.yaml
+│       │   ├── asr_tts
+│       │   │   └── hybrid_asr_tts.yaml
+│       │   ├── carnelinet
+│       │   │   └── carnelinet_384.yaml
+│       │   ├── citrinet
+│       │   │   ├── citrinet_1024.yaml
+│       │   │   ├── citrinet_384.yaml
+│       │   │   ├── citrinet_512.yaml
+│       │   │   └── config_bpe.yaml
+│       │   ├── config.yaml
+│       │   ├── conformer
+│       │   │   ├── cache_aware_streaming
+│       │   │   │   ├── conformer_ctc_bpe_streaming.yaml
+│       │   │   │   └── conformer_transducer_bpe_streaming.yaml
+│       │   │   ├── conformer_ctc_bpe.yaml
+│       │   │   ├── conformer_ctc_char.yaml
+│       │   │   ├── conformer_transducer_bpe.yaml
+│       │   │   ├── conformer_transducer_char.yaml
+│       │   │   ├── hat
+│       │   │   │   ├── conformer_hat_bpe.yaml
+│       │   │   │   └── conformer_hat_char.yaml
+│       │   │   ├── hybrid_transducer_ctc
+│       │   │   │   ├── conformer_hybrid_transducer_ctc_bpe.yaml
+│       │   │   │   └── conformer_hybrid_transducer_ctc_char.yaml
+│       │   │   ├── multiblank
+│       │   │   │   └── conformer_multiblank_transducer_bpe.yaml
+│       │   │   ├── multilang
+│       │   │   │   ├── conformer_ctc_bpe_multilang.yaml
+│       │   │   │   └── conformer_transducer_bpe_multilang.yaml
+│       │   │   └── tdt
+│       │   │       ├── conformer_tdt_bpe_stateless.yaml
+│       │   │       └── conformer_tdt_bpe.yaml
+│       │   ├── contextnet_rnnt
+│       │   │   ├── config_rnnt_bpe.yaml
+│       │   │   ├── config_rnnt.yaml
+│       │   │   ├── contextnet_rnnt_char.yaml
+│       │   │   ├── contextnet_rnnt_multilang.yaml
+│       │   │   └── contextnet_rnnt.yaml
+│       │   ├── fastconformer
+│       │   │   ├── cache_aware_streaming
+│       │   │   │   ├── fastconformer_ctc_bpe_streaming.yaml
+│       │   │   │   ├── fastconformer_ctc_char_streaming.yaml
+│       │   │   │   ├── fastconformer_transducer_bpe_streaming.yaml
+│       │   │   │   └── fastconformer_transducer_char_streaming.yaml
+│       │   │   ├── fast-conformer_ctc_bpe.yaml
+│       │   │   ├── fast-conformer_transducer_bpe.yaml
+│       │   │   ├── hybrid_cache_aware_streaming
+│       │   │   │   ├── fastconformer_hybrid_transducer_ctc_bpe_streaming.yaml
+│       │   │   │   └── fastconformer_hybrid_transducer_ctc_char_streaming.yaml
+│       │   │   ├── hybrid_transducer_ctc
+│       │   │   │   ├── fastconformer_hybrid_transducer_ctc_bpe.yaml
+│       │   │   │   └── fastconformer_hybrid_transducer_ctc_char.yaml
+│       │   │   └── long_fastconformer
+│       │   │       ├── fast-conformer-long_ctc_bpe.yaml
+│       │   │       └── fast-conformer-long_transducer_bpe.yaml
+│       │   ├── jasper
+│       │   │   └── jasper_10x5dr.yaml
+│       │   ├── lang_id
+│       │   │   └── titanet_large.yaml
+│       │   ├── lstm
+│       │   │   ├── lstm_ctc_bpe.yaml
+│       │   │   └── lstm_transducer_bpe.yaml
+│       │   ├── marblenet
+│       │   │   ├── marblenet_3x2x64_20ms.yaml
+│       │   │   └── marblenet_3x2x64.yaml
+│       │   ├── matchboxnet
+│       │   │   ├── matchboxnet_3x1x64_v1.yaml
+│       │   │   └── matchboxnet_3x1x64_v2.yaml
+│       │   ├── quartznet
+│       │   │   ├── quartznet_15x5_aug.yaml
+│       │   │   ├── quartznet_15x5_ru.yaml
+│       │   │   ├── quartznet_15x5.yaml
+│       │   │   └── quartznet_15x5_zh.yaml
+│       │   ├── run_local.yaml
+│       │   ├── speech_multitask
+│       │   │   └── fast-conformer_aed.yaml
+│       │   ├── speech_translation
+│       │   │   └── fast-conformer_transformer.yaml
+│       │   ├── squeezeformer
+│       │   │   ├── squeezeformer_ctc_bpe.yaml
+│       │   │   └── squeezeformer_ctc_char.yaml
+│       │   ├── ssl
+│       │   │   ├── citrinet
+│       │   │   │   ├── citrinet_ssl_1024.yaml
+│       │   │   │   └── citrinet_ssl_ci.yaml
+│       │   │   ├── conformer
+│       │   │   │   └── conformer_ssl.yaml
+│       │   │   ├── contextnet
+│       │   │   │   └── contextnet_ssl.yaml
+│       │   │   ├── fastconformer
+│       │   │   │   └── fast-conformer.yaml
+│       │   │   ├── nest
+│       │   │   │   ├── multi_layer_feat
+│       │   │   │   │   ├── nest_ecapa_tdnn_small.yaml
+│       │   │   │   │   └── nest_titanet_small.yaml
+│       │   │   │   └── nest_fast-conformer.yaml
+│       │   │   └── wav2vec
+│       │   │       ├── wav2vec_ci.yaml
+│       │   │       ├── wav2vec_pretrain_large.yaml
+│       │   │       └── wav2vec_pretrain.yaml
+│       │   ├── vad
+│       │   │   ├── frame_vad_infer_postprocess.yaml
+│       │   │   └── vad_inference_postprocessing.yaml
+│       │   └── wav2vec_ctc
+│       │       ├── wav2vecCTC_large.yaml
+│       │       └── wav2vecCTC.yaml
+│       ├── experimental
+│       │   ├── k2
+│       │   │   ├── align_speech_parallel.py
+│       │   │   ├── conf
+│       │   │   │   ├── citrinet
+│       │   │   │   │   └── citrinet_mmi_1024.yaml
+│       │   │   │   └── conformer
+│       │   │   │       ├── conformer_ctc_bpe.yaml
+│       │   │   │       └── conformer_transducer_bpe.yaml
+│       │   │   ├── make_token_lm.py
+│       │   │   ├── speech_to_text_bpe.py
+│       │   │   └── speech_to_text_rnnt_bpe.py
+│       │   ├── sclite
+│       │   │   └── speech_to_text_sclite.py
+│       │   └── structured
+│       │       ├── conf
+│       │       │   └── quartznet_15x5.yaml
+│       │       ├── speech_to_text_hybrid.py
+│       │       ├── speech_to_text_structured.py
+│       │       └── speech_to_text_structured_v2.py
+│       ├── export
+│       │   └── transducer
+│       │       ├── infer_transducer_onnx.py
+│       │       └── infer_transducer_ts.py
+│       ├── quantization
+│       │   ├── speech_to_text_calibrate.py
+│       │   ├── speech_to_text_quant_infer.py
+│       │   └── speech_to_text_quant_infer_trt.py
+│       ├── README.md
+│       ├── run_helper.py
+│       ├── slurm_example.sh
+│       ├── speech_classification
+│       │   ├── frame_vad_infer.py
+│       │   ├── README.md
+│       │   ├── speech_to_frame_label.py
+│       │   ├── speech_to_label.py
+│       │   └── vad_infer.py
+│       ├── speech_multitask
+│       │   └── speech_to_text_aed.py
+│       ├── speech_pretraining
+│       │   ├── downstream
+│       │   │   └── speech_classification_mfa_train.py
+│       │   ├── masked_token_pred_pretrain.py
+│       │   ├── README.md
+│       │   └── speech_pre_training.py
+│       ├── speech_to_text_eval.py
+│       ├── speech_to_text_finetune.py
+│       ├── speech_translation
+│       │   ├── speech_to_text_transformer.py
+│       │   └── translate_speech.py
+│       ├── _temp
+│       │   └── config.yaml
+│       ├── transcribe_speech_parallel.py
+│       └── transcribe_speech.py
+├── external
+│   ├── get_collections.py
+│   ├── get_modules.py
+│   └── patches
+│       └── nemo_2.3.0_te.patch
+├── LICENSE
+├── MANIFEST.in
+├── nemo
+│   ├── automodel
+│   │   ├── dist_utils.py
+│   │   ├── __init__.py
+│   │   └── loss
+│   │       ├── chunked_ce.py
+│   │       ├── __init__.py
+│   │       ├── linear_ce.py
+│   │       └── masked_ce.py
+│   ├── collections
+│   │   ├── asr
+│   │   │   ├── data
+│   │   │   │   ├── audio_to_ctm_dataset.py
+│   │   │   │   ├── audio_to_diar_label_lhotse.py
+│   │   │   │   ├── audio_to_diar_label.py
+│   │   │   │   ├── audio_to_label_dataset.py
+│   │   │   │   ├── audio_to_label.py
+│   │   │   │   ├── audio_to_text_dali.py
+│   │   │   │   ├── audio_to_text_dataset.py
+│   │   │   │   ├── audio_to_text_lhotse_prompted.py
+│   │   │   │   ├── audio_to_text_lhotse.py
+│   │   │   │   ├── audio_to_text.py
+│   │   │   │   ├── data_simulation.py
+│   │   │   │   ├── feature_to_label_dataset.py
+│   │   │   │   ├── feature_to_label.py
+│   │   │   │   ├── feature_to_text_dataset.py
+│   │   │   │   ├── feature_to_text.py
+│   │   │   │   ├── huggingface
+│   │   │   │   │   ├── hf_audio_to_text_dataset.py
+│   │   │   │   │   ├── hf_audio_to_text.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── ssl_dataset.py
+│   │   │   │   └── text_to_text.py
+│   │   │   ├── __init__.py
+│   │   │   ├── losses
+│   │   │   │   ├── angularloss.py
+│   │   │   │   ├── bce_loss.py
+│   │   │   │   ├── ctc.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── lattice_losses.py
+│   │   │   │   ├── rnnt.py
+│   │   │   │   ├── rnnt_pytorch.py
+│   │   │   │   └── ssl_losses
+│   │   │   │       ├── contrastive.py
+│   │   │   │       ├── ctc.py
+│   │   │   │       ├── __init__.py
+│   │   │   │       ├── mlm.py
+│   │   │   │       └── rnnt.py
+│   │   │   ├── metrics
+│   │   │   │   ├── bleu.py
+│   │   │   │   ├── der.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── multi_binary_acc.py
+│   │   │   │   └── wer.py
+│   │   │   ├── models
+│   │   │   │   ├── aed_multitask_models.py
+│   │   │   │   ├── asr_model.py
+│   │   │   │   ├── classification_models.py
+│   │   │   │   ├── clustering_diarizer.py
+│   │   │   │   ├── confidence_ensemble.py
+│   │   │   │   ├── configs
+│   │   │   │   │   ├── aligner_config.py
+│   │   │   │   │   ├── asr_models_config.py
+│   │   │   │   │   ├── classification_models_config.py
+│   │   │   │   │   ├── diarizer_config.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── k2_sequence_models_config.py
+│   │   │   │   │   ├── matchboxnet_config.py
+│   │   │   │   │   └── quartznet_config.py
+│   │   │   │   ├── ctc_bpe_models.py
+│   │   │   │   ├── ctc_models.py
+│   │   │   │   ├── hybrid_asr_tts_models.py
+│   │   │   │   ├── hybrid_rnnt_ctc_bpe_models.py
+│   │   │   │   ├── hybrid_rnnt_ctc_models.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── k2_aligner_model.py
+│   │   │   │   ├── k2_sequence_models.py
+│   │   │   │   ├── label_models.py
+│   │   │   │   ├── msdd_models.py
+│   │   │   │   ├── online_diarizer.py
+│   │   │   │   ├── rnnt_bpe_models.py
+│   │   │   │   ├── rnnt_models.py
+│   │   │   │   ├── slu_models.py
+│   │   │   │   ├── sortformer_diar_models.py
+│   │   │   │   ├── ssl_models.py
+│   │   │   │   └── transformer_bpe_models.py
+│   │   │   ├── modules
+│   │   │   │   ├── audio_preprocessing.py
+│   │   │   │   ├── beam_search_decoder.py
+│   │   │   │   ├── conformer_encoder.py
+│   │   │   │   ├── conv_asr.py
+│   │   │   │   ├── flashlight_decoder.py
+│   │   │   │   ├── graph_decoder.py
+│   │   │   │   ├── hybrid_autoregressive_transducer.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── lstm_decoder.py
+│   │   │   │   ├── msdd_diarizer.py
+│   │   │   │   ├── rnn_encoder.py
+│   │   │   │   ├── rnnt_abstract.py
+│   │   │   │   ├── rnnt.py
+│   │   │   │   ├── sortformer_modules.py
+│   │   │   │   ├── squeezeformer_encoder.py
+│   │   │   │   ├── ssl_modules
+│   │   │   │   │   ├── augmentation.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── masking.py
+│   │   │   │   │   ├── multi_layer_feat.py
+│   │   │   │   │   ├── multi_softmax_decoder.py
+│   │   │   │   │   └── quantizers.py
+│   │   │   │   ├── transformer
+│   │   │   │   │   ├── bridge_encoders.py
+│   │   │   │   │   ├── decoder_module.py
+│   │   │   │   │   ├── encoder_module.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── perceiver_encoders.py
+│   │   │   │   │   ├── reduction_encoders.py
+│   │   │   │   │   ├── text_generation.py
+│   │   │   │   │   ├── transformer_bottleneck.py
+│   │   │   │   │   ├── transformer_decoders.py
+│   │   │   │   │   ├── transformer_encoders.py
+│   │   │   │   │   ├── transformer_generators.py
+│   │   │   │   │   ├── transformer_modules.py
+│   │   │   │   │   ├── transformer.py
+│   │   │   │   │   └── transformer_utils.py
+│   │   │   │   └── wav2vec_modules.py
+│   │   │   ├── parts
+│   │   │   │   ├── context_biasing
+│   │   │   │   │   ├── context_biasing_utils.py
+│   │   │   │   │   ├── context_graph_ctc.py
+│   │   │   │   │   ├── ctc_based_word_spotter.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── features.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── k2
+│   │   │   │   │   ├── classes.py
+│   │   │   │   │   ├── grad_utils.py
+│   │   │   │   │   ├── graph_compilers.py
+│   │   │   │   │   ├── graph_decoders.py
+│   │   │   │   │   ├── graph_transducer.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── loss_mixins.py
+│   │   │   │   │   ├── map_loss.py
+│   │   │   │   │   ├── ml_loss.py
+│   │   │   │   │   ├── rnnt_logprobs.py
+│   │   │   │   │   ├── rnnt_logprobs_triton.py
+│   │   │   │   │   ├── topologies.py
+│   │   │   │   │   ├── utils.py
+│   │   │   │   │   └── w_transducer.py
+│   │   │   │   ├── mixins
+│   │   │   │   │   ├── asr_adapter_mixins.py
+│   │   │   │   │   ├── diarization.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── interctc_mixin.py
+│   │   │   │   │   ├── mixins.py
+│   │   │   │   │   ├── streaming.py
+│   │   │   │   │   └── transcription.py
+│   │   │   │   ├── numba
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── rnnt_loss
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── rnnt_numpy.py
+│   │   │   │   │   │   ├── rnnt.py
+│   │   │   │   │   │   ├── rnnt_pytorch.py
+│   │   │   │   │   │   └── utils
+│   │   │   │   │   │       ├── cpu_utils
+│   │   │   │   │   │       │   ├── cpu_rnnt.py
+│   │   │   │   │   │       │   └── __init__.py
+│   │   │   │   │   │       ├── cuda_utils
+│   │   │   │   │   │       │   ├── gpu_rnnt_kernel.py
+│   │   │   │   │   │       │   ├── gpu_rnnt.py
+│   │   │   │   │   │       │   ├── __init__.py
+│   │   │   │   │   │       │   └── reduce.py
+│   │   │   │   │   │       ├── global_constants.py
+│   │   │   │   │   │       ├── __init__.py
+│   │   │   │   │   │       └── rnnt_helper.py
+│   │   │   │   │   └── spec_augment
+│   │   │   │   │       ├── __init__.py
+│   │   │   │   │       └── spec_aug_numba.py
+│   │   │   │   ├── preprocessing
+│   │   │   │   │   ├── feature_loader.py
+│   │   │   │   │   ├── features.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── perturb.py
+│   │   │   │   │   └── segment.py
+│   │   │   │   ├── submodules
+│   │   │   │   │   ├── adapters
+│   │   │   │   │   │   ├── attention_adapter_mixin.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── multi_head_attention_adapter_module.py
+│   │   │   │   │   │   └── transformer_multi_head_attention_adapter_module.py
+│   │   │   │   │   ├── batchnorm.py
+│   │   │   │   │   ├── causal_convs.py
+│   │   │   │   │   ├── classifier.py
+│   │   │   │   │   ├── conformer_modules.py
+│   │   │   │   │   ├── ctc_beam_decoding.py
+│   │   │   │   │   ├── ctc_decoding.py
+│   │   │   │   │   ├── ctc_greedy_decoding.py
+│   │   │   │   │   ├── cuda_graph_rnnt_greedy_decoding.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── jasper.py
+│   │   │   │   │   ├── multi_head_attention.py
+│   │   │   │   │   ├── multitask_beam_decoding.py
+│   │   │   │   │   ├── multitask_decoding.py
+│   │   │   │   │   ├── multitask_greedy_decoding.py
+│   │   │   │   │   ├── ngram_lm
+│   │   │   │   │   │   ├── constants.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── kenlm_utils.py
+│   │   │   │   │   │   ├── ngram_lm_batched.py
+│   │   │   │   │   │   └── ngram_lm_triton.py
+│   │   │   │   │   ├── rnnt_beam_decoding.py
+│   │   │   │   │   ├── rnnt_decoding.py
+│   │   │   │   │   ├── rnnt_greedy_decoding.py
+│   │   │   │   │   ├── rnnt_loop_labels_computer.py
+│   │   │   │   │   ├── spectr_augment.py
+│   │   │   │   │   ├── squeezeformer_modules.py
+│   │   │   │   │   ├── ssl_quantizers.py
+│   │   │   │   │   ├── stateless_net.py
+│   │   │   │   │   ├── subsampling.py
+│   │   │   │   │   ├── tdnn_attention.py
+│   │   │   │   │   ├── tdt_beam_decoding.py
+│   │   │   │   │   ├── tdt_loop_labels_computer.py
+│   │   │   │   │   ├── token_classifier.py
+│   │   │   │   │   └── wfst_decoder.py
+│   │   │   │   └── utils
+│   │   │   │       ├── activations.py
+│   │   │   │       ├── adapter_utils.py
+│   │   │   │       ├── asr_batching.py
+│   │   │   │       ├── asr_confidence_benchmarking_utils.py
+│   │   │   │       ├── asr_confidence_utils.py
+│   │   │   │       ├── asr_module_utils.py
+│   │   │   │       ├── asr_multispeaker_utils.py
+│   │   │   │       ├── confidence_metrics.py
+│   │   │   │       ├── data_simulation_utils.py
+│   │   │   │       ├── decoder_timestamps_utils.py
+│   │   │   │       ├── diarization_utils.py
+│   │   │   │       ├── eval_utils.py
+│   │   │   │       ├── __init__.py
+│   │   │   │       ├── longform_clustering.py
+│   │   │   │       ├── manifest_utils.py
+│   │   │   │       ├── numba_utils.py
+│   │   │   │       ├── offline_clustering.py
+│   │   │   │       ├── online_clustering.py
+│   │   │   │       ├── optimization_utils.py
+│   │   │   │       ├── regularization_utils.py
+│   │   │   │       ├── rnnt_utils.py
+│   │   │   │       ├── slu_utils.py
+│   │   │   │       ├── speaker_utils.py
+│   │   │   │       ├── streaming_utils.py
+│   │   │   │       ├── timestamp_utils.py
+│   │   │   │       ├── transcribe_utils.py
+│   │   │   │       ├── vad_utils.py
+│   │   │   │       └── wfst_utils.py
+│   │   │   └── README.md
+│   │   ├── audio
+│   │   │   ├── data
+│   │   │   │   ├── audio_to_audio_dataset.py
+│   │   │   │   ├── audio_to_audio_lhotse.py
+│   │   │   │   ├── audio_to_audio.py
+│   │   │   │   ├── data_simulation.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── __init__.py
+│   │   │   ├── losses
+│   │   │   │   ├── audio.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── metrics
+│   │   │   │   ├── audio.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── squim.py
+│   │   │   ├── models
+│   │   │   │   ├── audio_to_audio.py
+│   │   │   │   ├── enhancement.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── modules
+│   │   │   │   ├── features.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── masking.py
+│   │   │   │   ├── projections.py
+│   │   │   │   ├── ssl_pretrain_masking.py
+│   │   │   │   └── transforms.py
+│   │   │   ├── parts
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── submodules
+│   │   │   │   │   ├── conformer.py
+│   │   │   │   │   ├── diffusion.py
+│   │   │   │   │   ├── flow.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── multichannel.py
+│   │   │   │   │   ├── ncsnpp.py
+│   │   │   │   │   ├── schroedinger_bridge.py
+│   │   │   │   │   └── transformerunet.py
+│   │   │   │   └── utils
+│   │   │   │       ├── audio.py
+│   │   │   │       ├── callbacks.py
+│   │   │   │       └── __init__.py
+│   │   │   └── README.md
+│   │   ├── common
+│   │   │   ├── callbacks
+│   │   │   │   ├── callbacks.py
+│   │   │   │   ├── ema.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── data
+│   │   │   │   ├── dataset.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── lhotse
+│   │   │   │   │   ├── cutset.py
+│   │   │   │   │   ├── dataloader.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── nemo_adapters.py
+│   │   │   │   │   ├── sampling.py
+│   │   │   │   │   └── text_adapters.py
+│   │   │   │   ├── prompt_fn.py
+│   │   │   │   └── utils.py
+│   │   │   ├── __init__.py
+│   │   │   ├── losses
+│   │   │   │   ├── aggregator.py
+│   │   │   │   ├── bce_logits_loss.py
+│   │   │   │   ├── cross_entropy.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── mse_loss.py
+│   │   │   │   ├── multi_similarity_loss.py
+│   │   │   │   ├── smoothed_cross_entropy.py
+│   │   │   │   └── spanning_loss.py
+│   │   │   ├── metrics
+│   │   │   │   ├── classification_accuracy.py
+│   │   │   │   ├── global_average_loss_metric.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── metric_string_to_torchmetric.py
+│   │   │   │   ├── perf_metrics.py
+│   │   │   │   ├── perplexity.py
+│   │   │   │   └── punct_er.py
+│   │   │   ├── parts
+│   │   │   │   ├── adapter_modules.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── mlm_scorer.py
+│   │   │   │   ├── multi_layer_perceptron.py
+│   │   │   │   ├── optional_cuda_graphs.py
+│   │   │   │   ├── patch_utils.py
+│   │   │   │   ├── perf_metrics_utils.py
+│   │   │   │   ├── preprocessing
+│   │   │   │   │   ├── cleaners.py
+│   │   │   │   │   ├── collections.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── manifest.py
+│   │   │   │   │   └── parsers.py
+│   │   │   │   ├── ptl_overrides.py
+│   │   │   │   ├── rnn.py
+│   │   │   │   ├── run_utils.py
+│   │   │   │   ├── transformer_utils.py
+│   │   │   │   └── utils.py
+│   │   │   ├── prompts
+│   │   │   │   ├── canary2.py
+│   │   │   │   ├── canary.py
+│   │   │   │   ├── example.py
+│   │   │   │   ├── formatter.py
+│   │   │   │   ├── gemma.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── llama.py
+│   │   │   │   ├── mistral.py
+│   │   │   │   ├── phi2.py
+│   │   │   │   ├── plain.py
+│   │   │   │   └── t5nmt.py
+│   │   │   ├── tokenizers
+│   │   │   │   ├── aggregate_tokenizer.py
+│   │   │   │   ├── bytelevel_tokenizers.py
+│   │   │   │   ├── canary_tokenizer.py
+│   │   │   │   ├── char_tokenizer.py
+│   │   │   │   ├── chat_template_mixin.py
+│   │   │   │   ├── chinese_tokenizers.py
+│   │   │   │   ├── column_coder.py
+│   │   │   │   ├── en_ja_tokenizers.py
+│   │   │   │   ├── fairseq_tokenizer.py
+│   │   │   │   ├── huggingface
+│   │   │   │   │   ├── auto_tokenizer.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── indic_tokenizers.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── moses_tokenizers.py
+│   │   │   │   ├── null_tokenizer.py
+│   │   │   │   ├── regex_tokenizer.py
+│   │   │   │   ├── sentencepiece_tokenizer.py
+│   │   │   │   ├── tabular_tokenizer.py
+│   │   │   │   ├── text_to_speech
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── ipa_lexicon.py
+│   │   │   │   │   ├── tokenizer_utils.py
+│   │   │   │   │   ├── tokenizer_wrapper.py
+│   │   │   │   │   └── tts_tokenizers.py
+│   │   │   │   ├── tiktoken_tokenizer.py
+│   │   │   │   ├── tokenizer_spec.py
+│   │   │   │   ├── word_tokenizer.py
+│   │   │   │   └── youtokentome_tokenizer.py
+│   │   │   └── video_tokenizers
+│   │   │       ├── cosmos_tokenizer.py
+│   │   │       ├── cosmos_trt_run.py
+│   │   │       ├── __init__.py
+│   │   │       ├── modules
+│   │   │       │   ├── distributions.py
+│   │   │       │   ├── __init__.py
+│   │   │       │   ├── layers2d.py
+│   │   │       │   ├── layers3d.py
+│   │   │       │   ├── patching.py
+│   │   │       │   ├── quantizers.py
+│   │   │       │   └── utils.py
+│   │   │       ├── networks
+│   │   │       │   ├── configs.py
+│   │   │       │   ├── continuous_image.py
+│   │   │       │   ├── continuous_video.py
+│   │   │       │   ├── discrete_image.py
+│   │   │       │   ├── discrete_video.py
+│   │   │       │   └── __init__.py
+│   │   │       ├── README.md
+│   │   │       └── utils.py
+│   │   ├── diffusion
+│   │   │   ├── assets
+│   │   │   │   ├── mixed_training.png
+│   │   │   │   ├── pipeline_conditioning.png
+│   │   │   │   └── st_dit_hybrid_parallel.png
+│   │   │   ├── data
+│   │   │   │   ├── diffusion_energon_datamodule.py
+│   │   │   │   ├── diffusion_fake_datamodule.py
+│   │   │   │   ├── diffusion_mock_datamodule.py
+│   │   │   │   ├── diffusion_taskencoder.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── prepare_energon_dataset.py
+│   │   │   │   └── readme.rst
+│   │   │   ├── encoders
+│   │   │   │   ├── conditioner.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── __init__.py
+│   │   │   ├── models
+│   │   │   │   ├── dit
+│   │   │   │   │   ├── dit_attention.py
+│   │   │   │   │   ├── dit_embeddings.py
+│   │   │   │   │   ├── dit_layer_spec.py
+│   │   │   │   │   ├── dit_model.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── dit_llama
+│   │   │   │   │   ├── dit_llama_layer_spec.py
+│   │   │   │   │   ├── dit_llama_model.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── flux
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── layers.py
+│   │   │   │   │   ├── model.py
+│   │   │   │   │   └── pipeline.py
+│   │   │   │   ├── flux_controlnet
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── layers.py
+│   │   │   │   │   └── model.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── model.py
+│   │   │   ├── readme.rst
+│   │   │   ├── recipes
+│   │   │   │   ├── flux_12b.py
+│   │   │   │   ├── flux_535m.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── sampler
+│   │   │   │   ├── batch_ops.py
+│   │   │   │   ├── context_parallel.py
+│   │   │   │   ├── edm
+│   │   │   │   │   ├── edm_pipeline.py
+│   │   │   │   │   ├── edm.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── flow_matching
+│   │   │   │   │   ├── flow_match_euler_discrete.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── utils
+│   │   │   │   ├── flux_ckpt_converter.py
+│   │   │   │   ├── flux_pipeline_utils.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── mcore_parallel_utils.py
+│   │   │   └── vae
+│   │   │       ├── autoencoder.py
+│   │   │       ├── autovae.py
+│   │   │       ├── blocks.py
+│   │   │       ├── contperceptual_loss.py
+│   │   │       ├── diffusers_vae.py
+│   │   │       ├── __init__.py
+│   │   │       ├── readme.rst
+│   │   │       ├── test_autovae.py
+│   │   │       ├── train_vae.py
+│   │   │       ├── train_vae.sh
+│   │   │       ├── vae16x
+│   │   │       │   └── config.json
+│   │   │       └── validate_vae.py
+│   │   ├── __init__.py
+│   │   ├── llm
+│   │   │   ├── api.py
+│   │   │   ├── bert
+│   │   │   │   ├── data
+│   │   │   │   │   ├── core.py
+│   │   │   │   │   ├── fine_tuning.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── mock.py
+│   │   │   │   │   ├── pre_training.py
+│   │   │   │   │   └── specter.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── loss.py
+│   │   │   │   └── model
+│   │   │   │       ├── base.py
+│   │   │   │       ├── bert.py
+│   │   │   │       ├── bert_spec.py
+│   │   │   │       ├── embedding.py
+│   │   │   │       └── __init__.py
+│   │   │   ├── deploy
+│   │   │   │   ├── base.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── evaluation
+│   │   │   │   ├── api.py
+│   │   │   │   ├── base.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── fn
+│   │   │   │   ├── activation.py
+│   │   │   │   ├── base.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── mixin.py
+│   │   │   ├── gpt
+│   │   │   │   ├── data
+│   │   │   │   │   ├── alpaca.py
+│   │   │   │   │   ├── api.py
+│   │   │   │   │   ├── chat.py
+│   │   │   │   │   ├── core.py
+│   │   │   │   │   ├── dolly.py
+│   │   │   │   │   ├── fine_tuning.py
+│   │   │   │   │   ├── hf_dataset.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── megatron
+│   │   │   │   │   │   ├── hyena
+│   │   │   │   │   │   │   ├── config.py
+│   │   │   │   │   │   │   ├── evo2_dataset.py
+│   │   │   │   │   │   │   └── __init__.py
+│   │   │   │   │   │   └── __init__.py
+│   │   │   │   │   ├── mlperf_govreport.py
+│   │   │   │   │   ├── mock.py
+│   │   │   │   │   ├── packed_sequence.py
+│   │   │   │   │   ├── pre_training.py
+│   │   │   │   │   ├── retrieval.py
+│   │   │   │   │   ├── squad.py
+│   │   │   │   │   └── utils.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── model
+│   │   │   │       ├── baichuan.py
+│   │   │   │       ├── base.py
+│   │   │   │       ├── chatglm.py
+│   │   │   │       ├── deepseek.py
+│   │   │   │       ├── gemma2.py
+│   │   │   │       ├── gemma.py
+│   │   │   │       ├── hf_auto_model_for_causal_lm.py
+│   │   │   │       ├── hf_llama_embedding.py
+│   │   │   │       ├── hyena.py
+│   │   │   │       ├── __init__.py
+│   │   │   │       ├── llama4_utils.py
+│   │   │   │       ├── llama_embedding.py
+│   │   │   │       ├── llama_nemotron_config.py
+│   │   │   │       ├── llama_nemotron.py
+│   │   │   │       ├── llama.py
+│   │   │   │       ├── megatron
+│   │   │   │       │   ├── hyena
+│   │   │   │       │   │   ├── hyena_block.py
+│   │   │   │       │   │   ├── hyena_config.py
+│   │   │   │       │   │   ├── hyena_hybrid_layer_allocation.py
+│   │   │   │       │   │   ├── hyena_layer.py
+│   │   │   │       │   │   ├── hyena_layer_specs.py
+│   │   │   │       │   │   ├── hyena_mixer.py
+│   │   │   │       │   │   ├── hyena_model.py
+│   │   │   │       │   │   ├── hyena_utils.py
+│   │   │   │       │   │   └── __init__.py
+│   │   │   │       │   └── __init__.py
+│   │   │   │       ├── mistral.py
+│   │   │   │       ├── mixtral.py
+│   │   │   │       ├── nemotron.py
+│   │   │   │       ├── phi3mini.py
+│   │   │   │       ├── qwen2.py
+│   │   │   │       ├── ssm.py
+│   │   │   │       ├── starcoder2.py
+│   │   │   │       └── starcoder.py
+│   │   │   ├── inference
+│   │   │   │   ├── base.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── __init__.py
+│   │   │   ├── modelopt
+│   │   │   │   ├── distill
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── loss.py
+│   │   │   │   │   ├── model.py
+│   │   │   │   │   └── utils.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── model_utils.py
+│   │   │   │   ├── prune
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── pruner.py
+│   │   │   │   ├── quantization
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── quant_cfg_choices.py
+│   │   │   │   │   └── quantizer.py
+│   │   │   │   └── recipes
+│   │   │   │       ├── distillation_recipe.py
+│   │   │   │       ├── __init__.py
+│   │   │   │       └── prune_recipe.py
+│   │   │   ├── peft
+│   │   │   │   ├── api.py
+│   │   │   │   ├── canonical_lora.py
+│   │   │   │   ├── dora.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── lora.py
+│   │   │   │   ├── module_matcher.py
+│   │   │   │   └── utils.py
+│   │   │   ├── README.md
+│   │   │   ├── recipes
+│   │   │   │   ├── ADD-RECIPE.md
+│   │   │   │   ├── baichuan2_7b.py
+│   │   │   │   ├── bert_110m.py
+│   │   │   │   ├── bert_340m.py
+│   │   │   │   ├── bert_embedding.py
+│   │   │   │   ├── bert.py
+│   │   │   │   ├── callbacks
+│   │   │   │   │   ├── common.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── chatglm3_6b.py
+│   │   │   │   ├── CONFIGURATION-HIERARCHY.md
+│   │   │   │   ├── deepseek.py
+│   │   │   │   ├── deepseek_v2_lite.py
+│   │   │   │   ├── deepseek_v2.py
+│   │   │   │   ├── deepseek_v3.py
+│   │   │   │   ├── e5_340m.py
+│   │   │   │   ├── finetune_default.py
+│   │   │   │   ├── gemma2_27b.py
+│   │   │   │   ├── gemma2_2b.py
+│   │   │   │   ├── gemma2_9b.py
+│   │   │   │   ├── gemma_2b.py
+│   │   │   │   ├── gemma2.py
+│   │   │   │   ├── gemma_7b.py
+│   │   │   │   ├── gpt3_175b.py
+│   │   │   │   ├── hf_auto_model_for_causal_lm.py
+│   │   │   │   ├── hyena_1b.py
+│   │   │   │   ├── hyena_40b.py
+│   │   │   │   ├── hyena_7b.py
+│   │   │   │   ├── hyena_base.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── llama2_7b.py
+│   │   │   │   ├── llama31_405b.py
+│   │   │   │   ├── llama31_70b.py
+│   │   │   │   ├── llama31_8b.py
+│   │   │   │   ├── llama31_nemotron_70b.py
+│   │   │   │   ├── llama31_nemotron_nano_8b.py
+│   │   │   │   ├── llama31_nemotron_ultra_253b.py
+│   │   │   │   ├── llama32_1b.py
+│   │   │   │   ├── llama32_3b.py
+│   │   │   │   ├── llama33_nemotron_super_49b.py
+│   │   │   │   ├── llama3_70b_16k.py
+│   │   │   │   ├── llama3_70b_64k.py
+│   │   │   │   ├── llama3_70b.py
+│   │   │   │   ├── llama3_8b_128k.py
+│   │   │   │   ├── llama3_8b_16k.py
+│   │   │   │   ├── llama3_8b_64k.py
+│   │   │   │   ├── llama3_8b.py
+│   │   │   │   ├── llama4_e128.py
+│   │   │   │   ├── llama4_e16.py
+│   │   │   │   ├── llama_embedding_1b.py
+│   │   │   │   ├── log
+│   │   │   │   │   ├── default.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── mamba2_130m.py
+│   │   │   │   ├── mamba2_1_3b.py
+│   │   │   │   ├── mamba2_2_7b.py
+│   │   │   │   ├── mamba2_370m.py
+│   │   │   │   ├── mamba2_780m.py
+│   │   │   │   ├── mamba2_8b.py
+│   │   │   │   ├── mamba2_hybrid_8b.py
+│   │   │   │   ├── mistral_7b.py
+│   │   │   │   ├── mistral_nemo_12b.py
+│   │   │   │   ├── mixtral_8x22b_64k.py
+│   │   │   │   ├── mixtral_8x22b.py
+│   │   │   │   ├── mixtral_8x7b_16k.py
+│   │   │   │   ├── mixtral_8x7b_64k.py
+│   │   │   │   ├── mixtral_8x7b.py
+│   │   │   │   ├── nemotron3_22b_16k.py
+│   │   │   │   ├── nemotron3_22b_64k.py
+│   │   │   │   ├── nemotron3_22b.py
+│   │   │   │   ├── nemotron3_4b.py
+│   │   │   │   ├── nemotron3_8b.py
+│   │   │   │   ├── nemotron4_15b_16k.py
+│   │   │   │   ├── nemotron4_15b_64k.py
+│   │   │   │   ├── nemotron4_15b.py
+│   │   │   │   ├── nemotron4_340b.py
+│   │   │   │   ├── nemotronh_47b.py
+│   │   │   │   ├── nemotronh_56b.py
+│   │   │   │   ├── nemotronh_8b.py
+│   │   │   │   ├── nemotron.py
+│   │   │   │   ├── optim
+│   │   │   │   │   ├── adam.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── sgd.py
+│   │   │   │   ├── phi3_mini_4k_instruct.py
+│   │   │   │   ├── precision
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── mixed_precision.py
+│   │   │   │   ├── qwen2_1p5b.py
+│   │   │   │   ├── qwen2_500m.py
+│   │   │   │   ├── qwen25_14b.py
+│   │   │   │   ├── qwen25_1p5b.py
+│   │   │   │   ├── qwen25_32b.py
+│   │   │   │   ├── qwen25_500m.py
+│   │   │   │   ├── qwen25_72b.py
+│   │   │   │   ├── qwen25_7b.py
+│   │   │   │   ├── qwen2_72b.py
+│   │   │   │   ├── qwen2_7b.py
+│   │   │   │   ├── qwen2.py
+│   │   │   │   ├── README.md
+│   │   │   │   ├── run
+│   │   │   │   │   ├── executor.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── starcoder_15b.py
+│   │   │   │   ├── starcoder2_15b.py
+│   │   │   │   ├── starcoder2_3b.py
+│   │   │   │   ├── starcoder2_7b.py
+│   │   │   │   ├── starcoder2.py
+│   │   │   │   ├── t5_11b.py
+│   │   │   │   ├── t5_220m.py
+│   │   │   │   ├── t5_3b.py
+│   │   │   │   └── tp_overlap_configs
+│   │   │   │       ├── __init__.py
+│   │   │   │       └── userbuffers.py
+│   │   │   ├── t5
+│   │   │   │   ├── data
+│   │   │   │   │   ├── core.py
+│   │   │   │   │   ├── fine_tuning.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── mock.py
+│   │   │   │   │   ├── pre_training.py
+│   │   │   │   │   └── squad.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── model
+│   │   │   │       ├── __init__.py
+│   │   │   │       └── t5.py
+│   │   │   ├── tools
+│   │   │   │   └── auto_configurator
+│   │   │   │       ├── core
+│   │   │   │       │   ├── base_config.py
+│   │   │   │       │   ├── calculate_performance.py
+│   │   │   │       │   ├── training_config.py
+│   │   │   │       │   └── utils.py
+│   │   │   │       ├── __init__.py
+│   │   │   │       └── runner.py
+│   │   │   └── utils.py
+│   │   ├── multimodal
+│   │   │   ├── data
+│   │   │   │   ├── clip
+│   │   │   │   │   ├── augmentations
+│   │   │   │   │   │   ├── augmentations.py
+│   │   │   │   │   │   └── __init__.py
+│   │   │   │   │   ├── clip_dataset.py
+│   │   │   │   │   ├── imagenet_zeroshot_data.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── common
+│   │   │   │   │   ├── data_samplers.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── utils.py
+│   │   │   │   │   ├── webdataset.py
+│   │   │   │   │   └── webdataset_s3.py
+│   │   │   │   ├── controlnet
+│   │   │   │   │   ├── controlnet_dataset.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── dreambooth
+│   │   │   │   │   ├── dreambooth_dataset.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── energon
+│   │   │   │   │   ├── base.py
+│   │   │   │   │   ├── config.py
+│   │   │   │   │   ├── conversation.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── sample_encoder.py
+│   │   │   │   │   └── task_encoder.py
+│   │   │   │   ├── imagen
+│   │   │   │   │   ├── augmentations
+│   │   │   │   │   │   ├── augmentations.py
+│   │   │   │   │   │   ├── corruption.py
+│   │   │   │   │   │   └── __init__.py
+│   │   │   │   │   ├── imagen_dataset.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── instruct_pix2pix
+│   │   │   │   │   ├── edit_dataset.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── nerf
+│   │   │   │   │   ├── cameras.py
+│   │   │   │   │   ├── circle_poses.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── random_poses.py
+│   │   │   │   │   └── utils.py
+│   │   │   │   ├── neva
+│   │   │   │   │   ├── conversation.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── neva_dataset.py
+│   │   │   │   │   └── neva_energon_dataset.py
+│   │   │   │   ├── nsfw
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── nsfw_dataset.py
+│   │   │   │   └── stable_diffusion
+│   │   │   │       ├── augmentation
+│   │   │   │       │   ├── augmentations.py
+│   │   │   │       │   └── __init__.py
+│   │   │   │       ├── __init__.py
+│   │   │   │       └── stable_diffusion_dataset.py
+│   │   │   ├── __init__.py
+│   │   │   ├── losses
+│   │   │   │   ├── clip_loss.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── siglip_loss.py
+│   │   │   ├── models
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── multimodal_llm
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── neva
+│   │   │   │   │       ├── __init__.py
+│   │   │   │   │       └── neva_model.py
+│   │   │   │   ├── nerf
+│   │   │   │   │   ├── base.py
+│   │   │   │   │   ├── dreamfusion.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── txt2nerf_base.py
+│   │   │   │   ├── text_to_image
+│   │   │   │   │   ├── controlnet
+│   │   │   │   │   │   ├── controlnet.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   └── util.py
+│   │   │   │   │   ├── dreambooth
+│   │   │   │   │   │   ├── dreambooth.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   └── util.py
+│   │   │   │   │   ├── imagen
+│   │   │   │   │   │   ├── imagen_pipeline.py
+│   │   │   │   │   │   ├── imagen.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   └── precond.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── instruct_pix2pix
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   └── ldm
+│   │   │   │   │   │       ├── ddpm_edit.py
+│   │   │   │   │   │       └── __init__.py
+│   │   │   │   │   └── stable_diffusion
+│   │   │   │   │       ├── diffusion_engine.py
+│   │   │   │   │       ├── diffusion_model.py
+│   │   │   │   │       ├── __init__.py
+│   │   │   │   │       ├── ldm
+│   │   │   │   │       │   ├── autoencoder.py
+│   │   │   │   │       │   ├── ddpm.py
+│   │   │   │   │       │   └── __init__.py
+│   │   │   │   │       ├── ldm_config.py
+│   │   │   │   │       └── samplers
+│   │   │   │   │           ├── base_sampler.py
+│   │   │   │   │           ├── ddim.py
+│   │   │   │   │           ├── dpmsolver.py
+│   │   │   │   │           ├── __init__.py
+│   │   │   │   │           ├── k_diffusion.py
+│   │   │   │   │           ├── para_ddim.py
+│   │   │   │   │           ├── plms.py
+│   │   │   │   │           └── sampler_dpm.py
+│   │   │   │   └── vision_language_foundation
+│   │   │   │       ├── clip
+│   │   │   │       │   ├── __init__.py
+│   │   │   │       │   └── megatron_clip_models.py
+│   │   │   │       ├── __init__.py
+│   │   │   │       └── megatron_nsfw_clip_models.py
+│   │   │   ├── modules
+│   │   │   │   ├── imagen
+│   │   │   │   │   ├── diffusionmodules
+│   │   │   │   │   │   ├── attention_alt.py
+│   │   │   │   │   │   ├── attention.py
+│   │   │   │   │   │   ├── blocks.py
+│   │   │   │   │   │   ├── embs.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── layers.py
+│   │   │   │   │   │   └── nets.py
+│   │   │   │   │   ├── encoder
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── t5encoder.json
+│   │   │   │   │   │   └── t5encoder.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── sampler
+│   │   │   │   │       ├── batch_ops.py
+│   │   │   │   │       ├── continuous_ddpm.py
+│   │   │   │   │       ├── __init__.py
+│   │   │   │   │       └── sampler.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── nerf
+│   │   │   │   │   ├── background
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── nerf_background_base.py
+│   │   │   │   │   │   ├── random_background.py
+│   │   │   │   │   │   ├── static_background.py
+│   │   │   │   │   │   ├── tcnn_background.py
+│   │   │   │   │   │   └── torchngp_background.py
+│   │   │   │   │   ├── geometry
+│   │   │   │   │   │   ├── dmtet.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── layers.py
+│   │   │   │   │   │   ├── nerf_base.py
+│   │   │   │   │   │   ├── tcnn_nerf.py
+│   │   │   │   │   │   └── torchngp_nerf.py
+│   │   │   │   │   ├── guidance
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── stablediffusion_huggingface_pipeline.py
+│   │   │   │   │   │   ├── stablediffusion_nemo_pipeline.py
+│   │   │   │   │   │   ├── stablediffusion_trt_pipeline.py
+│   │   │   │   │   │   └── txt2img_guidance_base.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── loss
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── laplacian_smooth_loss.py
+│   │   │   │   │   │   └── normal_consistency_loss.py
+│   │   │   │   │   ├── materials
+│   │   │   │   │   │   ├── basic_shading.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   └── materials_base.py
+│   │   │   │   │   ├── renderers
+│   │   │   │   │   │   ├── base_renderer.py
+│   │   │   │   │   │   ├── base_sdf_renderer.py
+│   │   │   │   │   │   ├── base_volume_renderer.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── nerfacc_volume_renderer.py
+│   │   │   │   │   │   ├── nvdiffrast_renderer.py
+│   │   │   │   │   │   └── torchngp_volume_renderer.py
+│   │   │   │   │   └── utils
+│   │   │   │   │       ├── activation.py
+│   │   │   │   │       ├── __init__.py
+│   │   │   │   │       ├── torch_ngp
+│   │   │   │   │       │   ├── encoding.py
+│   │   │   │   │       │   ├── freqencoder.py
+│   │   │   │   │       │   ├── gridencoder.py
+│   │   │   │   │       │   ├── __init__.py
+│   │   │   │   │       │   ├── raymarching.py
+│   │   │   │   │       │   └── shencoder.py
+│   │   │   │   │       └── trt_engine.py
+│   │   │   │   └── stable_diffusion
+│   │   │   │       ├── attention.py
+│   │   │   │       ├── diffusionmodules
+│   │   │   │       │   ├── denoiser.py
+│   │   │   │       │   ├── denoiser_scaling.py
+│   │   │   │       │   ├── denoiser_weighting.py
+│   │   │   │       │   ├── discretizer.py
+│   │   │   │       │   ├── guiders.py
+│   │   │   │       │   ├── __init__.py
+│   │   │   │       │   ├── loss.py
+│   │   │   │       │   ├── model.py
+│   │   │   │       │   ├── openaimodel.py
+│   │   │   │       │   ├── sampling.py
+│   │   │   │       │   ├── sampling_utils.py
+│   │   │   │       │   ├── sigma_sampling.py
+│   │   │   │       │   ├── util.py
+│   │   │   │       │   └── wrappers.py
+│   │   │   │       ├── distributions
+│   │   │   │       │   ├── distributions.py
+│   │   │   │       │   └── __init__.py
+│   │   │   │       ├── encoders
+│   │   │   │       │   ├── __init__.py
+│   │   │   │       │   ├── modules.py
+│   │   │   │       │   └── x_transformer.py
+│   │   │   │       ├── fast_geglu
+│   │   │   │       │   ├── geglu.cpp
+│   │   │   │       │   ├── geglu_cuda.cu
+│   │   │   │       │   ├── geglu.hpp
+│   │   │   │       │   └── __init__.py
+│   │   │   │       ├── __init__.py
+│   │   │   │       ├── quantization_utils
+│   │   │   │       │   ├── calib_prompts.txt
+│   │   │   │       │   ├── __init__.py
+│   │   │   │       │   ├── plugin_calib.py
+│   │   │   │       │   ├── trt_engine.py
+│   │   │   │       │   └── utils.py
+│   │   │   │       └── schedulers
+│   │   │   │           └── ddim_scheduler.py
+│   │   │   ├── parts
+│   │   │   │   ├── imagen
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── utils.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── stable_diffusion
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── lr_scheduler.py
+│   │   │   │   │   ├── pipeline.py
+│   │   │   │   │   ├── sdxl_helpers.py
+│   │   │   │   │   ├── sdxl_pipeline.py
+│   │   │   │   │   └── utils.py
+│   │   │   │   └── utils.py
+│   │   │   ├── README.md
+│   │   │   ├── speech_cv
+│   │   │   │   ├── data
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── video_to_text_dataset.py
+│   │   │   │   │   └── video_to_text.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── models
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── visual_ctc_bpe_models.py
+│   │   │   │   │   ├── visual_ctc_models.py
+│   │   │   │   │   ├── visual_hybrid_rnnt_ctc_bpe_models.py
+│   │   │   │   │   ├── visual_hybrid_rnnt_ctc_models.py
+│   │   │   │   │   ├── visual_rnnt_bpe_models.py
+│   │   │   │   │   └── visual_rnnt_models.py
+│   │   │   │   ├── modules
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── linear_projection_video_front_end.py
+│   │   │   │   │   ├── resnet_video_front_end.py
+│   │   │   │   │   ├── video_augment.py
+│   │   │   │   │   └── video_preprocessing.py
+│   │   │   │   └── parts
+│   │   │   │       ├── __init__.py
+│   │   │   │       ├── preprocessing
+│   │   │   │       │   └── features.py
+│   │   │   │       └── submodules
+│   │   │   │           ├── conv2d.py
+│   │   │   │           ├── global_avg_pool2d.py
+│   │   │   │           ├── __init__.py
+│   │   │   │           ├── permute.py
+│   │   │   │           ├── resnet_block.py
+│   │   │   │           ├── resnet_bottleneck_block.py
+│   │   │   │           └── resnet.py
+│   │   │   └── speech_llm
+│   │   │       ├── data
+│   │   │       │   ├── audio_text_dataset.py
+│   │   │       │   ├── build_dataset.py
+│   │   │       │   ├── __init__.py
+│   │   │       │   └── lhotse_dataset.py
+│   │   │       ├── __init__.py
+│   │   │       ├── models
+│   │   │       │   ├── __init__.py
+│   │   │       │   ├── modular_models.py
+│   │   │       │   └── modular_t5_models.py
+│   │   │       ├── modules
+│   │   │       │   ├── common
+│   │   │       │   │   ├── audio_text_generation_strategy.py
+│   │   │       │   │   ├── audio_text_generation_utils.py
+│   │   │       │   │   └── __init__.py
+│   │   │       │   ├── __init__.py
+│   │   │       │   ├── modality_adapters.py
+│   │   │       │   └── perception_modules.py
+│   │   │       └── parts
+│   │   │           ├── __init__.py
+│   │   │           ├── mixins
+│   │   │           │   ├── adapter_mixin.py
+│   │   │           │   └── __init__.py
+│   │   │           └── utils
+│   │   │               ├── data_utils.py
+│   │   │               └── __init__.py
+│   │   ├── multimodal_autoregressive
+│   │   │   ├── data
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── preprocess_coyo_emu3_tokenizer.py
+│   │   │   │   ├── preprocess_pokemon_blip_cosmos_tokenizer.py
+│   │   │   │   └── README.md
+│   │   │   ├── __init__.py
+│   │   │   └── tokenizer
+│   │   │       ├── cosmos_multimodal_tokenizer.py
+│   │   │       ├── cosmos_vision_tokens.txt
+│   │   │       ├── emu3.tiktoken
+│   │   │       ├── __init__.py
+│   │   │       ├── special_tokens_map.json
+│   │   │       └── tokenizer_config.json
+│   │   ├── nlp
+│   │   │   ├── data
+│   │   │   │   ├── common
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── sequence_to_sequence_dataset.py
+│   │   │   │   ├── data_utils
+│   │   │   │   │   ├── data_preprocessing.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── dialogue
+│   │   │   │   │   ├── data_processor
+│   │   │   │   │   │   ├── assistant_data_processor.py
+│   │   │   │   │   │   ├── data_processor.py
+│   │   │   │   │   │   ├── design_data_processor.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── mellon_qa_data_processor.py
+│   │   │   │   │   │   ├── ms_marco_data_processor.py
+│   │   │   │   │   │   └── sgd_data_processor.py
+│   │   │   │   │   ├── dataset
+│   │   │   │   │   │   ├── dialogue_bert_dataset.py
+│   │   │   │   │   │   ├── dialogue_dataset.py
+│   │   │   │   │   │   ├── dialogue_gpt_classification_dataset.py
+│   │   │   │   │   │   ├── dialogue_gpt_generation_dataset.py
+│   │   │   │   │   │   ├── dialogue_nearest_neighbour_dataset.py
+│   │   │   │   │   │   ├── dialogue_s2s_generation_dataset.py
+│   │   │   │   │   │   ├── dialogue_sgd_bert_dataset.py
+│   │   │   │   │   │   ├── dialogue_zero_shot_intent_dataset.py
+│   │   │   │   │   │   └── __init__.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── input_example
+│   │   │   │   │   │   ├── assistant_input_example.py
+│   │   │   │   │   │   ├── design_input_example.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── input_example.py
+│   │   │   │   │   │   ├── mellon_qa_input_example.py
+│   │   │   │   │   │   ├── ms_marco_input_example.py
+│   │   │   │   │   │   └── sgd_input_example.py
+│   │   │   │   │   └── sgd
+│   │   │   │   │       ├── evaluate.py
+│   │   │   │   │       ├── __init__.py
+│   │   │   │   │       ├── prediction_utils.py
+│   │   │   │   │       └── schema.py
+│   │   │   │   ├── entity_linking
+│   │   │   │   │   ├── entity_linking_dataset.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── glue_benchmark
+│   │   │   │   │   ├── data_processors.py
+│   │   │   │   │   ├── glue_benchmark_dataset.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── information_retrieval
+│   │   │   │   │   ├── bert_embedding_dataset.py
+│   │   │   │   │   ├── gpt_embedding_dataset.py
+│   │   │   │   │   ├── information_retrieval_dataset.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── intent_slot_classification
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── intent_slot_classification_dataset.py
+│   │   │   │   │   ├── intent_slot_classification_descriptor.py
+│   │   │   │   │   ├── multi_label_intent_slot_classification_dataset.py
+│   │   │   │   │   └── multi_label_intent_slot_classification_descriptor.py
+│   │   │   │   ├── language_modeling
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── l2r_lm_dataset.py
+│   │   │   │   │   ├── lm_bert_dataset.py
+│   │   │   │   │   ├── megatron
+│   │   │   │   │   │   ├── bart_dataset.py
+│   │   │   │   │   │   ├── base_dataset_utils.py
+│   │   │   │   │   │   ├── base_prompt_learning_dataset.py
+│   │   │   │   │   │   ├── bert_dataset.py
+│   │   │   │   │   │   ├── blendable_dataset.py
+│   │   │   │   │   │   ├── data_samplers.py
+│   │   │   │   │   │   ├── dataset_utils.py
+│   │   │   │   │   │   ├── gpt_dataset.py
+│   │   │   │   │   │   ├── gpt_fim_dataset.py
+│   │   │   │   │   │   ├── gpt_prompt_learning_dataset.py
+│   │   │   │   │   │   ├── gpt_sft_chat_dataset.py
+│   │   │   │   │   │   ├── gpt_sft_dataset.py
+│   │   │   │   │   │   ├── helpers.cpp
+│   │   │   │   │   │   ├── indexed_dataset.py
+│   │   │   │   │   │   ├── indexed_retrieval_dataset.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── length_distribution_type.py
+│   │   │   │   │   │   ├── lm_adapted_t5_dataset.py
+│   │   │   │   │   │   ├── Makefile
+│   │   │   │   │   │   ├── megatron_batch_samplers.py
+│   │   │   │   │   │   ├── request_dataset.py
+│   │   │   │   │   │   ├── retro_dataset_legacy.py
+│   │   │   │   │   │   ├── retro_dataset.py
+│   │   │   │   │   │   ├── retro_fine_tune_dataset.py
+│   │   │   │   │   │   ├── t5_dataset.py
+│   │   │   │   │   │   ├── t5_prompt_learning_dataset.py
+│   │   │   │   │   │   ├── t5_sft_dataset.py
+│   │   │   │   │   │   ├── ul2_dataset.py
+│   │   │   │   │   │   └── xlm_dataset.py
+│   │   │   │   │   ├── sentence_dataset.py
+│   │   │   │   │   ├── t0_dataset.py
+│   │   │   │   │   └── text_memmap_dataset.py
+│   │   │   │   ├── machine_translation
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── machine_translation_dataset.py
+│   │   │   │   │   └── preproc_mt_data.py
+│   │   │   │   ├── question_answering
+│   │   │   │   │   ├── data_processor
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   └── qa_processing.py
+│   │   │   │   │   ├── dataset
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── qa_bert_dataset.py
+│   │   │   │   │   │   ├── qa_dataset.py
+│   │   │   │   │   │   ├── qa_gpt_dataset.py
+│   │   │   │   │   │   └── qa_s2s_dataset.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── input_example
+│   │   │   │   │       ├── __init__.py
+│   │   │   │   │       ├── qa_bert_input_example.py
+│   │   │   │   │       ├── qa_gpt_input_example.py
+│   │   │   │   │       ├── qa_input_example.py
+│   │   │   │   │       └── qa_s2s_input_example.py
+│   │   │   │   ├── question_answering_squad
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── qa_dataset.py
+│   │   │   │   │   └── qa_squad_processing.py
+│   │   │   │   ├── spellchecking_asr_customization
+│   │   │   │   │   ├── bert_example.py
+│   │   │   │   │   ├── dataset.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── utils.py
+│   │   │   │   ├── text2sparql
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── text2sparql_dataset.py
+│   │   │   │   ├── text_classification
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── ptune_text_classification_dataset.py
+│   │   │   │   │   └── text_classification_dataset.py
+│   │   │   │   ├── text_normalization
+│   │   │   │   │   ├── constants.py
+│   │   │   │   │   ├── decoder_dataset.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── tagger_dataset.py
+│   │   │   │   │   ├── test_dataset.py
+│   │   │   │   │   └── utils.py
+│   │   │   │   ├── text_normalization_as_tagging
+│   │   │   │   │   ├── bert_example.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── tagging.py
+│   │   │   │   │   ├── thutmose_tagger_dataset.py
+│   │   │   │   │   └── utils.py
+│   │   │   │   ├── token_classification
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── punctuation_capitalization_dataset.py
+│   │   │   │   │   ├── punctuation_capitalization_infer_dataset.py
+│   │   │   │   │   ├── punctuation_capitalization_tarred_dataset.py
+│   │   │   │   │   ├── token_classification_dataset.py
+│   │   │   │   │   └── token_classification_utils.py
+│   │   │   │   └── zero_shot_intent_recognition
+│   │   │   │       ├── __init__.py
+│   │   │   │       └── zero_shot_intent_dataset.py
+│   │   │   ├── __init__.py
+│   │   │   ├── losses
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── sgd_loss.py
+│   │   │   ├── metrics
+│   │   │   │   ├── classification_report.py
+│   │   │   │   ├── dialogue_metrics.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── prompt_learning_metrics.py
+│   │   │   │   ├── qa_metrics.py
+│   │   │   │   ├── sequence_perplexity.py
+│   │   │   │   └── sgd_metrics.py
+│   │   │   ├── models
+│   │   │   │   ├── dialogue
+│   │   │   │   │   ├── dialogue_gpt_classification_model.py
+│   │   │   │   │   ├── dialogue_gpt_generation_model.py
+│   │   │   │   │   ├── dialogue_nearest_neighbour_model.py
+│   │   │   │   │   ├── dialogue_s2s_generation_model.py
+│   │   │   │   │   ├── dialogue_zero_shot_intent_model.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── intent_slot_classification_model.py
+│   │   │   │   │   └── sgdqa_model.py
+│   │   │   │   ├── duplex_text_normalization
+│   │   │   │   │   ├── duplex_decoder.py
+│   │   │   │   │   ├── duplex_tagger.py
+│   │   │   │   │   ├── duplex_tn.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── utils.py
+│   │   │   │   ├── enc_dec_nlp_model.py
+│   │   │   │   ├── entity_linking
+│   │   │   │   │   ├── entity_linking_model.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── glue_benchmark
+│   │   │   │   │   ├── glue_benchmark_model.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── metrics_for_glue.py
+│   │   │   │   ├── information_retrieval
+│   │   │   │   │   ├── base_ir_model.py
+│   │   │   │   │   ├── bert_dpr_model.py
+│   │   │   │   │   ├── bert_embedding_model.py
+│   │   │   │   │   ├── bert_joint_ir_model.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── megatron_bert_embedding_model.py
+│   │   │   │   │   ├── megatron_gpt_embedding_model.py
+│   │   │   │   │   └── megatron_gpt_reranker_model.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── intent_slot_classification
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── intent_slot_classification_model.py
+│   │   │   │   │   └── multi_label_intent_slot_classification_model.py
+│   │   │   │   ├── language_modeling
+│   │   │   │   │   ├── bert_lm_model.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── megatron
+│   │   │   │   │   │   ├── bert
+│   │   │   │   │   │   │   ├── bert_model.py
+│   │   │   │   │   │   │   ├── bert_spec.py
+│   │   │   │   │   │   │   └── __init__.py
+│   │   │   │   │   │   ├── falcon
+│   │   │   │   │   │   │   ├── falcon_decoder_layer.py
+│   │   │   │   │   │   │   ├── falcon_spec.py
+│   │   │   │   │   │   │   └── __init__.py
+│   │   │   │   │   │   ├── gemma2
+│   │   │   │   │   │   │   ├── gemma2_modules.py
+│   │   │   │   │   │   │   ├── gemma2_spec.py
+│   │   │   │   │   │   │   └── __init__.py
+│   │   │   │   │   │   ├── gpt_full_te_layer_autocast_spec.py
+│   │   │   │   │   │   ├── gpt_layer_modelopt_spec.py
+│   │   │   │   │   │   ├── gpt_model.py
+│   │   │   │   │   │   ├── griffin
+│   │   │   │   │   │   │   ├── griffin_block.py
+│   │   │   │   │   │   │   ├── griffin_layer_spec.py
+│   │   │   │   │   │   │   ├── griffin_model.py
+│   │   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   │   ├── recurrent_layer.py
+│   │   │   │   │   │   │   └── recurrent_module.py
+│   │   │   │   │   │   └── __init__.py
+│   │   │   │   │   ├── megatron_bart_model.py
+│   │   │   │   │   ├── megatron_base_model.py
+│   │   │   │   │   ├── megatron_base_prompt_learning_model.py
+│   │   │   │   │   ├── megatron_bert_model.py
+│   │   │   │   │   ├── megatron_glue_model.py
+│   │   │   │   │   ├── megatron_gpt_adapter_model.py
+│   │   │   │   │   ├── megatron_gpt_model.py
+│   │   │   │   │   ├── megatron_gpt_prompt_learning_model.py
+│   │   │   │   │   ├── megatron_gpt_sft_model.py
+│   │   │   │   │   ├── megatron_griffin_model.py
+│   │   │   │   │   ├── megatron_griffin_sft_model.py
+│   │   │   │   │   ├── megatron_lm_encoder_decoder_model.py
+│   │   │   │   │   ├── megatron_mamba_model.py
+│   │   │   │   │   ├── megatron_mamba_sft_model.py
+│   │   │   │   │   ├── megatron_retrieval_model.py
+│   │   │   │   │   ├── megatron_retro_fine_tune_model.py
+│   │   │   │   │   ├── megatron_retro_model.py
+│   │   │   │   │   ├── megatron_t0_model.py
+│   │   │   │   │   ├── megatron_t5_adapter_model.py
+│   │   │   │   │   ├── megatron_t5_model.py
+│   │   │   │   │   ├── megatron_t5_prompt_learning_model.py
+│   │   │   │   │   ├── megatron_t5_sft_model.py
+│   │   │   │   │   └── transformer_lm_model.py
+│   │   │   │   ├── machine_translation
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── megatron_nmt_model.py
+│   │   │   │   │   ├── mt_enc_dec_bottleneck_model.py
+│   │   │   │   │   ├── mt_enc_dec_config.py
+│   │   │   │   │   └── mt_enc_dec_model.py
+│   │   │   │   ├── nlp_model.py
+│   │   │   │   ├── question_answering
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── qa_base_model.py
+│   │   │   │   │   ├── qa_bert_model.py
+│   │   │   │   │   ├── qa_gpt_model.py
+│   │   │   │   │   ├── qa_model.py
+│   │   │   │   │   └── qa_s2s_model.py
+│   │   │   │   ├── rag
+│   │   │   │   │   ├── custom_bert_embedder.py
+│   │   │   │   │   ├── custom_gpt_llm.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── spellchecking_asr_customization
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── spellchecking_model.py
+│   │   │   │   ├── text2sparql
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── text2sparql_model.py
+│   │   │   │   ├── text_classification
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── text_classification_model.py
+│   │   │   │   ├── text_normalization_as_tagging
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── thutmose_tagger.py
+│   │   │   │   ├── token_classification
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── punctuation_capitalization_config.py
+│   │   │   │   │   ├── punctuation_capitalization_lexical_audio_model.py
+│   │   │   │   │   ├── punctuation_capitalization_model.py
+│   │   │   │   │   └── token_classification_model.py
+│   │   │   │   └── zero_shot_intent_recognition
+│   │   │   │       ├── __init__.py
+│   │   │   │       └── zero_shot_intent_model.py
+│   │   │   ├── modules
+│   │   │   │   ├── common
+│   │   │   │   │   ├── bert_module.py
+│   │   │   │   │   ├── chatbot_component.py
+│   │   │   │   │   ├── chat_css.py
+│   │   │   │   │   ├── classifier.py
+│   │   │   │   │   ├── decoder_module.py
+│   │   │   │   │   ├── encoder_module.py
+│   │   │   │   │   ├── gpt_module.py
+│   │   │   │   │   ├── huggingface
+│   │   │   │   │   │   ├── albert.py
+│   │   │   │   │   │   ├── bert.py
+│   │   │   │   │   │   ├── camembert.py
+│   │   │   │   │   │   ├── distilbert.py
+│   │   │   │   │   │   ├── gpt2.py
+│   │   │   │   │   │   ├── huggingface_decoder.py
+│   │   │   │   │   │   ├── huggingface_encoder.py
+│   │   │   │   │   │   ├── huggingface_utils.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   └── roberta.py
+│   │   │   │   │   ├── hyena
+│   │   │   │   │   │   ├── fftconv_wrapper.py
+│   │   │   │   │   │   ├── hyena_filter.py
+│   │   │   │   │   │   ├── hyena.py
+│   │   │   │   │   │   ├── hyena_spec.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   └── README.md
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── lm_utils.py
+│   │   │   │   │   ├── megatron
+│   │   │   │   │   │   ├── adapters
+│   │   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   │   ├── mcore_mixins.py
+│   │   │   │   │   │   │   ├── parallel_adapters.py
+│   │   │   │   │   │   │   └── qlora.py
+│   │   │   │   │   │   ├── attention.py
+│   │   │   │   │   │   ├── build_model.py
+│   │   │   │   │   │   ├── clip_grads.py
+│   │   │   │   │   │   ├── fused_bias_dropout_add.py
+│   │   │   │   │   │   ├── fused_bias_geglu.py
+│   │   │   │   │   │   ├── fused_bias_gelu.py
+│   │   │   │   │   │   ├── fused_layer_norm.py
+│   │   │   │   │   │   ├── fused_softmax.py
+│   │   │   │   │   │   ├── hiddens
+│   │   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   │   ├── megatron_hidden_loss.py
+│   │   │   │   │   │   │   ├── megatron_hiddens.py
+│   │   │   │   │   │   │   └── megatron_hidden_transform.py
+│   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   ├── kerple_relative_position_embedding.py
+│   │   │   │   │   │   ├── language_model.py
+│   │   │   │   │   │   ├── layer_norm_1p.py
+│   │   │   │   │   │   ├── layer_type.py
+│   │   │   │   │   │   ├── megatron_decoder_module.py
+│   │   │   │   │   │   ├── megatron_decoders.py
+│   │   │   │   │   │   ├── megatron_encoder_decoder.py
+│   │   │   │   │   │   ├── megatron_encoder_module.py
+│   │   │   │   │   │   ├── megatron_encoders.py
+│   │   │   │   │   │   ├── megatron_export.py
+│   │   │   │   │   │   ├── megatron_init.py
+│   │   │   │   │   │   ├── megatron_perceiver_encoders.py
+│   │   │   │   │   │   ├── megatron_tokens_head_module.py
+│   │   │   │   │   │   ├── megatron_transformer_decoder.py
+│   │   │   │   │   │   ├── megatron_transformer_encoder.py
+│   │   │   │   │   │   ├── megatron_utils.py
+│   │   │   │   │   │   ├── mlp.py
+│   │   │   │   │   │   ├── module.py
+│   │   │   │   │   │   ├── mup
+│   │   │   │   │   │   │   ├── infshape.py
+│   │   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   │   ├── init.py
+│   │   │   │   │   │   │   ├── layer.py
+│   │   │   │   │   │   │   ├── optim.py
+│   │   │   │   │   │   │   └── shape.py
+│   │   │   │   │   │   ├── position_embedding
+│   │   │   │   │   │   │   ├── alibi_relative_position_embedding.py
+│   │   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   │   ├── kerple_relative_position_embedding.py
+│   │   │   │   │   │   │   ├── rotary_position_embedding.py
+│   │   │   │   │   │   │   ├── sandwich_relative_position_embedding.py
+│   │   │   │   │   │   │   ├── t5_relative_position_embedding.py
+│   │   │   │   │   │   │   └── xpos_position_embedding.py
+│   │   │   │   │   │   ├── retrieval_services
+│   │   │   │   │   │   │   ├── bert_service.py
+│   │   │   │   │   │   │   ├── combo_retrieval_server.py
+│   │   │   │   │   │   │   ├── dynamic_retrieval_server.py
+│   │   │   │   │   │   │   ├── __init__.py
+│   │   │   │   │   │   │   ├── retrieval_service.py
+│   │   │   │   │   │   │   ├── static_retrieval_server.py
+│   │   │   │   │   │   │   └── util.py
+│   │   │   │   │   │   ├── retrieval_token_level_encoder_decoder.py
+│   │   │   │   │   │   ├── retrieval_transformer.py
+│   │   │   │   │   │   ├── token_level_encoder_decoder.py
+│   │   │   │   │   │   ├── transformer.py
+│   │   │   │   │   │   ├── utils.py
+│   │   │   │   │   │   └── vocab_parallel_cross_entropy.py
+│   │   │   │   │   ├── megatron_web_server.py
+│   │   │   │   │   ├── prompt_encoder.py
+│   │   │   │   │   ├── prompt_table.py
+│   │   │   │   │   ├── retro_inference_strategies.py
+│   │   │   │   │   ├── sequence_classifier.py
+│   │   │   │   │   ├── sequence_regression.py
+│   │   │   │   │   ├── sequence_token_classifier.py
+│   │   │   │   │   ├── text_generation_server.py
+│   │   │   │   │   ├── text_generation_strategy.py
+│   │   │   │   │   ├── text_generation_utils.py
+│   │   │   │   │   ├── token_classifier.py
+│   │   │   │   │   ├── tokenizer_utils.py
+│   │   │   │   │   └── transformer
+│   │   │   │   │       ├── bridge_encoders.py
+│   │   │   │   │       ├── __init__.py
+│   │   │   │   │       ├── perceiver_encoders.py
+│   │   │   │   │       ├── reduction_encoders.py
+│   │   │   │   │       ├── text_generation.py
+│   │   │   │   │       ├── transformer_bottleneck.py
+│   │   │   │   │       ├── transformer_decoders.py
+│   │   │   │   │       ├── transformer_encoders.py
+│   │   │   │   │       ├── transformer_generators.py
+│   │   │   │   │       ├── transformer_modules.py
+│   │   │   │   │       ├── transformer.py
+│   │   │   │   │       └── transformer_utils.py
+│   │   │   │   ├── dialogue_state_tracking
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── sgd_decoder.py
+│   │   │   │   │   └── sgd_encoder.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── parts
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── megatron_lr_schedulers.py
+│   │   │   │   ├── megatron_trainer_builder.py
+│   │   │   │   ├── mixins
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── multimodal_adapter_mixins.py
+│   │   │   │   │   └── nlp_adapter_mixins.py
+│   │   │   │   ├── nlp_overrides.py
+│   │   │   │   ├── peft_config.py
+│   │   │   │   └── utils_funcs.py
+│   │   │   └── README.md
+│   │   ├── speechlm
+│   │   │   ├── api.py
+│   │   │   ├── data
+│   │   │   │   ├── audio_to_text_module.py
+│   │   │   │   ├── data_sampler.py
+│   │   │   │   ├── dataset
+│   │   │   │   │   ├── audio_text_dataset.py
+│   │   │   │   │   ├── audio_text_lhotse_dataset.py
+│   │   │   │   │   ├── data_utils.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── text_processing.py
+│   │   │   ├── __init__.py
+│   │   │   ├── models
+│   │   │   │   ├── base.py
+│   │   │   │   ├── hf_auto_model_for_speech_seq2seq.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── speech_to_text_llm_model.py
+│   │   │   ├── modules
+│   │   │   │   ├── asr_module.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── modality_adapter.py
+│   │   │   ├── recipes
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── optim
+│   │   │   │   │   ├── adam.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   └── pipeline.py
+│   │   │   ├── strategies
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── megatron_strategy.py
+│   │   │   └── utils
+│   │   │       ├── hydra_utils.py
+│   │   │       ├── __init__.py
+│   │   │       ├── io.py
+│   │   │       ├── model_transform.py
+│   │   │       ├── resume.py
+│   │   │       └── text_generation
+│   │   │           ├── audio_text_generation_strategy.py
+│   │   │           ├── audio_text_generation_utils.py
+│   │   │           └── __init__.py
+│   │   ├── tts
+│   │   │   ├── data
+│   │   │   │   ├── dataset.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── speechllm
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── t5_speechllm_dataset.py
+│   │   │   │   │   └── t5_speechllm_tarred_dataset.py
+│   │   │   │   ├── text_to_speech_dataset.py
+│   │   │   │   └── vocoder_dataset.py
+│   │   │   ├── g2p
+│   │   │   │   ├── data
+│   │   │   │   │   ├── ctc.py
+│   │   │   │   │   ├── heteronym_classification.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── t5.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── models
+│   │   │   │   │   ├── base.py
+│   │   │   │   │   ├── ctc.py
+│   │   │   │   │   ├── en_us_arpabet.py
+│   │   │   │   │   ├── heteronym_classification.py
+│   │   │   │   │   ├── i18n_ipa.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── ja_jp_ipa.py
+│   │   │   │   │   ├── t5.py
+│   │   │   │   │   └── zh_cn_pinyin.py
+│   │   │   │   ├── modules.py
+│   │   │   │   └── utils.py
+│   │   │   ├── __init__.py
+│   │   │   ├── losses
+│   │   │   │   ├── aligner_loss.py
+│   │   │   │   ├── audio_codec_loss.py
+│   │   │   │   ├── fastpitchloss.py
+│   │   │   │   ├── hifigan_losses.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── radttsloss.py
+│   │   │   │   ├── spectrogram_enhancer_losses.py
+│   │   │   │   ├── stftlosses.py
+│   │   │   │   ├── tacotron2loss.py
+│   │   │   │   ├── vits_losses.py
+│   │   │   │   └── waveglowloss.py
+│   │   │   ├── models
+│   │   │   │   ├── aligner.py
+│   │   │   │   ├── audio_codec.py
+│   │   │   │   ├── base.py
+│   │   │   │   ├── fastpitch.py
+│   │   │   │   ├── fastpitch_ssl.py
+│   │   │   │   ├── hifigan.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── magpietts.py
+│   │   │   │   ├── mixer_tts.py
+│   │   │   │   ├── radtts.py
+│   │   │   │   ├── spectrogram_enhancer.py
+│   │   │   │   ├── speechllm
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── megatron_base_speechllm_prompt_model.py
+│   │   │   │   │   └── megatron_t5_speechllm_model.py
+│   │   │   │   ├── ssl_tts.py
+│   │   │   │   ├── tacotron2.py
+│   │   │   │   ├── two_stages.py
+│   │   │   │   ├── univnet.py
+│   │   │   │   ├── vits.py
+│   │   │   │   └── waveglow.py
+│   │   │   ├── modules
+│   │   │   │   ├── adapters.py
+│   │   │   │   ├── aligner.py
+│   │   │   │   ├── attribute_prediction_model.py
+│   │   │   │   ├── audio_codec_modules.py
+│   │   │   │   ├── common.py
+│   │   │   │   ├── encodec_modules.py
+│   │   │   │   ├── fastpitch.py
+│   │   │   │   ├── hifigan_modules.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── mixer_tts.py
+│   │   │   │   ├── monotonic_align
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── numba_core.py
+│   │   │   │   ├── radtts.py
+│   │   │   │   ├── spectrogram_enhancer.py
+│   │   │   │   ├── ssl_tts.py
+│   │   │   │   ├── submodules.py
+│   │   │   │   ├── tacotron2.py
+│   │   │   │   ├── transformer_2501.py
+│   │   │   │   ├── transformer.py
+│   │   │   │   ├── univnet_modules.py
+│   │   │   │   ├── vits_modules.py
+│   │   │   │   └── waveglow.py
+│   │   │   ├── parts
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── mixins
+│   │   │   │   │   ├── fastpitch_adapter_mixins.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   ├── preprocessing
+│   │   │   │   │   ├── audio_trimming.py
+│   │   │   │   │   ├── feature_processors.py
+│   │   │   │   │   ├── features.py
+│   │   │   │   │   └── __init__.py
+│   │   │   │   └── utils
+│   │   │   │       ├── callbacks.py
+│   │   │   │       ├── distributed.py
+│   │   │   │       ├── helpers.py
+│   │   │   │       ├── __init__.py
+│   │   │   │       ├── splines.py
+│   │   │   │       └── tts_dataset_utils.py
+│   │   │   ├── README.md
+│   │   │   └── torch
+│   │   │       ├── g2ps.py
+│   │   │       ├── __init__.py
+│   │   │       ├── tts_data_types.py
+│   │   │       └── tts_tokenizers.py
+│   │   ├── vision
+│   │   │   ├── data
+│   │   │   │   ├── imagenet_classnames.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── megatron
+│   │   │   │       ├── autoaugment.py
+│   │   │   │       ├── data_samplers.py
+│   │   │   │       ├── image_folder.py
+│   │   │   │       ├── __init__.py
+│   │   │   │       └── vit_dataset.py
+│   │   │   ├── __init__.py
+│   │   │   ├── losses
+│   │   │   │   └── __init__.py
+│   │   │   ├── metrics
+│   │   │   │   └── __init__.py
+│   │   │   ├── models
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── megatron_vit_classification_models.py
+│   │   │   ├── modules
+│   │   │   │   ├── common
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── megatron
+│   │   │   │   │       ├── __init__.py
+│   │   │   │   │       └── vision_transformer.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── vit
+│   │   │   │       ├── __init__.py
+│   │   │   │       └── vit_backbone.py
+│   │   │   ├── parts
+│   │   │   │   └── __init__.py
+│   │   │   └── README.md
+│   │   └── vlm
+│   │       ├── clip
+│   │       │   ├── data
+│   │       │   │   ├── clip_data_module.py
+│   │       │   │   ├── __init__.py
+│   │       │   │   └── mock.py
+│   │       │   ├── __init__.py
+│   │       │   ├── loss
+│   │       │   │   ├── clip_loss.py
+│   │       │   │   └── __init__.py
+│   │       │   └── model
+│   │       │       ├── base.py
+│   │       │       ├── clip.py
+│   │       │       └── __init__.py
+│   │       ├── data
+│   │       │   ├── data_module.py
+│   │       │   ├── task_encoder.py
+│   │       │   └── utils.py
+│   │       ├── hf
+│   │       │   ├── data
+│   │       │   │   ├── automodel_datasets.py
+│   │       │   │   └── hf_dataset.py
+│   │       │   └── model
+│   │       │       └── hf_auto_model_for_image_text_to_text.py
+│   │       ├── inference
+│   │       │   ├── base.py
+│   │       │   ├── __init__.py
+│   │       │   ├── llava_inference_wrapper.py
+│   │       │   ├── mllama_inference_wrapper.py
+│   │       │   ├── vlm_engine.py
+│   │       │   └── vlm_inference_controller.py
+│   │       ├── __init__.py
+│   │       ├── layer_specs.py
+│   │       ├── llama4
+│   │       │   ├── data
+│   │       │   │   ├── __init__.py
+│   │       │   │   ├── mock.py
+│   │       │   │   └── task_encoder.py
+│   │       │   ├── __init__.py
+│   │       │   └── model
+│   │       │       ├── base.py
+│   │       │       ├── __init__.py
+│   │       │       ├── llama4_omni.py
+│   │       │       └── vision.py
+│   │       ├── llava_next
+│   │       │   ├── data
+│   │       │   │   ├── __init__.py
+│   │       │   │   ├── interleaved_sample_encoder.py
+│   │       │   │   ├── mock.py
+│   │       │   │   ├── sample.py
+│   │       │   │   ├── task_encoder.py
+│   │       │   │   ├── utils.py
+│   │       │   │   └── vqa_sample_encoder.py
+│   │       │   ├── __init__.py
+│   │       │   └── model
+│   │       │       ├── base.py
+│   │       │       ├── __init__.py
+│   │       │       ├── llava_next.py
+│   │       │       └── utils.py
+│   │       ├── mllama
+│   │       │   ├── data
+│   │       │   │   ├── __init__.py
+│   │       │   │   ├── mock.py
+│   │       │   │   ├── preloaded.py
+│   │       │   │   ├── sample_encoder.py
+│   │       │   │   └── task_encoder.py
+│   │       │   ├── __init__.py
+│   │       │   └── model
+│   │       │       ├── base.py
+│   │       │       ├── __init__.py
+│   │       │       ├── language.py
+│   │       │       ├── mllama.py
+│   │       │       ├── utils.py
+│   │       │       └── vision.py
+│   │       ├── neva
+│   │       │   ├── data
+│   │       │   │   ├── config.py
+│   │       │   │   ├── conversation.py
+│   │       │   │   ├── __init__.py
+│   │       │   │   ├── mock.py
+│   │       │   │   ├── multimodal_tokens.py
+│   │       │   │   ├── preloaded.py
+│   │       │   │   └── sequence_packing.py
+│   │       │   ├── __init__.py
+│   │       │   └── model
+│   │       │       ├── base.py
+│   │       │       ├── __init__.py
+│   │       │       └── llava.py
+│   │       ├── peft
+│   │       │   ├── __init__.py
+│   │       │   └── lora.py
+│   │       ├── qwen2vl
+│   │       │   ├── data
+│   │       │   │   ├── api.py
+│   │       │   │   ├── config.py
+│   │       │   │   ├── conversation.py
+│   │       │   │   ├── convert_to_qwen2vl_wds.py
+│   │       │   │   ├── __init__.py
+│   │       │   │   ├── mock.py
+│   │       │   │   ├── multimodal_tokens.py
+│   │       │   │   ├── preloaded.py
+│   │       │   │   └── task_encoder.py
+│   │       │   ├── __init__.py
+│   │       │   └── model
+│   │       │       ├── api.py
+│   │       │       ├── base.py
+│   │       │       ├── __init__.py
+│   │       │       ├── qwen2vl.py
+│   │       │       └── vision.py
+│   │       ├── recipes
+│   │       │   ├── clip_b32.py
+│   │       │   ├── __init__.py
+│   │       │   ├── llama4_omni_e128.py
+│   │       │   ├── llama4_omni_e16.py
+│   │       │   ├── llava15_13b.py
+│   │       │   ├── llava15_7b.py
+│   │       │   ├── llava_next_7b.py
+│   │       │   ├── mllama_11b.py
+│   │       │   ├── mllama_90b.py
+│   │       │   ├── neva_llama3_8b.py
+│   │       │   └── qwen2vl_2b.py
+│   │       └── vision
+│   │           ├── base.py
+│   │           ├── clip_vit.py
+│   │           ├── __init__.py
+│   │           ├── intern_vit.py
+│   │           └── siglip_vit.py
+│   ├── constants.py
+│   ├── core
+│   │   ├── classes
+│   │   │   ├── common.py
+│   │   │   ├── dataset.py
+│   │   │   ├── exportable.py
+│   │   │   ├── __init__.py
+│   │   │   ├── loss.py
+│   │   │   ├── mixins
+│   │   │   │   ├── access_mixins.py
+│   │   │   │   ├── adapter_mixins.py
+│   │   │   │   ├── adapter_mixin_strategies.py
+│   │   │   │   ├── hf_io_mixin.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── modelPT.py
+│   │   │   └── module.py
+│   │   ├── config
+│   │   │   ├── base_config.py
+│   │   │   ├── hydra_runner.py
+│   │   │   ├── __init__.py
+│   │   │   ├── modelPT.py
+│   │   │   ├── optimizers.py
+│   │   │   ├── pytorch_lightning.py
+│   │   │   ├── pytorch.py
+│   │   │   ├── schedulers.py
+│   │   │   └── templates
+│   │   │       ├── __init__.py
+│   │   │       └── model_card.py
+│   │   ├── connectors
+│   │   │   ├── __init__.py
+│   │   │   └── save_restore_connector.py
+│   │   ├── __init__.py
+│   │   ├── neural_types
+│   │   │   ├── axes.py
+│   │   │   ├── comparison.py
+│   │   │   ├── elements.py
+│   │   │   ├── __init__.py
+│   │   │   └── neural_type.py
+│   │   ├── optim
+│   │   │   ├── adafactor.py
+│   │   │   ├── adan.py
+│   │   │   ├── distributed_adam.py
+│   │   │   ├── __init__.py
+│   │   │   ├── lr_scheduler.py
+│   │   │   ├── mcore_optim.py
+│   │   │   ├── megatron_fused_adam.py
+│   │   │   ├── novograd.py
+│   │   │   ├── optimizers.py
+│   │   │   ├── optimizer_with_main_params.py
+│   │   │   └── radam.py
+│   │   └── utils
+│   │       ├── cuda_python_utils.py
+│   │       ├── __init__.py
+│   │       ├── k2_guard.py
+│   │       ├── k2_utils.py
+│   │       ├── neural_type_utils.py
+│   │       ├── numba_utils.py
+│   │       ├── optional_libs.py
+│   │       └── process_launcher
+│   │           ├── __init__.py
+│   │           └── launcher.py
+│   ├── deploy
+│   │   ├── deploy_base.py
+│   │   ├── deploy_pytriton.py
+│   │   ├── __init__.py
+│   │   ├── multimodal
+│   │   │   ├── __init__.py
+│   │   │   └── query_multimodal.py
+│   │   ├── nlp
+│   │   │   ├── hf_deployable.py
+│   │   │   ├── __init__.py
+│   │   │   ├── megatronllm_deployable.py
+│   │   │   └── query_llm.py
+│   │   ├── service
+│   │   │   ├── fastapi_interface_to_pytriton.py
+│   │   │   ├── __init__.py
+│   │   │   └── rest_model_api.py
+│   │   ├── triton_deployable.py
+│   │   └── utils.py
+│   ├── export
+│   │   ├── __init__.py
+│   │   ├── multimodal
+│   │   │   ├── build.py
+│   │   │   ├── converter.py
+│   │   │   ├── __init__.py
+│   │   │   └── run.py
+│   │   ├── onnx_llm_exporter.py
+│   │   ├── quantize
+│   │   │   ├── __init__.py
+│   │   │   └── quantizer.py
+│   │   ├── sentencepiece_tokenizer.py
+│   │   ├── tarutils.py
+│   │   ├── tensorrt_lazy_compiler.py
+│   │   ├── tensorrt_llm.py
+│   │   ├── tensorrt_mm_exporter.py
+│   │   ├── tiktoken_tokenizer.py
+│   │   ├── trt_llm
+│   │   │   ├── converter
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── model_converter.py
+│   │   │   │   ├── model_to_trt_llm_ckpt.py
+│   │   │   │   └── utils.py
+│   │   │   ├── __init__.py
+│   │   │   ├── nemo_ckpt_loader
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── nemo_file.py
+│   │   │   ├── qnemo
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── qnemo_to_tensorrt_llm.py
+│   │   │   │   ├── tokenizer_utils.py
+│   │   │   │   └── utils.py
+│   │   │   ├── tensorrt_llm_build.py
+│   │   │   ├── tensorrt_llm_run.py
+│   │   │   └── utils.py
+│   │   ├── utils
+│   │   │   ├── constants.py
+│   │   │   ├── __init__.py
+│   │   │   ├── lora_converter.py
+│   │   │   ├── _mock_import.py
+│   │   │   ├── model_loader.py
+│   │   │   └── utils.py
+│   │   ├── vllm
+│   │   │   ├── __init__.py
+│   │   │   ├── model_config.py
+│   │   │   ├── model_converters.py
+│   │   │   ├── model_loader.py
+│   │   │   └── tokenizer_group.py
+│   │   ├── vllm_exporter.py
+│   │   └── vllm_hf_exporter.py
+│   ├── __init__.py
+│   ├── lightning
+│   │   ├── base.py
+│   │   ├── ckpt_utils.py
+│   │   ├── data.py
+│   │   ├── fabric
+│   │   │   ├── conversion.py
+│   │   │   ├── fabric.py
+│   │   │   ├── __init__.py
+│   │   │   ├── plugins.py
+│   │   │   └── strategies.py
+│   │   ├── __init__.py
+│   │   ├── io
+│   │   │   ├── api.py
+│   │   │   ├── artifact
+│   │   │   │   ├── base.py
+│   │   │   │   ├── file.py
+│   │   │   │   ├── hf_auto.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── pickle.py
+│   │   │   ├── capture.py
+│   │   │   ├── connector.py
+│   │   │   ├── fdl_torch.py
+│   │   │   ├── hf.py
+│   │   │   ├── __init__.py
+│   │   │   ├── mixin.py
+│   │   │   ├── pl.py
+│   │   │   ├── registry.py
+│   │   │   ├── state.py
+│   │   │   └── to_config.py
+│   │   ├── megatron_init.py
+│   │   ├── megatron_parallel.py
+│   │   ├── nemo_logger.py
+│   │   ├── pytorch
+│   │   │   ├── accelerate
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── transformer_engine.py
+│   │   │   ├── callbacks
+│   │   │   │   ├── ddp_parity_checker.py
+│   │   │   │   ├── debugging.py
+│   │   │   │   ├── flops_callback.py
+│   │   │   │   ├── garbage_collection.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── jit_transform.py
+│   │   │   │   ├── megatron_comm_overlap.py
+│   │   │   │   ├── memory_profiler.py
+│   │   │   │   ├── model_callback.py
+│   │   │   │   ├── model_checkpoint.py
+│   │   │   │   ├── model_transform.py
+│   │   │   │   ├── moe_token_drop.py
+│   │   │   │   ├── nsys.py
+│   │   │   │   ├── peft.py
+│   │   │   │   ├── preemption.py
+│   │   │   │   ├── progress_bar.py
+│   │   │   │   └── progress_printer.py
+│   │   │   ├── __init__.py
+│   │   │   ├── local_ckpt.py
+│   │   │   ├── optim
+│   │   │   │   ├── base.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── lr_scheduler.py
+│   │   │   │   ├── megatron.py
+│   │   │   │   └── pytorch.py
+│   │   │   ├── plugins
+│   │   │   │   ├── data_sampler.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── mixed_precision.py
+│   │   │   ├── strategies
+│   │   │   │   ├── fsdp2_strategy.py
+│   │   │   │   ├── fsdp_strategy.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── megatron_strategy.py
+│   │   │   │   └── utils.py
+│   │   │   ├── trainer.py
+│   │   │   └── utils.py
+│   │   ├── README.md
+│   │   ├── resume.py
+│   │   ├── run
+│   │   │   ├── __init__.py
+│   │   │   └── plugins.py
+│   │   └── _strategy_lib.py
+│   ├── package_info.py
+│   ├── README.md
+│   └── utils
+│       ├── app_state.py
+│       ├── arguments.py
+│       ├── callbacks
+│       │   ├── checkpointing_context.py
+│       │   ├── cuda_graph.py
+│       │   ├── dist_ckpt_io.py
+│       │   ├── __init__.py
+│       │   ├── nemo_model_checkpoint.py
+│       │   ├── preemption.py
+│       │   └── s3_checkpoint_io.py
+│       ├── cast_utils.py
+│       ├── cloud.py
+│       ├── config_utils.py
+│       ├── data_utils.py
+│       ├── debug_hook.py
+│       ├── decorators
+│       │   ├── deprecated.py
+│       │   ├── experimental.py
+│       │   ├── __init__.py
+│       │   └── port_docs.py
+│       ├── distributed.py
+│       ├── dtype.py
+│       ├── enum.py
+│       ├── env_var_parsing.py
+│       ├── exceptions.py
+│       ├── exp_manager.py
+│       ├── export_utils.py
+│       ├── flops_formulas.py
+│       ├── formatters
+│       │   ├── base.py
+│       │   ├── colors.py
+│       │   ├── __init__.py
+│       │   └── utils.py
+│       ├── get_rank.py
+│       ├── hyena_flops_formulas.py
+│       ├── import_utils.py
+│       ├── __init__.py
+│       ├── lightning_logger_patch.py
+│       ├── loggers
+│       │   ├── clearml_logger.py
+│       │   ├── dllogger.py
+│       │   ├── __init__.py
+│       │   └── mlflow_logger.py
+│       ├── mcore_logger.py
+│       ├── metaclasses.py
+│       ├── model_utils.py
+│       ├── nemo_logging.py
+│       ├── notebook_utils.py
+│       ├── nvtx.py
+│       ├── s3_dirpath_utils.py
+│       ├── s3_utils.py
+│       ├── sequence_packing_utils.py
+│       ├── te_utils.py
+│       ├── timers.py
+│       ├── trainer_utils.py
+│       └── trt_utils.py
+├── pyproject.toml
+├── README.md
+├── reinstall.sh
+├── requirements
+│   ├── manifest.json
+│   ├── requirements_asr.txt
+│   ├── requirements_audio.txt
+│   ├── requirements_automodel.txt
+│   ├── requirements_common.txt
+│   ├── requirements_deploy.txt
+│   ├── requirements_docs.txt
+│   ├── requirements_eval.txt
+│   ├── requirements_lightning.txt
+│   ├── requirements_multimodal.txt
+│   ├── requirements_nlp.txt
+│   ├── requirements_slu.txt
+│   ├── requirements_test.txt
+│   ├── requirements_tts.txt
+│   ├── requirements.txt
+│   └── requirements_vllm.txt
+├── scripts
+│   ├── asr_context_biasing
+│   │   └── eval_greedy_decoding_with_context_biasing.py
+│   ├── asr_language_modeling
+│   │   ├── neural_rescorer
+│   │   │   ├── create_tarred_transformer_lm_dataset.py
+│   │   │   └── eval_neural_rescorer.py
+│   │   └── ngram_lm
+│   │       ├── create_lexicon_from_arpa.py
+│   │       ├── eval_beamsearch_ngram_ctc.py
+│   │       ├── eval_beamsearch_ngram_transducer.py
+│   │       ├── eval_wfst_decoding_ctc.py
+│   │       ├── install_beamsearch_decoders.sh
+│   │       ├── make_phone_lm.py
+│   │       ├── ngram_merge.py
+│   │       └── train_kenlm.py
+│   ├── audio_to_audio
+│   │   └── convert_nemo_to_lhotse.py
+│   ├── checkpoint_averaging
+│   │   ├── legacy
+│   │   │   ├── average_model_checkpoints.py
+│   │   │   ├── checkpoint_averaging_model_parallel.py
+│   │   │   ├── checkpoint_averaging.py
+│   │   │   └── megatron_checkpoint_averaging.py
+│   │   ├── README.md
+│   │   └── zarr_distributed_checkpoint_averaging.py
+│   ├── checkpoint_converters
+│   │   ├── convert_baichuan2_hf_to_nemo.py
+│   │   ├── convert_baichuan2_nemo_to_hf.py
+│   │   ├── convert_bert_hf_to_nemo.py
+│   │   ├── convert_bert_nemo_to_hf.py
+│   │   ├── convert_chatglm_hf_to_nemo.py
+│   │   ├── convert_chatglm_nemo_to_hf.py
+│   │   ├── convert_clip_hf_to_nemo.py
+│   │   ├── convert_falcon_hf_to_nemo.py
+│   │   ├── convert_falcon_nemo_to_hf.py
+│   │   ├── convert_gemma2_hf_to_nemo.py
+│   │   ├── convert_gemma_hf_to_nemo.py
+│   │   ├── convert_gemma_jax_to_nemo.py
+│   │   ├── convert_gemma_nemo_to_hf.py
+│   │   ├── convert_gemma_pyt_to_nemo.py
+│   │   ├── convert_gpt_nemo_to_mcore.py
+│   │   ├── convert_griffin_hf_to_nemo.py
+│   │   ├── convert_griffin_nemo_to_hf.py
+│   │   ├── convert_llama_hf_to_nemo_load.py
+│   │   ├── convert_llama_hf_to_nemo.py
+│   │   ├── convert_llama_hf_to_nemo_save_dict.py
+│   │   ├── convert_llama_nemo_to_hf.py
+│   │   ├── convert_llava_hf_to_nemo.py
+│   │   ├── convert_llava_nemo_to_hf.py
+│   │   ├── convert_mamba2_pyt_to_nemo.py
+│   │   ├── convert_mistral_7b_hf_to_nemo.py
+│   │   ├── convert_mistral_7b_nemo_to_hf.py
+│   │   ├── convert_mixtral_hf_to_nemo.py
+│   │   ├── convert_mixtral_nemo_to_hf.py
+│   │   ├── convert_mpt_hf_to_nemo.py
+│   │   ├── convert_nemo1_to_nemo2.py
+│   │   ├── convert_nemotron_nemo_to_hf.py
+│   │   ├── convert_qwen2_hf_to_nemo.py
+│   │   ├── convert_qwen2_nemo_to_hf.py
+│   │   ├── convert_siglip_hf_to_nemo.py
+│   │   ├── convert_stablediffusion_hf_to_nemo.py
+│   │   ├── convert_starcoder2_hf_to_nemo.py
+│   │   ├── convert_starcoder2_nemo_to_hf.py
+│   │   ├── convert_starcoder_hf_to_nemo.py
+│   │   ├── convert_zarr_to_torch_dist.py
+│   │   ├── lora_converters
+│   │   │   ├── convert_hf_to_canonical.py
+│   │   │   └── convert_nemo_to_canonical.py
+│   │   ├── quantize_model_to_nf4.py
+│   │   └── README.md
+│   ├── confidence_ensembles
+│   │   ├── build_ensemble.py
+│   │   ├── ensemble_config.yaml
+│   │   └── test_confidence_ensembles.py
+│   ├── construct_random_negatives.py
+│   ├── dataset_processing
+│   │   ├── add_noise.py
+│   │   ├── fisher_audio_to_wav.py
+│   │   ├── g2p
+│   │   │   ├── convert_cmu_arpabet_to_ipa.py
+│   │   │   ├── export_wikihomograph_data_to_manifest.py
+│   │   │   ├── export_zh_cpp_data_to_manifest.py
+│   │   │   └── syllabify.py
+│   │   ├── get_aishell_data.py
+│   │   ├── get_commonvoice_data.py
+│   │   ├── get_demand_data.py
+│   │   ├── get_librispeech_data.py
+│   │   ├── get_openslr_rir_data.py
+│   │   ├── kaldi2json.py
+│   │   ├── nlp
+│   │   │   ├── financial_phrase_bank
+│   │   │   │   └── prompt_learning_financial_phrase_bank_preprocessing.py
+│   │   │   ├── intent_and_slot
+│   │   │   │   ├── assistant_utils.py
+│   │   │   │   ├── augment_training_data.py
+│   │   │   │   ├── convert_datasets.py
+│   │   │   │   ├── import_datasets.py
+│   │   │   │   └── prompt_learning_assistant_preprocessing.py
+│   │   │   └── squad
+│   │   │       └── prompt_learning_squad_preprocessing.py
+│   │   ├── process_aishell2_data.py
+│   │   ├── process_an4_data.py
+│   │   ├── process_fisher_data.py
+│   │   ├── process_hub5_data.py
+│   │   ├── process_slurp_data.py
+│   │   ├── process_speech_commands_data.py
+│   │   ├── process_vad_data.py
+│   │   ├── speaker_tasks
+│   │   │   ├── get_aishell_diarization_data.py
+│   │   │   ├── get_ami_data.py
+│   │   │   ├── get_hi-mia_data.py
+│   │   │   ├── get_voxconverse.py
+│   │   │   └── README.md
+│   │   ├── spoken_wikipedia
+│   │   │   ├── preprocess.py
+│   │   │   └── run.sh
+│   │   └── tts
+│   │       ├── aishell3
+│   │       │   ├── ds_conf
+│   │       │   │   └── ds_for_fastpitch_align.yaml
+│   │       │   └── get_data.py
+│   │       ├── compute_features.py
+│   │       ├── compute_feature_stats.py
+│   │       ├── compute_speaker_stats.py
+│   │       ├── create_speaker_map.py
+│   │       ├── extract_sup_data.py
+│   │       ├── generate_mels.py
+│   │       ├── hifitts
+│   │       │   └── get_data.py
+│   │       ├── hui_acg
+│   │       │   ├── ds_conf
+│   │       │   │   └── ds_for_fastpitch_align.yaml
+│   │       │   └── get_data.py
+│   │       ├── libritts
+│   │       │   └── get_data.py
+│   │       ├── ljspeech
+│   │       │   ├── ds_conf
+│   │       │   │   ├── ds_for_fastpitch_align.yaml
+│   │       │   │   ├── ds_for_mixer_tts_x.yaml
+│   │       │   │   └── ds_for_mixer_tts.yaml
+│   │       │   ├── get_data.py
+│   │       │   └── lj_speech.tsv
+│   │       ├── preprocess_audio.py
+│   │       ├── preprocess_text.py
+│   │       ├── resynthesize_dataset.py
+│   │       ├── sfbilingual
+│   │       │   ├── ds_conf
+│   │       │   │   └── ds_for_fastpitch_align.yaml
+│   │       │   └── get_data.py
+│   │       └── thorsten_neutral
+│   │           ├── ds_conf
+│   │           │   └── ds_for_fastpitch_align.yaml
+│   │           └── get_data.py
+│   ├── deploy
+│   │   ├── multimodal
+│   │   │   ├── deploy_triton.py
+│   │   │   └── query.py
+│   │   └── nlp
+│   │       ├── deploy_inframework_hf_triton.py
+│   │       ├── deploy_inframework_triton.py
+│   │       ├── deploy_in_fw_oai_server_eval.py
+│   │       ├── deploy_triton.py
+│   │       ├── deploy_vllm_triton.py
+│   │       ├── query_inframework_hf.py
+│   │       ├── query_inframework.py
+│   │       └── query.py
+│   ├── diffusion_model_lora_merge
+│   │   ├── conf
+│   │   │   └── merge_lora_weights.yaml
+│   │   └── merge_lora_weights_into_base_model.py
+│   ├── dit
+│   │   ├── dit_train.py
+│   │   └── dit_train.sh
+│   ├── export
+│   │   ├── convert_nemo2_for_export.py
+│   │   ├── export_mm_to_trtllm.py
+│   │   ├── export_to_trt_llm.py
+│   │   └── setup_vllm_venv.sh
+│   ├── export.py
+│   ├── fid-eval-text2img
+│   │   ├── compute_clip_score.py
+│   │   └── plot.py
+│   ├── flux
+│   │   ├── flux_controlnet_infer.py
+│   │   ├── flux_controlnet_training.py
+│   │   ├── flux_infer.py
+│   │   └── flux_training.py
+│   ├── freesound_download_resample
+│   │   ├── download_resample_freesound.sh
+│   │   ├── freesound_download.py
+│   │   ├── freesound_requirements.txt
+│   │   └── freesound_resample.py
+│   ├── information_retrieval
+│   │   └── get_msmarco.sh
+│   ├── __init__.py
+│   ├── installers
+│   │   ├── Dockerfile.ngramtools
+│   │   ├── install_ais_cli_latest.sh
+│   │   ├── install_graphviz.sh
+│   │   ├── install_k2.sh
+│   │   ├── install_opengrm.sh
+│   │   ├── install_riva_decoder.sh
+│   │   ├── install_torchaudio_latest.sh
+│   │   └── setup_os2s_decoders.py
+│   ├── llm
+│   │   ├── automodel.py
+│   │   ├── evaluation.py
+│   │   ├── generate.py
+│   │   ├── gpt_distillation.py
+│   │   ├── gpt_prune.py
+│   │   ├── pretraining.py
+│   │   ├── ptq.py
+│   │   └── t5_generate.py
+│   ├── magpietts
+│   │   └── dpo
+│   │       ├── create_preference_pairs.py
+│   │       └── create_text_contextpairs.py
+│   ├── metric_calculation
+│   │   ├── compute_rouge.py
+│   │   └── peft_metric_calc.py
+│   ├── multimodal_dataset_conversion
+│   │   ├── convert_dvc_dataset_for_evaluation.py
+│   │   ├── convert_dvc_dataset_for_training.py
+│   │   ├── convert_video_qa_dataset.py
+│   │   ├── generate_qa_data.py
+│   │   └── parquet_conversion.py
+│   ├── nemo_legacy_import
+│   │   ├── asr_checkpoint_port.py
+│   │   └── nlp_checkpoint_port.py
+│   ├── neural_machine_translation
+│   │   ├── collect_tokenizer_dataset_stats.py
+│   │   ├── filter_langs_nmt.py
+│   │   ├── length_ratio_filter.py
+│   │   ├── plot_detailed_timing.py
+│   │   └── preprocess_tokenization_normalization.py
+│   ├── nlp_language_modeling
+│   │   ├── augment-text.py
+│   │   ├── build_index_memmap_data.py
+│   │   ├── build_knn_map_index.py
+│   │   ├── build_regex_tokenizer.py
+│   │   ├── build_retrieval_index.py
+│   │   ├── conf
+│   │   │   └── prompt_learning_ckpt_to_nemo.yaml
+│   │   ├── convert_prompt_learning_ckpt_to_nemo.py
+│   │   ├── exam_knn_map_quality.py
+│   │   ├── export_nemo_bert_to_onnx.py
+│   │   ├── extract_inference_only_weights.py
+│   │   ├── hf_t5v1_1_base_config.yaml
+│   │   ├── hf_t5-v1_1_to_nemo.py
+│   │   ├── merge_lora_weights
+│   │   │   ├── conf
+│   │   │   │   └── merge_lora_weights.yaml
+│   │   │   └── merge.py
+│   │   ├── niv2
+│   │   │   └── preprocess_niv2.py
+│   │   ├── prepare_packed_ft_dataset.py
+│   │   ├── preprocess_data_for_megatron.py
+│   │   ├── service_launch_scripts
+│   │   │   ├── conf
+│   │   │   │   ├── bert_service.yaml
+│   │   │   │   ├── combo_retrieval_service.yaml
+│   │   │   │   ├── dynamic_retrieval_service.yaml
+│   │   │   │   ├── retro_text_generation_server.yaml
+│   │   │   │   ├── retro_web_server.yaml
+│   │   │   │   └── static_retrieval_service.yaml
+│   │   │   ├── env_variables.sh
+│   │   │   ├── launch_demo.sh
+│   │   │   ├── start_bert_service.py
+│   │   │   ├── start_combo_retrieval_service.py
+│   │   │   ├── start_dynamic_retrieval_service.py
+│   │   │   ├── start_retro_model_service.py
+│   │   │   ├── start_static_retrieval_service.py
+│   │   │   └── start_web_service.py
+│   │   ├── sft
+│   │   │   ├── attribute_annotate.py
+│   │   │   ├── data_clean.py
+│   │   │   └── preprocessing.py
+│   │   └── t0
+│   │       ├── merge_train_tasks.py
+│   │       ├── t0_dataset_preproc.py
+│   │       └── tasks_splits_and_features.py
+│   ├── performance
+│   │   ├── argument_parser.py
+│   │   ├── diffusion
+│   │   │   └── pretrain_flux_12b.py
+│   │   ├── __init__.py
+│   │   ├── llm
+│   │   │   ├── finetune_deepseek_v3.py
+│   │   │   ├── finetune_llama31_405b.py
+│   │   │   ├── finetune_llama3_70b.py
+│   │   │   ├── finetune_llama3_8b.py
+│   │   │   ├── __init__.py
+│   │   │   ├── mlperf_lora_llama2_70b.py
+│   │   │   ├── pretrain_automodel_llama3_8b.py
+│   │   │   ├── pretrain_deepseek_v3.py
+│   │   │   ├── pretrain_gpt3_175b.py
+│   │   │   ├── pretrain_llama31_405b.py
+│   │   │   ├── pretrain_llama3_70b.py
+│   │   │   ├── pretrain_llama3_8b.py
+│   │   │   ├── pretrain_llama4_e128.py
+│   │   │   ├── pretrain_llama4_e16.py
+│   │   │   ├── pretrain_mixtral_8x22b.py
+│   │   │   ├── pretrain_mixtral_8x7b.py
+│   │   │   ├── pretrain_nemotron3_22b.py
+│   │   │   ├── pretrain_nemotron3_8b.py
+│   │   │   ├── pretrain_nemotron4_15b.py
+│   │   │   └── pretrain_nemotron4_340b.py
+│   │   ├── README.md
+│   │   ├── recommended_model_configs
+│   │   │   ├── model_configs_b200.csv
+│   │   │   ├── model_configs_gb200.csv
+│   │   │   ├── model_configs_h100.csv
+│   │   │   └── strong_scaling_model_configs_h100.csv
+│   │   ├── utils.py
+│   │   └── vlm
+│   │       ├── finetune_neva_8b.py
+│   │       ├── pretrain_vlm_llama4_e128.py
+│   │       └── pretrain_vlm_llama4_e16.py
+│   ├── speaker_tasks
+│   │   ├── create_alignment_manifest.py
+│   │   ├── create_msdd_train_dataset.py
+│   │   ├── create_synth_vad_manifest.py
+│   │   ├── eval_diar_with_asr.py
+│   │   ├── filelist_to_manifest.py
+│   │   ├── multispeaker_data_analysis.py
+│   │   └── pathfiles_to_diarize_manifest.py
+│   ├── speech_llm
+│   │   ├── estimate_token_bins.py
+│   │   ├── export_conversations_to_tar.py
+│   │   └── oomptimizer.py
+│   ├── speech_recognition
+│   │   ├── canary
+│   │   │   ├── build_canary_1b_special_tokenizer.py
+│   │   │   └── build_canary_2_special_tokenizer.py
+│   │   ├── code_switching
+│   │   │   ├── code_switching_audio_data_creation.py
+│   │   │   ├── code_switching_manifest_creation.py
+│   │   │   └── README.md
+│   │   ├── confidence
+│   │   │   └── benchmark_asr_confidence.py
+│   │   ├── convert_hf_dataset_to_nemo.py
+│   │   ├── convert_to_tarred_audio_dataset.py
+│   │   ├── create_dali_tarred_dataset_index.py
+│   │   ├── estimate_data_weights.py
+│   │   ├── estimate_duration_bins_2d.py
+│   │   ├── estimate_duration_bins.py
+│   │   ├── filter_tarred_audio_dataset.py
+│   │   └── oomptimizer.py
+│   ├── ssl
+│   │   └── extract_features.py
+│   ├── ssl_tts
+│   │   ├── make_supdata.py
+│   │   └── ssl_tts_vc.py
+│   ├── text_normalization_dataset_files
+│   │   └── EngConf.txt
+│   ├── tokenizers
+│   │   ├── add_special_tokens_to_sentencepiece.py
+│   │   ├── conf
+│   │   │   ├── huggingface_data_tokenizer.yaml
+│   │   │   └── tabular_data_tokenizer.yaml
+│   │   ├── get_hf_text_data.py
+│   │   ├── process_asr_text_tokenizer.py
+│   │   └── train_tabular_data_tokenizer.py
+│   ├── tts_dataset_files
+│   │   ├── cmudict-0.7b_nv22.10
+│   │   ├── cmudict-arpabet_to_ipa_nv22.08.tsv
+│   │   ├── de
+│   │   │   ├── de_nv230119.dict
+│   │   │   └── de_nv230119.heteronym
+│   │   ├── es_ES
+│   │   │   └── es_ES_nv230301.dict
+│   │   ├── es_LA
+│   │   │   └── es_LA_nv230301.dict
+│   │   ├── heteronyms-052722
+│   │   ├── ipa_cmudict-0.7b_nv23.01.txt
+│   │   ├── ja_JP
+│   │   │   └── ja_JP_nv240719.dict
+│   │   ├── openslr_es
+│   │   │   ├── pitch_stats.json
+│   │   │   └── speakers.tsv
+│   │   └── zh
+│   │       ├── 24finals
+│   │       │   ├── ipa_dict_nv23.05.txt
+│   │       │   └── pinyin_dict_nv_22.10.txt
+│   │       └── 36finals
+│   │           ├── ipa_dict_nv23.05.txt
+│   │           └── pinyin_dict_nv23.05.txt
+│   ├── vlm
+│   │   ├── automodel.py
+│   │   ├── clip_infer.py
+│   │   ├── clip_pretrain.py
+│   │   ├── import_hf.py
+│   │   ├── llama4
+│   │   │   ├── convert_llama4_hf.py
+│   │   │   ├── llama4_finetune.py
+│   │   │   └── llama4_generate.py
+│   │   ├── llava_next_export_hf.py
+│   │   ├── llava_next_finetune.py
+│   │   ├── llava_next_generation.py
+│   │   ├── llava_next_nemo_run.py
+│   │   ├── llava_next_pretrain.py
+│   │   ├── mllama_finetune.py
+│   │   ├── mllama_generate.py
+│   │   ├── mllama_nemo_run.py
+│   │   ├── neva_finetune.py
+│   │   ├── neva_generate.py
+│   │   ├── neva_nemo_run.py
+│   │   ├── neva_pretrain.py
+│   │   ├── qwen2vl_finetune.py
+│   │   └── qwen2vl_generate.py
+│   └── voice_activity_detection
+│       ├── vad_overlap_posterior.py
+│       ├── vad_tune_threshold.py
+│       └── write_long_audio_manifest.py
+├── setup.py
+├── tools
+│   ├── asr_evaluator
+│   │   ├── asr_evaluator.py
+│   │   ├── conf
+│   │   │   └── eval.yaml
+│   │   ├── README.md
+│   │   └── utils.py
+│   ├── ctc_segmentation
+│   │   ├── README.md
+│   │   ├── requirements.txt
+│   │   ├── run_filter.sh
+│   │   ├── run_segmentation.sh
+│   │   └── scripts
+│   │       ├── cut_audio.py
+│   │       ├── get_metrics_and_filter.py
+│   │       ├── normalization_helpers.py
+│   │       ├── prepare_data.py
+│   │       ├── run_ctc_segmentation.py
+│   │       ├── utils.py
+│   │       └── verify_segments.py
+│   ├── customization_dataset_preparation
+│   │   ├── customization_dataset_preparation.py
+│   │   ├── __init__.py
+│   │   └── tests
+│   │       ├── __init__.py
+│   │       └── test_customization_dataset_preparation.py
+│   ├── nemo_forced_aligner
+│   │   ├── align.py
+│   │   ├── README.md
+│   │   ├── requirements.txt
+│   │   ├── tests
+│   │   │   ├── test_add_t_start_end_to_utt_obj.py
+│   │   │   ├── test_get_utt_obj.py
+│   │   │   └── test_restore_token_case.py
+│   │   └── utils
+│   │       ├── constants.py
+│   │       ├── data_prep.py
+│   │       ├── make_ass_files.py
+│   │       ├── make_ctm_files.py
+│   │       ├── make_output_manifest.py
+│   │       └── viterbi_decoding.py
+│   ├── nmt_grpc_service
+│   │   ├── api
+│   │   │   ├── nmt_pb2_grpc.py
+│   │   │   └── nmt_pb2.py
+│   │   ├── asr_nmt_client.py
+│   │   ├── client.py
+│   │   ├── nmt.proto
+│   │   ├── README.md
+│   │   └── server.py
+│   ├── nmt_webapp
+│   │   ├── config.json
+│   │   ├── index.html
+│   │   ├── nmt_service.py
+│   │   ├── README.rst
+│   │   ├── requirements.txt
+│   │   └── style.css
+│   ├── rir_corpus_generator
+│   │   ├── conf
+│   │   │   ├── rir_corpus.yaml
+│   │   │   └── rir_mix.yaml
+│   │   ├── README.md
+│   │   ├── rir_corpus_generator.py
+│   │   └── rir_mix_generator.py
+│   ├── speech_data_explorer
+│   │   ├── data_explorer.py
+│   │   ├── README.md
+│   │   ├── requirements.txt
+│   │   └── screenshot.png
+│   └── speech_data_simulator
+│       ├── conf
+│       │   └── data_simulator.yaml
+│       ├── multispeaker_simulator.py
+│       ├── pictures
+│       │   └── audio_session.png
+│       └── README.md
+└── tutorials
+    └── asr
+        ├── ASR_CTC_Language_Finetuning.ipynb
+        ├── ASR_FastConformer_Transducer_BPE.ipynb
+        ├── asr_fastconformer_transducer_bpe_vi.ipynb
+        ├── ASR_for_telephony_speech.ipynb
+        ├── ASR_with_Transducers.ipynb
+        ├── configs
+        │   ├── contextnet_rnnt.yaml
+        │   ├── fastconformer_hybrid_transducer_ctc_bpe.md
+        │   ├── fastconformer_hybrid_transducer_ctc_bpe_streaming.yaml
+        │   ├── fastconformer_hybrid_transducer_ctc_bpe.yaml
+        │   ├── fast-conformer_transducer_bpe.md
+        │   ├── fast-conformer_transducer_bpe.yaml
+        │   ├── vpb_fast-conformer_transducer_bpe.md
+        │   └── vpb_fast-conformer_transducer_bpe.yaml
+        ├── experiment_results.md
+        ├── scripts
+        │   ├── process_an4_data.py
+        │   └── process_asr_text_tokenizer.py
+        ├── telephony_augument.py
+        ├── vios_dataset.py
+        ├── vpb_asr_fastconformer_hybrid_transducer_ctc_bpe.py
+        └── vpb_asr_fastconformer_transducer_bpe.py
+
+533 directories, 2300 files
