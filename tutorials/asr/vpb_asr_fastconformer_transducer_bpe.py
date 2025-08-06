@@ -9,6 +9,9 @@ from lightning.pytorch.loggers import TensorBoardLogger
 import gc
 
 # Preparing the dataset
+# @NOTE: tạo ra manifest dataset ở file ./vivos_dataset.py
+# - Tạo manifest đúng format do học theo sample manifest
+# - tutoria/asr/datasets/an4/train.test_manifest.json 
 TRAIN_MANIFEST = "datasets/vivos/train_manifest.json"
 TEST_MANIFEST = "datasets/vivos/test_manifest.json"
 EPOCHS = 300
@@ -30,6 +33,7 @@ if not os.path.exists("tokenizers"):
     os.makedirs("tokenizers")
 
 # Process ASR text tokenizer
+# @NOTE: cụ thể code này sẽ tạo ra bộ tokenizer -> theo đúng type là spe, bpe, wpe tùy truyền vào
 os.system(f'python scripts/process_asr_text_tokenizer.py \
    --manifest={TRAIN_MANIFEST} \
    --data_root="tokenizers" \
@@ -40,17 +44,23 @@ os.system(f'python scripts/process_asr_text_tokenizer.py \
    --vocab_size={VOCAB_SIZE}')
 
 # Set tokenizer path based on type
+# @NOTE: bám theo sample_code 
+# https://github.com/NVIDIA/NeMo/blob/main/tutorials/asr/ASR_with_Transducers.ipynb?short_path=ddd0582
 if TOKENIZER_TYPE == 'spe':
     TOKENIZER = os.path.join("tokenizers", f"tokenizer_spe_{SPE_TYPE}_v{VOCAB_SIZE}")
     TOKENIZER_TYPE_CFG = "bpe"
+    # @NOTE: cần tìm hiểu và phân biệt tokenizer_type và tokenizer_type_cfg 
+    # -> phân biệt rõ spe va bpe 
 else:
     TOKENIZER = os.path.join("tokenizers", f"tokenizer_wpe_v{VOCAB_SIZE}")
     TOKENIZER_TYPE_CFG = "wpe"
 
-# Load model config
+# Load model config -> # @NOTE: sử dụng tokenizer đã tạo ra ở trên 
 # config = OmegaConf.load("configs/contextnet_rnnt.yaml")
 config = OmegaConf.load("configs/fast-conformer_transducer_bpe.yaml")
-# dataset config
+# @NOTE: sử dụng config fast-conformer_transducer_bpe.yaml -> Đây là config mẫu 
+# -> Cần tìm hiểu chi tiết config này -> trong đó có document giải thích chi tiết 
+# dataset config -> #NOTE: tìm ra config hợp lý cho tập vivos để train thì mới nhanh hội tụ 
 config.model.sample_rate = 16000
 config.model.train_ds.batch_size = 32 # GPU MEM 16G, precision: 16
 config.model.train_ds.max_duration = 17.125 # 17.125 seconds is the max duration in vivos dataset
@@ -104,11 +114,11 @@ config.model.optim.weight_decay=0.0001
 warnup_steps = int(0.05*EPOCHS*train_samples/actual_batch_size)
 print("warnup_steps: ", warnup_steps)
 config.model.log_prediction = False
-config.model.optim.sched.warmup_steps = warnup_steps
+config.model.optim.sched.warmup_steps = warnup_steps # NOTE: đoạn warmup này rất quan trọng 3.5/5
 config.exp_manager.create_wandb_logger=False
 config.exp_manager.create_tensorboard_logger=False
 
-# encoder config
+# encoder config -> @NOTE: các tham số liên quan đến size của model 4/5 -> còn chọn size phù hợp cho encoder theo tập data 
 config.model.encoder.n_layers = 6
 config.model.encoder.d_model = 176
 config.model.encoder.n_heads = 1
@@ -125,9 +135,10 @@ else:
 exp_dir = "experiments/"
 exp_name = "vpb_asr_fastconformer_transducer_bpe"
 
+# @NOTE: chatgpt gợi ý sử dụng logger TensorBoardLogger -> để trace được chính xác quá trình train
 tb_logger = TensorBoardLogger(exp_dir, name=exp_name, log_graph=True)
 
-
+# @NOTE: -> bám theo code mẫu -> tạo Trainer class thế này 
 trainer = Trainer(
     devices=-1,
     accelerator=accelerator,
@@ -139,7 +150,7 @@ trainer = Trainer(
     # precision=16,
 )
 
-# Initialize the model
+# Initialize the model -> @NOTE vẫn bám theo code mẫu 
 model = nemo_asr.models.EncDecRNNTBPEModel(cfg=config.model, trainer=trainer)
 # model.summarize()
 # print(model)
