@@ -278,6 +278,10 @@ exp_manager:
   name: *name
   create_tensorboard_logger: true
   create_checkpoint_callback: true
+
+  log_step_timing: true  # Optional
+  resume_if_exists: true
+
   checkpoint_callback_params:
     monitor: "val_wer"
     mode: "min"
