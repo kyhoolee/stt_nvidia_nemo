@@ -274,7 +274,7 @@ def write_manifest(rows: List[Row], out_path: Path, include_sr: bool = True) -> 
             }
             if include_sr and r.sample_rate is not None:
                 obj["sample_rate"] = int(r.sample_rate)
-            f.write(json.dumps(obj, ensure_ascii=False) + "")
+            f.write(json.dumps(obj, ensure_ascii=False) + "\n")
     print(f"✓ Wrote {out_path} ({len(rows)} items)")
 
 
