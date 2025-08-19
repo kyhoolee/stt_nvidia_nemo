@@ -1,5 +1,5 @@
 # 1) standard_test_2
-python -m vpb_mod.model._1_fastformer_trans_bpe \
+python -m vpb_mod.model._2_fastformer_infer \
   --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
   --test-manifest /home/kylh/work/public_datasets/vi_small/nemo_manifests/vpb_ds/standard_test_2/test_meta.jsonl \
   --devices 1 \
@@ -17,7 +17,7 @@ python -m vpb_mod.model._1_fastformer_trans_bpe \
 
 
 # 2) standard_test
-python -m vpb_mod.model._1_fastformer_trans_bpe \
+python -m vpb_mod.model._2_fastformer_infer \
   --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
   --test-manifest /home/kylh/work/public_datasets/vi_small/nemo_manifests/vpb_ds/standard_test/test_meta.jsonl \
   --devices 1 \
@@ -36,7 +36,7 @@ python -m vpb_mod.model._1_fastformer_trans_bpe \
 ====================================================================================================
 
 # 3) next_day_test_meta_debug
-python -m vpb_mod.model._1_fastformer_trans_bpe \
+python -m vpb_mod.model._2_fastformer_infer \
   --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
   --test-manifest /home/kylh/work/public_datasets/vi_small/nemo_manifests/vpb_ds/standard_test/next_day_test_meta_debug.jsonl \
   --devices 1 \
@@ -53,7 +53,7 @@ python -m vpb_mod.model._1_fastformer_trans_bpe \
 ====================================================================================================
 
 # 4) manifest_vpb_right_2/train_meta.jsonl
-python -m vpb_mod.model._1_fastformer_trans_bpe \
+python -m vpb_mod.model._2_fastformer_infer \
   --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
   --test-manifest /home/kylh/work/public_datasets/vi_small/nemo_manifests/vpb_ds/manifest_vpb_right_2/train_meta.jsonl \
   --devices 1 \
@@ -70,7 +70,7 @@ python -m vpb_mod.model._1_fastformer_trans_bpe \
 ====================================================================================================
 
 # 5) manifest_vpb_right_2/valid_meta.jsonl
-python -m vpb_mod.model._1_fastformer_trans_bpe \
+python -m vpb_mod.model._2_fastformer_infer \
   --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
   --test-manifest /home/kylh/work/public_datasets/vi_small/nemo_manifests/vpb_ds/manifest_vpb_right_2/valid_meta.jsonl \
   --devices 1 \

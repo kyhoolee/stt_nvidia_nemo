@@ -633,7 +633,7 @@ def main_train(args):
         pass
 
     print("=" * 100)
-    return
+    
 
 
     # Train
