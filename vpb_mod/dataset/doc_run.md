@@ -46,6 +46,8 @@
 
 ## CMD
 
+tensorboard --logdir ./
+
 python _1_nemo_manifest_format.py \
   --root ~/work/public_datasets/vi_small \
   --datasets vivos
