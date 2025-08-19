@@ -97,6 +97,9 @@ Cần mình bổ sung preset `xl`/`xxl` theo YAML gốc, hay thêm tuỳ chọn 
 
 ## RUN 
 
+
+### TRAIN 
+
 python train_fastconformer_vpb.py \
   --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
   --train-manifest ~/work/public_datasets/vi_small/merged_manifests/merged_train.jsonl \
@@ -181,3 +184,175 @@ nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
   --max-duration 17.0 \
   --exp-dir ../nemo_work/_1_small_vi_ds/experiments/lsvsc \
   --exp-name vpb_asr_fastconformer > vpb_mod/logs/lsvsc.log 2>&1 &
+
+
+### TEST 
+
+python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_test.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 128
+
+python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 128
+
+
+python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vivos/vivos_test.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 128
+
+python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/fpt_fosd/fpt_fosd_train.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 128
+
+python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/infore/infore_train.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 128
+
+
+python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vais1000/vais1000_train.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 128
+
+python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vlsp2020/vlsp2020_train.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 64
+
+python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vietmed/vietmed_train.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 64
+
+
+
+[
+    "/home/kylh/work/public_datasets/vi_small/nemo_manifests/vpb_ds/standard_test_2/test_meta.jsonl",
+    "/home/kylh/work/public_datasets/vi_small/nemo_manifests/vpb_ds/standard_test/test_meta.jsonl",
+    "/home/kylh/work/public_datasets/vi_small/nemo_manifests/vpb_ds/standard_test/next_day_test_meta_debug.jsonl",
+    "/home/kylh/work/public_datasets/vi_small/nemo_manifests/vpb_ds/manifest_vpb_right_2/train_meta.jsonl",
+    "/home/kylh/work/public_datasets/vi_small/nemo_manifests/vpb_ds/manifest_vpb_right_2/valid_meta.jsonl",
+]
+
+
+
+python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vpb_ds/standard_test_2/test_meta.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 64
+
+python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vpb_ds/standard_test/test_meta.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 64
+
+python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vpb_ds/standard_test/next_day_test_meta_debug.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 64
+
+python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vpb_ds/manifest_vpb_right_2/train_meta.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 64
+
+python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vpb_ds/manifest_vpb_right_2/valid_meta.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 64
+
+
+
+
+
+python -m vpb_mod.model._1_5_infer_gem_debug \
+  --checkpoint-path ~/work/nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer--val_wer=0.1370-epoch=100-last.ckpt \
+  --manifest-path ~/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --size small_0 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 128
+
+
+python -m vpb_mod.model._1_5_infer_gem_debug \
+  --checkpoint-path ~/work/nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --manifest-path ~/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --size small_0 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 128
+
+
+
+
+
+# Initialize the model -> @NOTE vẫn bám theo code mẫu 
+model = nemo_asr.models.EncDecRNNTBPEModel(cfg=config.model, trainer=trainer)
+# model.summarize()
+# print(model)
+
+# Load pre-trained weights if available
+ckpt_dir = "..."
+pretrained_model = nemo_asr.models.EncDecRNNTBPEModel.load_from_checkpoint(os.path.join(ckpt_dir,vpb_asr_fastconformer_transducer_bpe--val_wer=0.3318-epoch=100-last.ckptt"), map_location='cpu')
+model.encoder.load_state_dict(pretrained_model.encoder.state_dict(), strict=True)
+
+
+------------------
+
+
+python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_test.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 64 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments \
+  --exp-name vpb_asr_fastconformer_testonly_ckpt100 \
+  --ckpt ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer--val_wer=0.1370-epoch=100-last.ckpt \
+  --test-only
+
+
+python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_valid.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 64 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments \
+  --exp-name vpb_asr_fastconformer_testonly \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-only

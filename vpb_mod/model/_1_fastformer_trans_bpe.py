@@ -67,7 +67,7 @@ class CustomFastConformerRNNTModel(EncDecRNNTBPEModel):
         
         # Vô hiệu hóa tính năng log prediction của module WER
         # Điều này phải được thực hiện sau khi super() đã gọi và khởi tạo module WER
-        self.wer.log_prediction = False
+        self.wer.log_prediction = True
 
 
 # ----------------------------- Tokenizer -----------------------------
@@ -344,15 +344,25 @@ def log_val_metrics_to_txt(log_dir: Path, epoch: int, wer: float, loss: float):
 
 
 # --------------------------------- CLI ---------------------------------
+import json
+import librosa
+import torch
+from omegaconf import OmegaConf
+from pathlib import Path
+from typing import Optional
+from nemo.collections import asr as nemo_asr
+from nemo.core.config import hydra_runner
 
+
+# --- (2) Ở parse_args(): thêm nhóm lựa chọn resume + flag test-only ---
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Train FastConformer-Transducer on NeMo manifests")
+    p = argparse.ArgumentParser(description="Train / Test FastConformer-Transducer on NeMo manifests")
 
     # Data + tokenizer
-    p.add_argument('--train-manifest', type=Path, required=True)
+    p.add_argument('--train-manifest', type=Path, required=False)  # <-- bỏ required để test-only không cần
     p.add_argument('--val-manifest', type=Path, default=None)
     p.add_argument('--test-manifest', type=Path, default=None)
-    p.add_argument('--tokenizer-dir', type=Path, required=True)
+    p.add_argument('--tokenizer-dir', type=Path, required=False)
     p.add_argument('--vocab-size', type=int, default=128)
     p.add_argument('--spe-type', type=str, default='unigram', choices=['unigram', 'bpe'])
     p.add_argument('--lowercase-text', action='store_true')
@@ -374,13 +384,170 @@ def parse_args() -> argparse.Namespace:
     p.add_argument('--exp-dir', type=Path, default=Path('./experiments'))
     p.add_argument('--exp-name', type=str, default='vpb_asr_fastconformer')
 
+    # Test-only & resume
+    group = p.add_mutually_exclusive_group()
+    group.add_argument('--nemo', type=Path, help='Path to .nemo file to restore for test-only')
+    group.add_argument('--ckpt', type=Path, help='Path to Lightning .ckpt to restore for test-only')
+    p.add_argument('--test-only', action='store_true', help='Only run testing from a restored checkpoint')
+
     return p.parse_args()
+
+
+from jiwer import wer  # <-- Import the 'wer' function from 'jiwer'
+
+def _setup_test_data_for(model, test_manifest, batch_size):
+    """
+    Setup the test data loader for the model.
+    """
+    cfg = OmegaConf.create({'manifest_filepath': str(test_manifest), 'batch_size': batch_size, 'num_workers': 0})
+    model.setup_test_data(cfg)
+
+def test_from_checkpoint(
+    base_config: Path,
+    test_manifest: Path,
+    exp_dir: Path,
+    exp_name: str,
+    devices: int,
+    precision: str,
+    batch_size: int,
+    nemo_path: Optional[Path] = None,
+    ckpt_path: Optional[Path] = None,
+):
+    print("🚀 Starting test-only mode...")
+
+    cfg = OmegaConf.load(str(base_config))
+    trainer = build_trainer(
+        exp_dir=exp_dir, exp_name=exp_name, epochs=1, precision=precision, devices=devices
+    )
+    attach_exp_manager(trainer, cfg, exp_dir=exp_dir, exp_name=exp_name)
+    maybe_add_csv_logger(trainer)
+
+    if nemo_path:
+        print(f"🧠 Restoring model from .nemo: {nemo_path}")
+        model = nemo_asr.models.EncDecRNNTBPEModel.restore_from(
+            restore_path=str(nemo_path), trainer=trainer
+        )
+    elif ckpt_path:
+        print(f"🧠 Restoring model from .ckpt: {ckpt_path}")
+        model = nemo_asr.models.EncDecRNNTBPEModel.load_from_checkpoint(
+            checkpoint_path=str(ckpt_path), trainer=trainer
+        )
+    else:
+        raise ValueError("Must provide either --nemo or --ckpt for test-only mode.")
+
+    model.eval()
+    try:
+        if hasattr(model, 'spec_augmentation') and model.spec_augmentation is not None:
+            print("❗ Disabling SpecAugmentation for inference.")
+            model.spec_augmentation.mask_prob = 0.0
+            model.spec_augmentation = None
+        if hasattr(model, 'preprocessor'):
+            if hasattr(model.preprocessor, 'dither'):
+                model.preprocessor.dither = 0.0
+            if hasattr(model.preprocessor, 'pad_to'):
+                model.preprocessor.pad_to = 0
+    except Exception as e:
+        print(f"⚠️ Could not disable augmentations: {e}")
+
+    try:
+        print("💡 Forcing greedy_batch decoding strategy.")
+        model.change_decoding_strategy(decoder_type="greedy_batch")
+        if hasattr(model, 'wer'):
+            model.wer.log_prediction = False
+    except Exception as e:
+        print(f"⚠️ Could not set greedy decoder: {e}")
+
+    print("=" * 100)
+    try:
+        print(model.summarize(max_depth=4))
+    except Exception:
+        pass
+    print("=" * 100)
+
+    tokenizer = model.tokenizer
+
+    def transcribe_audio(audio_path, model):
+        audio, _ = librosa.load(audio_path, sr=16000)
+        audio_tensor = torch.from_numpy(audio).unsqueeze(0).to(model.device)
+        audio_len = torch.tensor([audio_tensor.shape[1]]).to(model.device)
+
+        with torch.no_grad():
+            logits = model.forward(input_signal=audio_tensor, input_signal_length=audio_len)
+            transcripts = model.decoding.rnnt_decoder_predictions_tensor(logits[0], logits[1])
+            return transcripts[0]
+
+    # --- Phần tính WER được bổ sung ---
+    all_predictions = []
+    all_references = []
+    
+    print("🔍 Running manual transcription and WER calculation...")
+    with open(test_manifest, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+        for i, line in enumerate(lines):
+            item = json.loads(line)
+            # path = os.path.expanduser
+            audio_path = os.path.expanduser(item['audio_filepath'])
+            reference_text = item['text']
+
+            predicted_text = transcribe_audio(audio_path, model).text
+
+            # print(predicted_text)
+            
+            # Normalize texts for consistent WER calculation
+            all_predictions.append(predicted_text.lower())
+            all_references.append(reference_text.lower())
+
+            # Print results every 100 samples for progress tracking
+            if (i + 1) % 100 == 0:
+                print(f"Processed {i + 1}/{len(lines)} samples.")
+
+                print(f"Sample {i + 1}:")
+                print(f"predicted: {predicted_text}")
+                print(f"reference: {reference_text}")
+                print("-" * 50)
+    
+    # --- Calculation using `jiwer` ---
+    wer_score = wer(all_references, all_predictions)
+    
+    print("=" * 100)
+    print(f"✅ Finished testing.")
+    print(f"✨ Final WER for the test set: {wer_score:.4f}")
+    print("=" * 100)
 
 
 # --------------------------------- Main --------------------------------
 
 def main():
     args = parse_args()
+
+    # Nhánh TEST-ONLY: không cần tokenizer build lại, không cần train manifest
+    if args.test_only:
+        if args.test_manifest is None:
+            raise ValueError("--test-only requires --test-manifest")
+        test_from_checkpoint(
+            base_config=args.base_config,
+            test_manifest=args.test_manifest.expanduser().resolve(),
+            exp_dir=args.exp_dir.expanduser().resolve(),
+            exp_name=args.exp_name,
+            devices=args.devices,
+            precision=args.precision,
+            batch_size=args.batch_size,
+            nemo_path=(args.nemo.expanduser().resolve() if args.nemo else None),
+            ckpt_path=(args.ckpt.expanduser().resolve() if args.ckpt else None),
+        )
+        return
+    # Nhánh TRAIN: cần build tokenizer, train manifest
+    elif args.train_manifest is None:
+        raise ValueError("--train-manifest is required for training")
+    elif args.tokenizer_dir is None:
+        raise ValueError("--tokenizer-dir is required for training")
+    # Nhánh TRAIN: tiếp tục train
+    else:
+        main_train(args)
+
+    
+
+def main_train(args):
 
     train_manifest = args.train_manifest.expanduser().resolve()
     val_manifest = args.val_manifest.expanduser().resolve() if args.val_manifest else None
@@ -464,6 +631,10 @@ def main():
     except Exception:
         # summarize() can fail on some PTL/Nemo combos; not critical
         pass
+
+    print("=" * 100)
+    return
+
 
     # Train
     print("🏋️ Starting training…")
