@@ -1,0 +1,770 @@
+(nemo) kylh@educa:~/work/stt_nvidia_nemo$ python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vivos/vivos_test.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 128
+🔁 Restoring from .nemo: ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo
+[NeMo I 2025-08-18 15:41:40 mixins:181] Tokenizer SentencePieceTokenizer initialized with 256 tokens
+[NeMo W 2025-08-18 15:41:41 modelPT:180] If you intend to do training or fine-tuning, please call the ModelPT.setup_training_data() method and provide a valid configuration file to setup the train data loader.
+    Train config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_train.jsonl
+    sample_rate: 16000
+    batch_size: 128
+    shuffle: true
+    num_workers: 8
+    pin_memory: true
+    max_duration: 17.0
+    min_duration: 0.1
+    is_tarred: false
+    tarred_audio_filepaths: null
+    shuffle_n: 2048
+    bucketing_strategy: fully_randomized
+    bucketing_batch_size: null
+    
+[NeMo W 2025-08-18 15:41:41 modelPT:187] If you intend to do validation, please call the ModelPT.setup_validation_data() or ModelPT.setup_multiple_validation_data() method and provide a valid configuration file to setup the validation data loader(s). 
+    Validation config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo W 2025-08-18 15:41:41 modelPT:194] Please call the ModelPT.setup_test_data() or ModelPT.setup_multiple_test_data() method and provide a valid configuration file to setup the test data loader(s).
+    Test config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_test.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo I 2025-08-18 15:41:41 features:305] PADDING: 0
+[NeMo I 2025-08-18 15:41:41 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo I 2025-08-18 15:41:41 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 15:41:41 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 15:41:41 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 15:41:41 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 15:41:41 save_restore_connector:275] Model EncDecRNNTBPEModel was successfully restored from /home/kylh/work/nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo.
+[NeMo I 2025-08-18 15:41:41 collections:201] Dataset loaded with 760 files totalling 0.75 hours
+[NeMo I 2025-08-18 15:41:41 collections:202] 0 files were filtered totalling 0.00 hours
+🚀 Running test (WER/Loss)…
+Using 16bit Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+You are using a CUDA device ('NVIDIA GeForce RTX 4090') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+Testing: |                                                                                   | 0/? [00:00<?, ?it/s][NeMo I 2025-08-18 15:41:41 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.models.rnnt_bpe_models.EncDecRNNTBPEModel'>.decoding.decoding
+[NeMo I 2025-08-18 15:41:41 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.metrics.wer.WER'>joint._wer.decoding.decoding
+Testing DataLoader 0: 100%|██████████████████████████████████████████████████████████| 6/6 [00:05<00:00,  1.13it/s]
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        Test metric        ┃       DataLoader 0        ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│        global_step        │            0.0            │
+│         test_wer          │     5.469955921173096     │
+└───────────────────────────┴───────────────────────────┘
+📊 Test metrics: [{'global_step': 0.0, 'test_wer': 5.469955921173096}]
+(nemo) kylh@educa:~/work/stt_nvidia_nemo$ python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vivos/vivos_train.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 128
+🔁 Restoring from .nemo: ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo
+[NeMo I 2025-08-18 15:42:55 mixins:181] Tokenizer SentencePieceTokenizer initialized with 256 tokens
+[NeMo W 2025-08-18 15:42:55 modelPT:180] If you intend to do training or fine-tuning, please call the ModelPT.setup_training_data() method and provide a valid configuration file to setup the train data loader.
+    Train config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_train.jsonl
+    sample_rate: 16000
+    batch_size: 128
+    shuffle: true
+    num_workers: 8
+    pin_memory: true
+    max_duration: 17.0
+    min_duration: 0.1
+    is_tarred: false
+    tarred_audio_filepaths: null
+    shuffle_n: 2048
+    bucketing_strategy: fully_randomized
+    bucketing_batch_size: null
+    
+[NeMo W 2025-08-18 15:42:55 modelPT:187] If you intend to do validation, please call the ModelPT.setup_validation_data() or ModelPT.setup_multiple_validation_data() method and provide a valid configuration file to setup the validation data loader(s). 
+    Validation config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo W 2025-08-18 15:42:55 modelPT:194] Please call the ModelPT.setup_test_data() or ModelPT.setup_multiple_test_data() method and provide a valid configuration file to setup the test data loader(s).
+    Test config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_test.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo I 2025-08-18 15:42:55 features:305] PADDING: 0
+[NeMo I 2025-08-18 15:42:55 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo I 2025-08-18 15:42:55 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 15:42:55 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 15:42:55 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 15:42:55 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 15:42:56 save_restore_connector:275] Model EncDecRNNTBPEModel was successfully restored from /home/kylh/work/nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo.
+[NeMo I 2025-08-18 15:42:56 collections:201] Dataset loaded with 11660 files totalling 14.92 hours
+[NeMo I 2025-08-18 15:42:56 collections:202] 0 files were filtered totalling 0.00 hours
+🚀 Running test (WER/Loss)…
+Using 16bit Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+You are using a CUDA device ('NVIDIA GeForce RTX 4090') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+Testing: |                                                                                   | 0/? [00:00<?, ?it/s][NeMo I 2025-08-18 15:42:56 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.models.rnnt_bpe_models.EncDecRNNTBPEModel'>.decoding.decoding
+[NeMo I 2025-08-18 15:42:56 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.metrics.wer.WER'>joint._wer.decoding.decoding
+Testing DataLoader 0: 100%|████████████████████████████████████████████████████████| 92/92 [00:58<00:00,  1.56it/s]
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        Test metric        ┃       DataLoader 0        ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│        global_step        │            0.0            │
+│         test_wer          │    11.694401741027832     │
+└───────────────────────────┴───────────────────────────┘
+📊 Test metrics: [{'global_step': 0.0, 'test_wer': 11.694401741027832}]
+(nemo) kylh@educa:~/work/stt_nvidia_nemo$ python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/fpt_fosd/fpt_fosd_train.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 128
+🔁 Restoring from .nemo: ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo
+[NeMo I 2025-08-18 15:47:51 mixins:181] Tokenizer SentencePieceTokenizer initialized with 256 tokens
+[NeMo W 2025-08-18 15:47:52 modelPT:180] If you intend to do training or fine-tuning, please call the ModelPT.setup_training_data() method and provide a valid configuration file to setup the train data loader.
+    Train config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_train.jsonl
+    sample_rate: 16000
+    batch_size: 128
+    shuffle: true
+    num_workers: 8
+    pin_memory: true
+    max_duration: 17.0
+    min_duration: 0.1
+    is_tarred: false
+    tarred_audio_filepaths: null
+    shuffle_n: 2048
+    bucketing_strategy: fully_randomized
+    bucketing_batch_size: null
+    
+[NeMo W 2025-08-18 15:47:52 modelPT:187] If you intend to do validation, please call the ModelPT.setup_validation_data() or ModelPT.setup_multiple_validation_data() method and provide a valid configuration file to setup the validation data loader(s). 
+    Validation config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo W 2025-08-18 15:47:52 modelPT:194] Please call the ModelPT.setup_test_data() or ModelPT.setup_multiple_test_data() method and provide a valid configuration file to setup the test data loader(s).
+    Test config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_test.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo I 2025-08-18 15:47:52 features:305] PADDING: 0
+[NeMo I 2025-08-18 15:47:52 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo I 2025-08-18 15:47:52 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 15:47:52 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 15:47:52 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 15:47:52 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 15:47:52 save_restore_connector:275] Model EncDecRNNTBPEModel was successfully restored from /home/kylh/work/nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo.
+[NeMo I 2025-08-18 15:47:53 collections:201] Dataset loaded with 25917 files totalling 30.18 hours
+[NeMo I 2025-08-18 15:47:53 collections:202] 0 files were filtered totalling 0.00 hours
+🚀 Running test (WER/Loss)…
+Using 16bit Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+You are using a CUDA device ('NVIDIA GeForce RTX 4090') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+Testing: |                                                                                   | 0/? [00:00<?, ?it/s][NeMo I 2025-08-18 15:47:53 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.models.rnnt_bpe_models.EncDecRNNTBPEModel'>.decoding.decoding
+[NeMo I 2025-08-18 15:47:53 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.metrics.wer.WER'>joint._wer.decoding.decoding
+Testing DataLoader 0: 100%|██████████████████████████████████████████████████████| 203/203 [02:42<00:00,  1.25it/s]
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        Test metric        ┃       DataLoader 0        ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│        global_step        │            0.0            │
+│         test_wer          │     5.360137462615967     │
+└───────────────────────────┴───────────────────────────┘
+📊 Test metrics: [{'global_step': 0.0, 'test_wer': 5.360137462615967}]
+(nemo) kylh@educa:~/work/stt_nvidia_nemo$ python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/infore/infore_train.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 128
+🔁 Restoring from .nemo: ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo
+[NeMo I 2025-08-18 15:53:45 mixins:181] Tokenizer SentencePieceTokenizer initialized with 256 tokens
+[NeMo W 2025-08-18 15:53:45 modelPT:180] If you intend to do training or fine-tuning, please call the ModelPT.setup_training_data() method and provide a valid configuration file to setup the train data loader.
+    Train config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_train.jsonl
+    sample_rate: 16000
+    batch_size: 128
+    shuffle: true
+    num_workers: 8
+    pin_memory: true
+    max_duration: 17.0
+    min_duration: 0.1
+    is_tarred: false
+    tarred_audio_filepaths: null
+    shuffle_n: 2048
+    bucketing_strategy: fully_randomized
+    bucketing_batch_size: null
+    
+[NeMo W 2025-08-18 15:53:45 modelPT:187] If you intend to do validation, please call the ModelPT.setup_validation_data() or ModelPT.setup_multiple_validation_data() method and provide a valid configuration file to setup the validation data loader(s). 
+    Validation config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo W 2025-08-18 15:53:45 modelPT:194] Please call the ModelPT.setup_test_data() or ModelPT.setup_multiple_test_data() method and provide a valid configuration file to setup the test data loader(s).
+    Test config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_test.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo I 2025-08-18 15:53:45 features:305] PADDING: 0
+[NeMo I 2025-08-18 15:53:45 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo I 2025-08-18 15:53:45 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 15:53:45 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 15:53:45 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 15:53:45 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 15:53:45 save_restore_connector:275] Model EncDecRNNTBPEModel was successfully restored from /home/kylh/work/nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo.
+[NeMo I 2025-08-18 15:53:46 collections:201] Dataset loaded with 14935 files totalling 25.00 hours
+[NeMo I 2025-08-18 15:53:46 collections:202] 0 files were filtered totalling 0.00 hours
+🚀 Running test (WER/Loss)…
+Using 16bit Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+You are using a CUDA device ('NVIDIA GeForce RTX 4090') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+Testing: |                                                                                   | 0/? [00:00<?, ?it/s][NeMo I 2025-08-18 15:53:46 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.models.rnnt_bpe_models.EncDecRNNTBPEModel'>.decoding.decoding
+[NeMo I 2025-08-18 15:53:46 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.metrics.wer.WER'>joint._wer.decoding.decoding
+Testing DataLoader 0: 100%|██████████████████████████████████████████████████████| 117/117 [01:18<00:00,  1.48it/s]
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        Test metric        ┃       DataLoader 0        ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│        global_step        │            0.0            │
+│         test_wer          │     11.67164421081543     │
+└───────────────────────────┴───────────────────────────┘
+📊 Test metrics: [{'global_step': 0.0, 'test_wer': 11.67164421081543}]
+(nemo) kylh@educa:~/work/stt_nvidia_nemo$ python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vais1000/vais1000_train.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 128
+🔁 Restoring from .nemo: ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo
+[NeMo I 2025-08-18 15:58:22 mixins:181] Tokenizer SentencePieceTokenizer initialized with 256 tokens
+[NeMo W 2025-08-18 15:58:22 modelPT:180] If you intend to do training or fine-tuning, please call the ModelPT.setup_training_data() method and provide a valid configuration file to setup the train data loader.
+    Train config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_train.jsonl
+    sample_rate: 16000
+    batch_size: 128
+    shuffle: true
+    num_workers: 8
+    pin_memory: true
+    max_duration: 17.0
+    min_duration: 0.1
+    is_tarred: false
+    tarred_audio_filepaths: null
+    shuffle_n: 2048
+    bucketing_strategy: fully_randomized
+    bucketing_batch_size: null
+    
+[NeMo W 2025-08-18 15:58:22 modelPT:187] If you intend to do validation, please call the ModelPT.setup_validation_data() or ModelPT.setup_multiple_validation_data() method and provide a valid configuration file to setup the validation data loader(s). 
+    Validation config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo W 2025-08-18 15:58:22 modelPT:194] Please call the ModelPT.setup_test_data() or ModelPT.setup_multiple_test_data() method and provide a valid configuration file to setup the test data loader(s).
+    Test config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_test.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo I 2025-08-18 15:58:22 features:305] PADDING: 0
+[NeMo I 2025-08-18 15:58:22 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo I 2025-08-18 15:58:22 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 15:58:22 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 15:58:22 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 15:58:22 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 15:58:23 save_restore_connector:275] Model EncDecRNNTBPEModel was successfully restored from /home/kylh/work/nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo.
+[NeMo I 2025-08-18 15:58:23 collections:201] Dataset loaded with 1000 files totalling 1.62 hours
+[NeMo I 2025-08-18 15:58:23 collections:202] 0 files were filtered totalling 0.00 hours
+🚀 Running test (WER/Loss)…
+Using 16bit Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+You are using a CUDA device ('NVIDIA GeForce RTX 4090') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+Testing: |                                                                                   | 0/? [00:00<?, ?it/s][NeMo I 2025-08-18 15:58:23 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.models.rnnt_bpe_models.EncDecRNNTBPEModel'>.decoding.decoding
+[NeMo I 2025-08-18 15:58:23 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.metrics.wer.WER'>joint._wer.decoding.decoding
+Testing DataLoader 0: 100%|██████████████████████████████████████████████████████████| 8/8 [00:06<00:00,  1.26it/s]
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        Test metric        ┃       DataLoader 0        ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│        global_step        │            0.0            │
+│         test_wer          │     7.705524444580078     │
+└───────────────────────────┴───────────────────────────┘
+📊 Test metrics: [{'global_step': 0.0, 'test_wer': 7.705524444580078}]
+(nemo) kylh@educa:~/work/stt_nvidia_nemo$ python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vlsp2020/vlsp2020_train.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 128
+🔁 Restoring from .nemo: ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo
+[NeMo I 2025-08-18 16:00:05 mixins:181] Tokenizer SentencePieceTokenizer initialized with 256 tokens
+[NeMo W 2025-08-18 16:00:05 modelPT:180] If you intend to do training or fine-tuning, please call the ModelPT.setup_training_data() method and provide a valid configuration file to setup the train data loader.
+    Train config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_train.jsonl
+    sample_rate: 16000
+    batch_size: 128
+    shuffle: true
+    num_workers: 8
+    pin_memory: true
+    max_duration: 17.0
+    min_duration: 0.1
+    is_tarred: false
+    tarred_audio_filepaths: null
+    shuffle_n: 2048
+    bucketing_strategy: fully_randomized
+    bucketing_batch_size: null
+    
+[NeMo W 2025-08-18 16:00:05 modelPT:187] If you intend to do validation, please call the ModelPT.setup_validation_data() or ModelPT.setup_multiple_validation_data() method and provide a valid configuration file to setup the validation data loader(s). 
+    Validation config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo W 2025-08-18 16:00:05 modelPT:194] Please call the ModelPT.setup_test_data() or ModelPT.setup_multiple_test_data() method and provide a valid configuration file to setup the test data loader(s).
+    Test config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_test.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo I 2025-08-18 16:00:05 features:305] PADDING: 0
+[NeMo I 2025-08-18 16:00:05 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo I 2025-08-18 16:00:05 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 16:00:05 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 16:00:05 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 16:00:05 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 16:00:06 save_restore_connector:275] Model EncDecRNNTBPEModel was successfully restored from /home/kylh/work/nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo.
+[NeMo I 2025-08-18 16:00:08 collections:201] Dataset loaded with 56427 files totalling 101.38 hours
+[NeMo I 2025-08-18 16:00:08 collections:202] 0 files were filtered totalling 0.00 hours
+🚀 Running test (WER/Loss)…
+Using 16bit Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+You are using a CUDA device ('NVIDIA GeForce RTX 4090') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+Testing: |                                                                                   | 0/? [00:00<?, ?it/s][NeMo I 2025-08-18 16:00:08 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.models.rnnt_bpe_models.EncDecRNNTBPEModel'>.decoding.decoding
+[NeMo I 2025-08-18 16:00:08 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.metrics.wer.WER'>joint._wer.decoding.decoding
+Testing DataLoader 0:  10%|█████▍                                                 | 44/441 [01:20<12:08,  0.55it/s]Traceback (most recent call last):
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/pytorch/trainer/call.py", line 47, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/pytorch/trainer/trainer.py", line 788, in _test_impl
+    results = self._run(model, ckpt_path=ckpt_path)
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/pytorch/trainer/trainer.py", line 981, in _run
+    results = self._run_stage()
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/pytorch/trainer/trainer.py", line 1018, in _run_stage
+    return self._evaluation_loop.run()
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/pytorch/loops/utilities.py", line 178, in _decorator
+    return loop_run(self, *args, **kwargs)
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/pytorch/loops/evaluation_loop.py", line 135, in run
+    self._evaluation_step(batch, batch_idx, dataloader_idx, dataloader_iter)
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/pytorch/loops/evaluation_loop.py", line 396, in _evaluation_step
+    output = call._call_strategy_hook(trainer, hook_name, *step_args)
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/pytorch/trainer/call.py", line 319, in _call_strategy_hook
+    output = fn(*args, **kwargs)
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/pytorch/strategies/strategy.py", line 424, in test_step
+    return self.lightning_module.test_step(*args, **kwargs)
+  File "/home/kylh/work/stt_nvidia_nemo/nemo/collections/asr/models/rnnt_models.py", line 902, in test_step
+    logs = self.validation_pass(batch, batch_idx, dataloader_idx=dataloader_idx)
+  File "/home/kylh/work/stt_nvidia_nemo/nemo/collections/asr/models/rnnt_models.py", line 873, in validation_pass
+    loss_value, wer, wer_num, wer_denom = self.joint(
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/kylh/work/stt_nvidia_nemo/nemo/core/classes/common.py", line 1137, in wrapped_call
+    outputs = wrapped(*args, **kwargs)
+  File "/home/kylh/work/stt_nvidia_nemo/nemo/collections/asr/modules/rnnt.py", line 1464, in forward
+    self.wer.update(
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torchmetrics/metric.py", line 559, in wrapped_func
+    raise err
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torchmetrics/metric.py", line 549, in wrapped_func
+    update(*args, **kwargs)
+  File "/home/kylh/work/stt_nvidia_nemo/nemo/collections/asr/metrics/wer.py", line 326, in update
+    hypotheses = self.decode(predictions, predictions_lengths, predictions_mask, input_ids, targets)
+  File "/home/kylh/work/stt_nvidia_nemo/nemo/collections/asr/metrics/wer.py", line 269, in <lambda>
+    self.decode = lambda predictions, predictions_lengths, predictions_mask, input_ids, targets: self.decoding.rnnt_decoder_predictions_tensor(
+  File "/home/kylh/work/stt_nvidia_nemo/nemo/collections/asr/parts/submodules/rnnt_decoding.py", line 522, in rnnt_decoder_predictions_tensor
+    hypotheses_list = self.decoding(
+  File "/home/kylh/work/stt_nvidia_nemo/nemo/collections/asr/parts/submodules/rnnt_greedy_decoding.py", line 198, in __call__
+    return self.forward(*args, **kwargs)
+  File "/home/kylh/work/stt_nvidia_nemo/nemo/core/classes/common.py", line 1137, in wrapped_call
+    outputs = wrapped(*args, **kwargs)
+  File "/home/kylh/work/stt_nvidia_nemo/nemo/collections/asr/parts/submodules/rnnt_greedy_decoding.py", line 745, in forward
+    hypotheses = self._greedy_decode(
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/kylh/work/stt_nvidia_nemo/nemo/collections/asr/parts/submodules/rnnt_greedy_decoding.py", line 773, in _greedy_decode_blank_as_pad_loop_labels
+    batched_hyps, alignments, last_decoder_state = self._decoding_computer(x=x, out_len=out_len)
+  File "/home/kylh/work/stt_nvidia_nemo/nemo/collections/asr/parts/submodules/rnnt_loop_labels_computer.py", line 1032, in __call__
+    return self.loop_labels_cuda_graphs(encoder_output=x, encoder_output_length=out_len)
+  File "/home/kylh/work/stt_nvidia_nemo/nemo/collections/asr/parts/submodules/rnnt_loop_labels_computer.py", line 576, in loop_labels_cuda_graphs
+    while self.state.advance_mask_any.item():
+torch.AcceleratorError: CUDA error: an illegal memory access was encountered
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/kylh/work/stt_nvidia_nemo/vpb_mod/model/_1_1_infer_fastformer_trans_bpe.py", line 160, in <module>
+    main()
+  File "/home/kylh/work/stt_nvidia_nemo/vpb_mod/model/_1_1_infer_fastformer_trans_bpe.py", line 145, in main
+    test_out = trainer.test(model)
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/pytorch/trainer/trainer.py", line 748, in test
+    return call._call_and_handle_interrupt(
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/pytorch/trainer/call.py", line 68, in _call_and_handle_interrupt
+    trainer._teardown()
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/pytorch/trainer/trainer.py", line 1004, in _teardown
+    self.strategy.teardown()
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/pytorch/strategies/strategy.py", line 535, in teardown
+    self.lightning_module.cpu()
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/lightning/fabric/utilities/device_dtype_mixin.py", line 82, in cpu
+    return super().cpu()
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1150, in cpu
+    return self._apply(lambda t: t.cpu())
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 928, in _apply
+    module._apply(fn)
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 928, in _apply
+    module._apply(fn)
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1020, in _apply
+    self._buffers[key] = fn(buf)
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1150, in <lambda>
+    return self._apply(lambda t: t.cpu())
+torch.AcceleratorError: CUDA error: an illegal memory access was encountered
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+Exception in thread Thread-2 (_pin_memory_loop):
+Traceback (most recent call last):
+  File "/home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+terminate called after throwing an instance of 'c10::AcceleratorError'
+  what():  CUDA error: an illegal memory access was encountered
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+Exception raised from c10_cuda_check_implementation at /pytorch/c10/cuda/CUDAException.cpp:42 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) + 0x80 (0x7fa74a77eeb0 in /home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0x111c7 (0x7fa74ab0c1c7 in /home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/lib/libc10_cuda.so)
+frame #2: <unknown function> + 0xc69358 (0x7fa6edac9358 in /home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/lib/libtorch_cuda.so)
+frame #3: <unknown function> + 0xc643a3 (0x7fa6edac43a3 in /home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/lib/libtorch_cuda.so)
+frame #4: <unknown function> + 0xc6b2dc (0x7fa6edacb2dc in /home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/lib/libtorch_cuda.so)
+frame #5: <unknown function> + 0x43fc6f (0x7fa73d349c6f in /home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/lib/libtorch_python.so)
+frame #6: c10::TensorImpl::~TensorImpl() + 0x9 (0x7fa74a75c179 in /home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/lib/libc10.so)
+frame #7: <unknown function> + 0x6df3d8 (0x7fa73d5e93d8 in /home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/lib/libtorch_python.so)
+frame #8: <unknown function> + 0x6df774 (0x7fa73d5e9774 in /home/kylh/.local/share/mamba/envs/nemo/lib/python3.10/site-packages/torch/lib/libtorch_python.so)
+<omitting python frames>
+frame #27: <unknown function> + 0x29d90 (0x7fa74b7b5d90 in /lib/x86_64-linux-gnu/libc.so.6)
+frame #28: __libc_start_main + 0x80 (0x7fa74b7b5e40 in /lib/x86_64-linux-gnu/libc.so.6)
+
+Aborted (core dumped)
+(nemo) kylh@educa:~/work/stt_nvidia_nemo$ nvidia-smi
+Mon Aug 18 16:08:59 2025       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 570.158.01             Driver Version: 570.158.01     CUDA Version: 12.8     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 4090        On  |   00000000:86:00.0 Off |                  Off |
+| 31%   38C    P8             11W /  450W |    1287MiB /  24564MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A         2467743      C   tritonserver                            448MiB |
+|    0   N/A  N/A         2790468      C   python3                                 824MiB |
++-----------------------------------------------------------------------------------------+
+(nemo) kylh@educa:~/work/stt_nvidia_nemo$ python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vlsp2020/vlsp2020_train.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 64
+🔁 Restoring from .nemo: ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo
+[NeMo I 2025-08-18 16:09:22 mixins:181] Tokenizer SentencePieceTokenizer initialized with 256 tokens
+[NeMo W 2025-08-18 16:09:22 modelPT:180] If you intend to do training or fine-tuning, please call the ModelPT.setup_training_data() method and provide a valid configuration file to setup the train data loader.
+    Train config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_train.jsonl
+    sample_rate: 16000
+    batch_size: 128
+    shuffle: true
+    num_workers: 8
+    pin_memory: true
+    max_duration: 17.0
+    min_duration: 0.1
+    is_tarred: false
+    tarred_audio_filepaths: null
+    shuffle_n: 2048
+    bucketing_strategy: fully_randomized
+    bucketing_batch_size: null
+    
+[NeMo W 2025-08-18 16:09:22 modelPT:187] If you intend to do validation, please call the ModelPT.setup_validation_data() or ModelPT.setup_multiple_validation_data() method and provide a valid configuration file to setup the validation data loader(s). 
+    Validation config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo W 2025-08-18 16:09:22 modelPT:194] Please call the ModelPT.setup_test_data() or ModelPT.setup_multiple_test_data() method and provide a valid configuration file to setup the test data loader(s).
+    Test config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_test.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo I 2025-08-18 16:09:22 features:305] PADDING: 0
+[NeMo I 2025-08-18 16:09:22 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo I 2025-08-18 16:09:22 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 16:09:22 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 16:09:22 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 16:09:22 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 16:09:22 save_restore_connector:275] Model EncDecRNNTBPEModel was successfully restored from /home/kylh/work/nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo.
+[NeMo I 2025-08-18 16:09:25 collections:201] Dataset loaded with 56427 files totalling 101.38 hours
+[NeMo I 2025-08-18 16:09:25 collections:202] 0 files were filtered totalling 0.00 hours
+🚀 Running test (WER/Loss)…
+Using 16bit Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+You are using a CUDA device ('NVIDIA GeForce RTX 4090') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+Testing: |                                                                                   | 0/? [00:00<?, ?it/s][NeMo I 2025-08-18 16:09:25 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.models.rnnt_bpe_models.EncDecRNNTBPEModel'>.decoding.decoding
+[NeMo I 2025-08-18 16:09:25 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.metrics.wer.WER'>joint._wer.decoding.decoding
+Testing DataLoader 0: 100%|██████████████████████████████████████████████████████| 882/882 [07:17<00:00,  2.02it/s]
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        Test metric        ┃       DataLoader 0        ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│        global_step        │            0.0            │
+│         test_wer          │     5.666754722595215     │
+└───────────────────────────┴───────────────────────────┘
+📊 Test metrics: [{'global_step': 0.0, 'test_wer': 5.666754722595215}]
+(nemo) kylh@educa:~/work/stt_nvidia_nemo$ 
+
+
+(nemo) kylh@educa:~/work/stt_nvidia_nemo$ python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
+  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
+  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vietmed/vietmed_train.jsonl \
+  --devices 1 \
+  --precision 16 \
+  --batch-size 64
+🔁 Restoring from .nemo: ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo
+[NeMo I 2025-08-18 16:21:15 mixins:181] Tokenizer SentencePieceTokenizer initialized with 256 tokens
+[NeMo W 2025-08-18 16:21:15 modelPT:180] If you intend to do training or fine-tuning, please call the ModelPT.setup_training_data() method and provide a valid configuration file to setup the train data loader.
+    Train config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_train.jsonl
+    sample_rate: 16000
+    batch_size: 128
+    shuffle: true
+    num_workers: 8
+    pin_memory: true
+    max_duration: 17.0
+    min_duration: 0.1
+    is_tarred: false
+    tarred_audio_filepaths: null
+    shuffle_n: 2048
+    bucketing_strategy: fully_randomized
+    bucketing_batch_size: null
+    
+[NeMo W 2025-08-18 16:21:15 modelPT:187] If you intend to do validation, please call the ModelPT.setup_validation_data() or ModelPT.setup_multiple_validation_data() method and provide a valid configuration file to setup the validation data loader(s). 
+    Validation config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo W 2025-08-18 16:21:15 modelPT:194] Please call the ModelPT.setup_test_data() or ModelPT.setup_multiple_test_data() method and provide a valid configuration file to setup the test data loader(s).
+    Test config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_test.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo I 2025-08-18 16:21:15 features:305] PADDING: 0
+[NeMo I 2025-08-18 16:21:16 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo I 2025-08-18 16:21:16 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 16:21:16 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 16:21:16 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 16:21:16 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 16:21:16 save_restore_connector:275] Model EncDecRNNTBPEModel was successfully restored from /home/kylh/work/nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo.
+[NeMo I 2025-08-18 16:21:16 collections:201] Dataset loaded with 2773 files totalling 4.80 hours
+[NeMo I 2025-08-18 16:21:16 collections:202] 0 files were filtered totalling 0.00 hours
+🚀 Running test (WER/Loss)…
+Using 16bit Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+You are using a CUDA device ('NVIDIA GeForce RTX 4090') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+Testing: |                                                                                   | 0/? [00:00<?, ?it/s][NeMo I 2025-08-18 16:21:16 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.models.rnnt_bpe_models.EncDecRNNTBPEModel'>.decoding.decoding
+[NeMo I 2025-08-18 16:21:16 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.metrics.wer.WER'>joint._wer.decoding.decoding
+Testing DataLoader 0: 100%|████████████████████████████████████████████████████████| 44/44 [00:15<00:00,  2.83it/s]
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        Test metric        ┃       DataLoader 0        ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│        global_step        │            0.0            │
+│         test_wer          │    13.733744621276855     │
+└───────────────────────────┴───────────────────────────┘
+📊 Test metrics: [{'global_step': 0.0, 'test_wer': 13.733744621276855}]

@@ -1,0 +1,199 @@
+(nemo) kylh@educa:~/work/stt_nvidia_nemo$ python -m vpb_mod.model._1_fastformer_trans_bpe   --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml   --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_test.jsonl   --devices 1   --precision 16   --batch-size 64   --exp-dir ../nemo_work/_1_small_vi_ds/experiments   --exp-name vpb_asr_fastconformer_testonly   --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo   --test-only
+🚀 Building Trainer…
+Using 16bit Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+🗂️  Setting up exp_manager…
+[NeMo I 2025-08-18 18:32:03 exp_manager:561] ExpManager schema
+[NeMo I 2025-08-18 18:32:03 exp_manager:562] {'explicit_log_dir': None, 'exp_dir': None, 'name': None, 'version': None, 'use_datetime_version': True, 'resume_if_exists': False, 'resume_past_end': False, 'resume_ignore_no_checkpoint': False, 'resume_from_checkpoint': None, 'create_tensorboard_logger': True, 'summary_writer_kwargs': None, 'create_wandb_logger': False, 'wandb_logger_kwargs': None, 'create_mlflow_logger': False, 'mlflow_logger_kwargs': {'experiment_name': None, 'tracking_uri': None, 'tags': None, 'save_dir': './mlruns', 'prefix': '', 'artifact_location': None, 'run_id': None, 'log_model': False}, 'create_dllogger_logger': False, 'dllogger_logger_kwargs': {'verbose': False, 'stdout': False, 'json_file': './dllogger.json'}, 'create_clearml_logger': False, 'clearml_logger_kwargs': {'project': None, 'task': None, 'connect_pytorch': False, 'model_name': None, 'tags': None, 'log_model': False, 'log_cfg': False, 'log_metrics': False}, 'create_neptune_logger': False, 'neptune_logger_kwargs': None, 'create_checkpoint_callback': True, 'checkpoint_callback_params': {'filepath': None, 'dirpath': None, 'filename': None, 'monitor': 'val_loss', 'verbose': True, 'save_last': True, 'save_top_k': 3, 'save_weights_only': False, 'mode': 'min', 'auto_insert_metric_name': True, 'every_n_epochs': 1, 'every_n_train_steps': None, 'train_time_interval': None, 'prefix': None, 'postfix': '.nemo', 'save_best_model': False, 'always_save_nemo': False, 'save_nemo_on_train_end': True, 'model_parallel_size': None, 'save_on_train_epoch_end': False, 'async_save': False, 'save_last_n_optim_states': -1}, 'create_early_stopping_callback': False, 'early_stopping_callback_params': {'monitor': 'val_loss', 'mode': 'min', 'min_delta': 0.001, 'patience': 10, 'verbose': True, 'strict': True, 'check_finite': True, 'stopping_threshold': None, 'divergence_threshold': None, 'check_on_train_epoch_end': None, 'log_rank_zero_only': False}, 'create_preemption_callback': True, 'files_to_copy': None, 'log_step_timing': True, 'log_delta_step_timing': False, 'step_timing_kwargs': {'reduction': 'mean', 'sync_cuda': False, 'buffer_size': 1}, 'log_local_rank_0_only': False, 'log_global_rank_0_only': False, 'disable_validation_on_resume': True, 'ema': {'enable': False, 'decay': 0.999, 'cpu_offload': False, 'validate_original_weights': False, 'every_n_steps': 1}, 'max_time_per_run': None, 'seconds_to_sleep': 5.0, 'create_straggler_detection_callback': False, 'straggler_detection_params': {'report_time_interval': 300.0, 'calc_relative_gpu_perf': True, 'calc_individual_gpu_perf': True, 'num_gpu_perf_scores_to_log': 5, 'gpu_relative_perf_threshold': 0.7, 'gpu_individual_perf_threshold': 0.7, 'stop_if_detected': False}, 'create_fault_tolerance_callback': False, 'fault_tolerance': {'workload_check_interval': 5.0, 'initial_rank_heartbeat_timeout': 3600.0, 'rank_heartbeat_timeout': 2700.0, 'calculate_timeouts': True, 'safety_factor': 5.0, 'rank_termination_signal': <Signals.SIGKILL: 9>, 'log_level': 'INFO', 'max_rank_restarts': 0, 'max_subsequent_job_failures': 0, 'additional_ft_launcher_args': '', 'simulated_fault': None}, 'log_tflops_per_sec_per_gpu': True}
+[NeMo I 2025-08-18 18:32:03 exp_manager:622] Experiments will be logged at /home/kylh/work/nemo_work/_1_small_vi_ds/experiments/vpb_asr_fastconformer_testonly/2025-08-18_18-32-03
+[NeMo I 2025-08-18 18:32:03 exp_manager:1213] TensorboardLogger has been set up
+[NeMo I 2025-08-18 18:32:03 exp_manager:767] TFLOPs per sec per GPU will be calculated, conditioned on supported models. Defaults to -1 upon failure.
+📝 Adding CSV Logger…
+[NeMo I 2025-08-18 18:32:04 mixins:181] Tokenizer SentencePieceTokenizer initialized with 256 tokens
+[NeMo W 2025-08-18 18:32:04 modelPT:180] If you intend to do training or fine-tuning, please call the ModelPT.setup_training_data() method and provide a valid configuration file to setup the train data loader.
+    Train config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_train.jsonl
+    sample_rate: 16000
+    batch_size: 128
+    shuffle: true
+    num_workers: 8
+    pin_memory: true
+    max_duration: 17.0
+    min_duration: 0.1
+    is_tarred: false
+    tarred_audio_filepaths: null
+    shuffle_n: 2048
+    bucketing_strategy: fully_randomized
+    bucketing_batch_size: null
+    
+[NeMo W 2025-08-18 18:32:04 modelPT:187] If you intend to do validation, please call the ModelPT.setup_validation_data() or ModelPT.setup_multiple_validation_data() method and provide a valid configuration file to setup the validation data loader(s). 
+    Validation config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo W 2025-08-18 18:32:04 modelPT:194] Please call the ModelPT.setup_test_data() or ModelPT.setup_multiple_test_data() method and provide a valid configuration file to setup the test data loader(s).
+    Test config : 
+    manifest_filepath: /home/kylh/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_test.jsonl
+    sample_rate: 16000
+    batch_size: 16
+    shuffle: false
+    use_start_end_token: false
+    num_workers: 8
+    pin_memory: true
+    return_transcripts: false
+    
+[NeMo I 2025-08-18 18:32:04 features:305] PADDING: 0
+[NeMo I 2025-08-18 18:32:04 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo I 2025-08-18 18:32:04 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 18:32:04 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 18:32:04 rnnt_models:226] Using RNNT Loss : warprnnt_numba
+    Loss warprnnt_numba_kwargs: {'fastemit_lambda': 0.0, 'clamp': -1.0}
+[NeMo W 2025-08-18 18:32:04 rnnt_loop_labels_computer:290] No conditional node support for Cuda.
+    Cuda graphs with while loops are disabled, decoding speed will be slower
+    Reason: No `cuda-python` module. Please do `pip install cuda-python>=12.3`
+[NeMo I 2025-08-18 18:32:04 save_restore_connector:275] Model CustomFastConformerRNNTModel was successfully restored from /home/kylh/work/nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo.
+🧠 Model restored from checkpoint/nemo:
+====================================================================================================
+   | Name                                | Type                              | Params | Mode 
+---------------------------------------------------------------------------------------------------
+0  | preprocessor                        | AudioToMelSpectrogramPreprocessor | 0      | train
+1  | preprocessor.featurizer             | FilterbankFeatures                | 0      | train
+2  | encoder                             | ConformerEncoder                  | 5.1 M  | train
+3  | encoder.pre_encode                  | ConvSubsampling                   | 590 K  | train
+4  | encoder.pre_encode.out              | Linear                            | 450 K  | train
+5  | encoder.pre_encode.conv             | Sequential                        | 139 K  | train
+6  | encoder.pre_encode.conv.0           | Conv2d                            | 2.6 K  | train
+7  | encoder.pre_encode.conv.1           | ReLU                              | 0      | train
+8  | encoder.pre_encode.conv.2           | Conv2d                            | 2.6 K  | train
+9  | encoder.pre_encode.conv.3           | Conv2d                            | 65.8 K | train
+10 | encoder.pre_encode.conv.5           | Conv2d                            | 2.6 K  | train
+11 | encoder.pre_encode.conv.6           | Conv2d                            | 65.8 K | train
+12 | encoder.pos_enc                     | RelPositionalEncoding             | 0      | train
+13 | encoder.pos_enc.dropout             | Dropout                           | 0      | train
+14 | encoder.layers                      | ModuleList                        | 4.5 M  | train
+15 | encoder.layers.0                    | ConformerLayer                    | 750 K  | train
+16 | encoder.layers.0.norm_feed_forward1 | LayerNorm                         | 352    | train
+17 | encoder.layers.0.feed_forward1      | ConformerFeedForward              | 248 K  | train
+18 | encoder.layers.0.norm_conv          | LayerNorm                         | 352    | train
+19 | encoder.layers.0.conv               | ConformerConvolution              | 95.6 K | train
+20 | encoder.layers.0.norm_self_att      | LayerNorm                         | 352    | train
+21 | encoder.layers.0.self_attn          | RelPositionMultiHeadAttention     | 155 K  | train
+22 | encoder.layers.0.norm_feed_forward2 | LayerNorm                         | 352    | train
+23 | encoder.layers.0.feed_forward2      | ConformerFeedForward              | 248 K  | train
+24 | encoder.layers.0.dropout            | Dropout                           | 0      | train
+25 | encoder.layers.0.norm_out           | LayerNorm                         | 352    | train
+26 | encoder.layers.1                    | ConformerLayer                    | 750 K  | train
+27 | encoder.layers.1.norm_feed_forward1 | LayerNorm                         | 352    | train
+28 | encoder.layers.1.feed_forward1      | ConformerFeedForward              | 248 K  | train
+29 | encoder.layers.1.norm_conv          | LayerNorm                         | 352    | train
+30 | encoder.layers.1.conv               | ConformerConvolution              | 95.6 K | train
+31 | encoder.layers.1.norm_self_att      | LayerNorm                         | 352    | train
+32 | encoder.layers.1.self_attn          | RelPositionMultiHeadAttention     | 155 K  | train
+33 | encoder.layers.1.norm_feed_forward2 | LayerNorm                         | 352    | train
+34 | encoder.layers.1.feed_forward2      | ConformerFeedForward              | 248 K  | train
+35 | encoder.layers.1.dropout            | Dropout                           | 0      | train
+36 | encoder.layers.1.norm_out           | LayerNorm                         | 352    | train
+37 | encoder.layers.2                    | ConformerLayer                    | 750 K  | train
+38 | encoder.layers.2.norm_feed_forward1 | LayerNorm                         | 352    | train
+39 | encoder.layers.2.feed_forward1      | ConformerFeedForward              | 248 K  | train
+40 | encoder.layers.2.norm_conv          | LayerNorm                         | 352    | train
+41 | encoder.layers.2.conv               | ConformerConvolution              | 95.6 K | train
+42 | encoder.layers.2.norm_self_att      | LayerNorm                         | 352    | train
+43 | encoder.layers.2.self_attn          | RelPositionMultiHeadAttention     | 155 K  | train
+44 | encoder.layers.2.norm_feed_forward2 | LayerNorm                         | 352    | train
+45 | encoder.layers.2.feed_forward2      | ConformerFeedForward              | 248 K  | train
+46 | encoder.layers.2.dropout            | Dropout                           | 0      | train
+47 | encoder.layers.2.norm_out           | LayerNorm                         | 352    | train
+48 | encoder.layers.3                    | ConformerLayer                    | 750 K  | train
+49 | encoder.layers.3.norm_feed_forward1 | LayerNorm                         | 352    | train
+50 | encoder.layers.3.feed_forward1      | ConformerFeedForward              | 248 K  | train
+51 | encoder.layers.3.norm_conv          | LayerNorm                         | 352    | train
+52 | encoder.layers.3.conv               | ConformerConvolution              | 95.6 K | train
+53 | encoder.layers.3.norm_self_att      | LayerNorm                         | 352    | train
+54 | encoder.layers.3.self_attn          | RelPositionMultiHeadAttention     | 155 K  | train
+55 | encoder.layers.3.norm_feed_forward2 | LayerNorm                         | 352    | train
+56 | encoder.layers.3.feed_forward2      | ConformerFeedForward              | 248 K  | train
+57 | encoder.layers.3.dropout            | Dropout                           | 0      | train
+58 | encoder.layers.3.norm_out           | LayerNorm                         | 352    | train
+59 | encoder.layers.4                    | ConformerLayer                    | 750 K  | train
+60 | encoder.layers.4.norm_feed_forward1 | LayerNorm                         | 352    | train
+61 | encoder.layers.4.feed_forward1      | ConformerFeedForward              | 248 K  | train
+62 | encoder.layers.4.norm_conv          | LayerNorm                         | 352    | train
+63 | encoder.layers.4.conv               | ConformerConvolution              | 95.6 K | train
+64 | encoder.layers.4.norm_self_att      | LayerNorm                         | 352    | train
+65 | encoder.layers.4.self_attn          | RelPositionMultiHeadAttention     | 155 K  | train
+66 | encoder.layers.4.norm_feed_forward2 | LayerNorm                         | 352    | train
+67 | encoder.layers.4.feed_forward2      | ConformerFeedForward              | 248 K  | train
+68 | encoder.layers.4.dropout            | Dropout                           | 0      | train
+69 | encoder.layers.4.norm_out           | LayerNorm                         | 352    | train
+70 | encoder.layers.5                    | ConformerLayer                    | 750 K  | train
+71 | encoder.layers.5.norm_feed_forward1 | LayerNorm                         | 352    | train
+72 | encoder.layers.5.feed_forward1      | ConformerFeedForward              | 248 K  | train
+73 | encoder.layers.5.norm_conv          | LayerNorm                         | 352    | train
+74 | encoder.layers.5.conv               | ConformerConvolution              | 95.6 K | train
+75 | encoder.layers.5.norm_self_att      | LayerNorm                         | 352    | train
+76 | encoder.layers.5.self_attn          | RelPositionMultiHeadAttention     | 155 K  | train
+77 | encoder.layers.5.norm_feed_forward2 | LayerNorm                         | 352    | train
+78 | encoder.layers.5.feed_forward2      | ConformerFeedForward              | 248 K  | train
+79 | encoder.layers.5.dropout            | Dropout                           | 0      | train
+80 | encoder.layers.5.norm_out           | LayerNorm                         | 352    | train
+81 | decoder                             | RNNTDecoder                       | 904 K  | train
+82 | decoder.prediction                  | ModuleDict                        | 904 K  | train
+83 | decoder.prediction.embed            | Embedding                         | 82.2 K | train
+84 | decoder.prediction.dec_rnn          | LSTMDropout                       | 821 K  | train
+85 | decoder.prediction.dec_rnn.lstm     | LSTM                              | 821 K  | train
+86 | decoder.prediction.dec_rnn.dropout  | Dropout                           | 0      | train
+87 | joint                               | RNNTJoint                         | 241 K  | train
+88 | joint.pred                          | Linear                            | 102 K  | train
+89 | joint.enc                           | Linear                            | 56.6 K | train
+90 | joint.joint_net                     | Sequential                        | 82.5 K | train
+91 | joint.joint_net.0                   | ReLU                              | 0      | train
+92 | joint.joint_net.1                   | Dropout                           | 0      | train
+93 | joint.joint_net.2                   | Linear                            | 82.5 K | train
+94 | joint._loss                         | RNNTLoss                          | 0      | train
+95 | joint._loss._loss                   | RNNTLossNumba                     | 0      | train
+96 | joint._wer                          | WER                               | 0      | train
+97 | spec_augmentation                   | SpectrogramAugmentation           | 0      | train
+98 | spec_augmentation.spec_augment      | SpecAugment                       | 0      | train
+---------------------------------------------------------------------------------------------------
+6.2 M     Trainable params
+0         Non-trainable params
+6.2 M     Total params
+24.959    Total estimated model params size (MB)
+202       Modules in train mode
+0         Modules in eval mode
+====================================================================================================
+[NeMo I 2025-08-18 18:32:05 collections:201] Dataset loaded with 5683 files totalling 10.07 hours
+[NeMo I 2025-08-18 18:32:05 collections:202] 0 files were filtered totalling 0.00 hours
+🔍 Running test-only from restored checkpoint…
+You are using a CUDA device ('NVIDIA GeForce RTX 4090') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+Testing: |                                                                                                                                      | 0/? [00:00<?, ?it/s][NeMo I 2025-08-18 18:32:05 optional_cuda_graphs:79] Enabled CUDA graphs for module <class '__main__.CustomFastConformerRNNTModel'>.decoding.decoding
+[NeMo I 2025-08-18 18:32:05 optional_cuda_graphs:79] Enabled CUDA graphs for module <class 'nemo.collections.asr.metrics.wer.WER'>joint._wer.decoding.decoding
+Testing DataLoader 0: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████| 89/89 [00:43<00:00,  2.03it/s]
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        Test metric        ┃       DataLoader 0        ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│        global_step        │            0.0            │
+│         test_wer          │     8.717652320861816     │
+└───────────────────────────┴───────────────────────────┘
+(nemo) kylh@educa:~/work/stt_nvidia_nemo$ 
+
+
+
+---------------------------------
+
+
+
