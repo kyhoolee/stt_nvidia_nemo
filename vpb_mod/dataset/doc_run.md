@@ -21,10 +21,12 @@
   🔹 vivos: 0 wav files | 0 manifest entries
   🔹 vlsp2020: 0 wav files | 0 manifest entries
 
+---------------------------- ERROR -> label missing dataset 
 📁 Dataset: speech_massive
   🔹 test: 2974 wav files | 2974 manifest entries
   🔹 train: 115 wav files | 115 manifest entries
   🔹 validation: 2033 wav files | 2033 manifest entries
+-----------------------------
 
 📁 Dataset: vais1000
   🔹 train: 1000 wav files | 1000 manifest entries
@@ -44,6 +46,42 @@
 
 -----------------------------
 
+(base) kylh@educa:~/work/public_datasets/vi_small/nemo_manifests$ tree 
+.
+├── fpt_fosd
+│   └── fpt_fosd_train.jsonl
+├── infore
+│   └── infore_train.jsonl
+├── lsvsc
+│   ├── lsvsc_dev.jsonl
+│   ├── lsvsc_test.jsonl
+│   └── lsvsc_train.jsonl
+├── vais1000
+│   └── vais1000_train.jsonl
+├── vietmed
+│   ├── vietmed_dev.jsonl
+│   ├── vietmed_test.jsonl
+│   └── vietmed_train.jsonl
+├── vivos
+│   ├── vivos_test.jsonl
+│   └── vivos_train.jsonl
+├── vlsp2020
+│   └── vlsp2020_train.jsonl
+└── vpb_ds
+    ├── manifest_vpb_right_2
+    │   ├── train_meta.jsonl
+    │   └── valid_meta.jsonl
+    ├── standard_test
+    │   ├── next_day_test_meta_debug.jsonl
+    │   └── test_meta.jsonl
+    └── standard_test_2
+        └── test_meta.jsonl
+
+11 directories, 17 files
+
+
+-----------------------------
+
 ## CMD
 
 tensorboard --logdir ./
@@ -57,3 +95,35 @@ python -m vpb_mod.dataset._1_nemo_manifest_format \
   --root ~/work/public_datasets/vi_small \
   --ensure-sr 16000 \
   --lowercase
+
+
+## NEXT-LOGIC
+
+- Convert to 8k -> then back to 16k 
+- Merge-manifest then split train/dev/test 
+
+
+python -m vpb_mod.dataset.merge_manifests \
+  --manifest-root ~/work/public_datasets/vi_small/nemo_manifests \
+  --datasets fpt_fosd infore lsvsc vais1000 vietmed vivos vlsp2020 \
+  --train-files \
+      fpt_fosd/fpt_fosd_train.jsonl \
+      infore/infore_train.jsonl \
+      lsvsc/lsvsc_train.jsonl \
+      vais1000/vais1000_train.jsonl \
+      vietmed/vietmed_train.jsonl \
+      vivos/vivos_train.jsonl \
+      vlsp2020/vlsp2020_train.jsonl \
+  --dev-files \
+      lsvsc/lsvsc_dev.jsonl \
+      vietmed/vietmed_dev.jsonl \
+  --test-files \
+      lsvsc/lsvsc_test.jsonl \
+      vietmed/vietmed_test.jsonl \
+      vivos/vivos_test.jsonl \
+  --out-dir ~/work/public_datasets/vi_small/nemo_manifests_merged \
+  --seed 20250819 \
+  --shuffle \
+  --max-per-dataset 0 \
+  --max-seconds-per-split 0 \
+  --min-dur 0.2 --max-dur 30
