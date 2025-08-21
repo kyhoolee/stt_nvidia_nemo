@@ -7,7 +7,7 @@ mkdir -p "$OUT_MANIFEST"
 
 # train dev test
 
-for SPLIT in train; do 
+for SPLIT in dev test train; do 
   python -m vpb_mod.dataset.preprocess_audio_telephony \
     --manifest "$IN/merged_${SPLIT}.jsonl" \
     --output-audio-root "$OUT_AUDIO" \

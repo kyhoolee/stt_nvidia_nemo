@@ -183,7 +183,8 @@ def summarize():
 
 def main():
     OUT_ROOT.mkdir(parents=True, exist_ok=True)
-    order = ["fpt_fosd", "infore", "lsvsc", "speech_massive", "vais1000", "vietmed", "vivos", "vlsp2020"]
+    order = ['vivos']
+    # ["fpt_fosd", "infore", "lsvsc", "speech_massive", "vais1000", "vietmed", "vivos", "vlsp2020"]
     for name in order:
         print("=" * 80)
         print(f"Downloading dataset: {name}")
