@@ -67,7 +67,7 @@ class CustomFastConformerRNNTModel(EncDecRNNTBPEModel):
         
         # Vô hiệu hóa tính năng log prediction của module WER
         # Điều này phải được thực hiện sau khi super() đã gọi và khởi tạo module WER
-        self.wer.log_prediction = True
+        self.wer.log_prediction = False
 
 
 # ----------------------------- Tokenizer -----------------------------
