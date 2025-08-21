@@ -97,6 +97,11 @@ python -m vpb_mod.dataset._1_nemo_manifest_format \
   --lowercase
 
 
+python -m vpb_mod.dataset._1_nemo_manifest_format \
+  --root ~/work/public_datasets/vi_small \
+  --lowercase
+
+
 ## NEXT-LOGIC
 
 - Convert to 8k -> then back to 16k 
@@ -127,3 +132,75 @@ python -m vpb_mod.dataset.merge_manifests \
   --max-per-dataset 0 \
   --max-seconds-per-split 0 \
   --min-dur 0.2 --max-dur 30
+
+
+
+
+python -m vpb_mod.dataset.merge_manifests \
+  --manifest-root ~/work/public_datasets/vi_small/nemo_manifests \
+  --datasets fpt_fosd lsvsc vais1000 vietmed vlsp2020 \
+  --train-files \
+      fpt_fosd/fpt_fosd_train.jsonl \
+      lsvsc/lsvsc_train.jsonl \
+      vais1000/vais1000_train.jsonl \
+      vietmed/vietmed_train.jsonl \
+      vlsp2020/vlsp2020_train.jsonl \
+  --dev-files \
+      lsvsc/lsvsc_dev.jsonl \
+      vietmed/vietmed_dev.jsonl \
+  --test-files \
+      lsvsc/lsvsc_test.jsonl \
+      vietmed/vietmed_test.jsonl \
+  --out-dir ~/work/public_datasets/vi_small/nemo_manifests_merged \
+  --seed 20250819 \
+  --shuffle \
+  --max-per-dataset 0 \
+  --max-seconds-per-split 0 \
+  --min-dur 0.2 --max-dur 30
+
+
+
+
+python -m vpb_mod.dataset.merge_manifests \
+  --manifest-root ~/work/public_datasets/vi_small/nemo_manifests \
+  --datasets fpt_fosd infore lsvsc vais1000 vietmed vlsp2020 \
+  --train-files \
+      fpt_fosd/fpt_fosd_train.jsonl \
+      infore/infore_train.jsonl \
+      lsvsc/lsvsc_train.jsonl \
+      vais1000/vais1000_train.jsonl \
+      vietmed/vietmed_train.jsonl \
+      vlsp2020/vlsp2020_train.jsonl \
+  --dev-files \
+      lsvsc/lsvsc_dev.jsonl \
+      vietmed/vietmed_dev.jsonl \
+  --test-files \
+      lsvsc/lsvsc_test.jsonl \
+      vietmed/vietmed_test.jsonl \
+  --out-dir ~/work/public_datasets/vi_small/nemo_manifests_merged \
+  --seed 20250819 \
+  --shuffle \
+  --max-per-dataset 0 \
+  --max-seconds-per-split 0 \
+  --min-dur 0.2 --max-dur 30
+
+
+nohup bash ./sh_process_merge.sh > sh_process_merge.log 2>&1 &
+
+
+
+'''
+nohup python -m vpb_mod.dataset._3_big_ds_to_nemo \
+  --in-root /mnt/efs/preprocess-4/manifest/vi_voice \
+  --audio-root /mnt/efs/preprocess-4/audio/vi_voice \
+  --out-root /home/ubuntu/work/public_datasets/vi_small/nemo_manifests_big \
+  --skip-missing --verbose --log-every 5000 > log_manifest_vi_voice.log 2>&1 &
+
+
+python convert_vi_voice_to_nemo.py \
+  --in-root   /mnt/efs/preprocess-4/manifest/vi_voice \
+  --audio-root /mnt/efs/preprocess-4/audio/vi_voice \
+  --out-root  /mnt/efs/preprocess-4/nemo_manifests \
+  --skip-missing --verbose --log-every 500
+
+'''

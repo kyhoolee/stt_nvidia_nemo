@@ -207,66 +207,92 @@ nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
   --exp-name vpb_asr_fastconformer > vpb_mod/logs/merged.log 2>&1 &
 
 
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_train.jsonl \
+  --val-manifest   ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_dev.jsonl \
+  --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/merged \
+  --vocab-size 512 \
+  --size medium \
+  --epochs 200 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 128 \
+  --accumulate-grad-batches 1 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/merged_2 \
+  --exp-name vpb_asr_fastconformer > vpb_mod/logs/merged_2_medium.log 2>&1 &
+
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_train.jsonl \
+  --val-manifest   ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_dev.jsonl \
+  --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/merged \
+  --vocab-size 512 \
+  --size medium \
+  --epochs 200 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 128 \
+  --accumulate-grad-batches 1 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/merged_2 \
+  --exp-name vpb_asr_fastconformer > vpb_mod/logs/merged_2_medium.log 2>&1 &
+
+
+--------------------------
+
+ls /mnt/efs/
+
+
+--------------------------
+
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_train.jsonl \
+  --val-manifest   ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_dev.jsonl \
+  --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/merged_3_large \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 100 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 128 \
+  --accumulate-grad-batches 1 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/merged_3_large \
+  --exp-name vpb_asr_fastconformer > vpb_mod/logs/merged_3_large.log 2>&1 &
+
+
+
+
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_train.jsonl \
+  --val-manifest   ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_dev.jsonl \
+  --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/merged_3_large \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 100 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 64 \
+  --accumulate-grad-batches 1 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/merged_3_large \
+  --exp-name vpb_asr_fastconformer > vpb_mod/logs/merged_3_large.log 2>&1 &
+
+
+
 ### TEST 
-
-python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
-  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_test.jsonl \
-  --devices 1 \
-  --precision 16 \
-  --batch-size 128
-
-python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
-  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl \
-  --devices 1 \
-  --precision 16 \
-  --batch-size 128
-
-
-python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
-  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vivos/vivos_test.jsonl \
-  --devices 1 \
-  --precision 16 \
-  --batch-size 128
-
-python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
-  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/fpt_fosd/fpt_fosd_train.jsonl \
-  --devices 1 \
-  --precision 16 \
-  --batch-size 128
-
-python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
-  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/infore/infore_train.jsonl \
-  --devices 1 \
-  --precision 16 \
-  --batch-size 128
-
-
-python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
-  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vais1000/vais1000_train.jsonl \
-  --devices 1 \
-  --precision 16 \
-  --batch-size 128
-
-python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
-  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vlsp2020/vlsp2020_train.jsonl \
-  --devices 1 \
-  --precision 16 \
-  --batch-size 64
-
-python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
-  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vietmed/vietmed_train.jsonl \
-  --devices 1 \
-  --precision 16 \
-  --batch-size 64
-
 
 
 [
@@ -276,67 +302,6 @@ python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
     "/home/kylh/work/public_datasets/vi_small/nemo_manifests/vpb_ds/manifest_vpb_right_2/train_meta.jsonl",
     "/home/kylh/work/public_datasets/vi_small/nemo_manifests/vpb_ds/manifest_vpb_right_2/valid_meta.jsonl",
 ]
-
-
-
-python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
-  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vpb_ds/standard_test_2/test_meta.jsonl \
-  --devices 1 \
-  --precision 16 \
-  --batch-size 64
-
-python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
-  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vpb_ds/standard_test/test_meta.jsonl \
-  --devices 1 \
-  --precision 16 \
-  --batch-size 64
-
-python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
-  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vpb_ds/standard_test/next_day_test_meta_debug.jsonl \
-  --devices 1 \
-  --precision 16 \
-  --batch-size 64
-
-python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
-  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vpb_ds/manifest_vpb_right_2/train_meta.jsonl \
-  --devices 1 \
-  --precision 16 \
-  --batch-size 64
-
-python -m vpb_mod.model._1_1_infer_fastformer_trans_bpe \
-  --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --test-manifest ~/work/public_datasets/vi_small/nemo_manifests/vpb_ds/manifest_vpb_right_2/valid_meta.jsonl \
-  --devices 1 \
-  --precision 16 \
-  --batch-size 64
-
-
-
-
-
-python -m vpb_mod.model._1_5_infer_gem_debug \
-  --checkpoint-path ~/work/nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer--val_wer=0.1370-epoch=100-last.ckpt \
-  --manifest-path ~/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl \
-  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
-  --size small_0 \
-  --devices -1 \
-  --precision 16 \
-  --batch-size 128
-
-
-python -m vpb_mod.model._1_5_infer_gem_debug \
-  --checkpoint-path ~/work/nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
-  --manifest-path ~/work/public_datasets/vi_small/nemo_manifests/lsvsc/lsvsc_dev.jsonl \
-  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
-  --size small_0 \
-  --devices -1 \
-  --precision 16 \
-  --batch-size 128
-
 
 
 
