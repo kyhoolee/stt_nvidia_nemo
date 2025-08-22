@@ -239,3 +239,12 @@ nohup python -m vpb_mod.dataset._3_big_ds_to_nemo \
 
 
 '''
+
+
+## STANDARD-DATASET 
+
+python -m vpb_mod.dataset._5_1_viet_speech_hf_ds \
+  --out-root ~/work/public_datasets/vi_small \
+  --split train \
+  --manifest-shard-size 250000 \
+  --num-workers 8
