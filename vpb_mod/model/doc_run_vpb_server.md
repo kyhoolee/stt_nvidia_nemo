@@ -290,6 +290,58 @@ nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
   --exp-dir ../nemo_work/_1_small_vi_ds/experiments/merged_3_large \
   --exp-name vpb_asr_fastconformer > vpb_mod/logs/merged_3_large.log 2>&1 &
 
+---------------------------------
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_train.jsonl \
+  --val-manifest   ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_dev.jsonl \
+  --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/merged_3_large \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 100 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 64 \
+  --accumulate-grad-batches 1 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/merged_3_large \
+  --exp-name vpb_asr_fastconformer > vpb_mod/logs/merged_3_large.log 2>&1 &
+
+(base) ubuntu@ip-10-0-14-129:~/work/public_datasets/vi_small/nemo_manifests_big/vi_voice$ tree
+.
+├── dev
+│   ├── vi_voice_dev_manifest.jsonl
+│   └── vi_voice_dev_manifest_origin.jsonl
+├── test
+│   ├── vi_voice_dev_manifest.jsonl
+│   ├── vi_voice_test_manifest.jsonl
+│   └── vi_voice_test_manifest_origin.jsonl
+└── train
+    └── vi_voice_train_manifest.jsonl
+
+
+-------------------------------------
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest ~/work/public_datasets/vi_small/nemo_manifests_big/vi_voice/train/vi_voice_train_manifest.jsonl \
+  --val-manifest   ~/work/public_datasets/vi_small/nemo_manifests_big/vi_voice/dev/vi_voice_dev_manifest_origin.jsonl \
+  --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests_big/vi_voice/test/vi_voice_test_manifest_origin.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vi_voice \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 20 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 64 \
+  --accumulate-grad-batches 1 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vi_voice \
+  --exp-name vpb_asr_fastconformer > vpb_mod/logs/vi_voice.log 2>&1 &
+
+
 
 
 ### TEST 

@@ -197,10 +197,45 @@ nohup python -m vpb_mod.dataset._3_big_ds_to_nemo \
   --skip-missing --verbose --log-every 5000 > log_manifest_vi_voice.log 2>&1 &
 
 
-python convert_vi_voice_to_nemo.py \
-  --in-root   /mnt/efs/preprocess-4/manifest/vi_voice \
-  --audio-root /mnt/efs/preprocess-4/audio/vi_voice \
-  --out-root  /mnt/efs/preprocess-4/nemo_manifests \
-  --skip-missing --verbose --log-every 500
+nohup python -m vpb_mod.dataset._3_big_ds_to_nemo \
+  --in-root /mnt/efs/preprocess-3/manifest/viet_bud500 \
+  --audio-root /mnt/efs/preprocess-3/audio/viet_bud500 \
+  --out-root /home/ubuntu/work/public_datasets/vi_small/nemo_manifests_big \
+  --skip-missing --verbose --log-every 5000 > log_manifest_viet_bud500.log 2>&1 &
+
+
+------------------------
+
+
+python  -m vpb_mod.dataset._3_big_ds_to_nemo \
+  --dataset vivos \
+  --in-root   /mnt/efs/preprocess-3/manifest/vivos \
+  --audio-root /mnt/efs/preprocess-3/audio/vivos \
+  --out-root  /home/ubuntu/work/public_datasets/vi_small/nemo_manifests_big \
+  --pattern "{dataset}_manifest.json" \
+  --skip-missing
+
+--------------------------------------------------------------------
+
+
+
+nohup python  -m vpb_mod.dataset._3_big_ds_to_nemo \
+  --dataset viet_bud500 \
+  --in-root   /mnt/efs/preprocess-3/manifest/viet_bud500 \
+  --audio-root /mnt/efs/preprocess-3/audio/viet_bud500 \
+  --out-root  /home/ubuntu/work/public_datasets/vi_small/nemo_manifests_big \
+  --pattern "{dataset}_manifest.json" \
+  --skip-missing --verbose --log-every 5000 > log_manifest_viet_bud500.log 2>&1 &
+
+
+nohup python -m vpb_mod.dataset._3_big_ds_to_nemo \
+  --dataset viet_bud500 \
+  --in-root   /mnt/efs/preprocess-3/manifest/viet_bud500 \
+  --audio-root /mnt/efs/preprocess-3/audio/viet_bud500 \
+  --out-root  /home/ubuntu/work/public_datasets/vi_small/nemo_manifests_big \
+  --skip-missing --verbose --log-every 5000 \
+  > log_manifest_viet_bud500.log 2>&1 &
+
+
 
 '''
