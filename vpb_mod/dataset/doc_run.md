@@ -243,8 +243,69 @@ nohup python -m vpb_mod.dataset._3_big_ds_to_nemo \
 
 ## STANDARD-DATASET 
 
+(base) ubuntu@ip-10-0-14-129:~/work/public_datasets/vi_small/nemo_manifests/vietspeech$ ls
+train_000.jsonl  train_002.jsonl  train_004.jsonl
+train_001.jsonl  train_003.jsonl
+(base) ubuntu@ip-10-0-14-129:~/work/public_datasets/vi_small/nemo_manifests/vietspeech$ head -n 2 train_000.jsonl 
+{"audio_filepath": "/home/ubuntu/work/public_datasets/vi_small/audio/vietspeech/train/shard_0179/vietspeech_train_000899244.wav", "duration": 4.512, "text": "chứ chẳng có ý gì đâu san ngạc nhiên rồi ngẫm nghĩ rồi y hỏi", "sample_rate": 16000, "dataset": "vietspeech"}
+{"audio_filepath": "/home/ubuntu/work/public_datasets/vi_small/audio/vietspeech/train/shard_0055/vietspeech_train_000277941.wav", "duration": 5.664, "text": "nhưng kẻ trộm sách giỏi việc đọc và phá hủy những quyển sách hơn là đưa ra những giả thiết", "sample_rate": 16000, "dataset": "vietspeech"}
+
+-------------------------
+
+
 python -m vpb_mod.dataset._5_1_viet_speech_hf_ds \
   --out-root ~/work/public_datasets/vi_small \
   --split train \
   --manifest-shard-size 250000 \
   --num-workers 8
+
+python -m vpb_mod.dataset._5_2_viet_speech_split \
+  --in-glob "~/work/public_datasets/vi_small/nemo_manifests/vietspeech/train_*.jsonl" \
+  --out-dir  "~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits" \
+  --train 0.90 --dev 0.05 --test 0.05
+
+
+-------
+
+127.0.0.1:/                     8.0E  2.6T  8.0E   1% /mnt/efs
+
+-------
+
+(nemo) ubuntu@ip-10-0-14-129:~/work/stt_nvidia_nemo$ head -n 1 ~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits/test.jsonl
+{"audio_filepath": "/home/ubuntu/work/public_datasets/vi_small/audio/vietspeech/train/shard_0116/vietspeech_train_000582586.wav", "duration": 5.75, "text": "nguồn năng lượng tích cực của bạn rất có giá trị và nó không thể lãng phí cho những người như vậy", "sample_rate": 16000, "dataset": "vietspeech"}
+
+-------
+
+(nemo) ubuntu@ip-10-0-14-129:~/work/stt_nvidia_nemo$ python -m vpb_mod.dataset._5_2_viet_speech_split \
+  --in-glob "~/work/public_datasets/vi_small/nemo_manifests/vietspeech/train_*.jsonl" \
+  --out-dir  "~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits" \
+  --train 0.90 --dev 0.05 --test 0.05
+=== Split Summary ===
+Input files    : 5
+Total read     : 1026047
+Dropped        : 0
+Kept           : 1026047
+  Train        : 923491
+  Dev          : 51309
+  Test         : 51247
+Outputs:
+  train -> ~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits/train.jsonl
+  dev   -> ~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits/dev.jsonl
+  test  -> ~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits/test.jsonl
+✅ Done.
+
+
+---------
+
+python  -m vpb_mod.dataset._5_3_move_data_s3 copy-audio \
+  --src-manifest-dir ~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits \
+  --dst-root /mnt/efs/share-ds/vietspeech \
+  --num-workers 8
+
+
+---------
+
+python -m vpb_mod.dataset._5_3_move_data_s3 remap-manifest \
+  --src-manifest-dir ~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits \
+  --dst-root /mnt/efs/share-ds/vietspeech \
+  --out-manifest-dir /mnt/efs/share-ds/vietspeech/manifest

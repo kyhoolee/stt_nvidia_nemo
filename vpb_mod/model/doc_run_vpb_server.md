@@ -342,6 +342,29 @@ nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
   --exp-name vpb_asr_fastconformer > vpb_mod/logs/vi_voice.log 2>&1 &
 
 
+--------------------------------------
+
+#### VIET_SPEECH
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest ~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits/train.jsonl \
+  --val-manifest   ~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits/dev.jsonl \
+  --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits/test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vietspeech \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 20 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 64 \
+  --accumulate-grad-batches 1 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vietspeech \
+  --exp-name vpb_asr_fastconformer > vpb_mod/logs/vietspeech.log 2>&1 &
+
+
+
 
 
 ### TEST 
