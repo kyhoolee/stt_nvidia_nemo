@@ -309,3 +309,28 @@ python -m vpb_mod.dataset._5_3_move_data_s3 remap-manifest \
   --src-manifest-dir ~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits \
   --dst-root /mnt/efs/share-ds/vietspeech \
   --out-manifest-dir /mnt/efs/share-ds/vietspeech/manifest
+
+
+### Common-voice
+
+python -m vpb_mod.dataset._6_1_common_voice_hf_ds \
+  --out-root ~/work/public_datasets/vi_small
+
+# 1) Tách 5% từ train thành dev, giữ phân phối duration (khuyến nghị)
+python  -m vpb_mod.dataset._6_2_common_voice_split \
+  --train-manifest ~/work/public_datasets/vi_small/nemo_manifests/common_voice_8_0_vi/train.jsonl \
+  --train-out     ~/work/public_datasets/vi_small/nemo_manifests/common_voice_8_0_vi/train.jsonl \
+  --dev-out       ~/work/public_datasets/vi_small/nemo_manifests/common_voice_8_0_vi/dev.jsonl \
+  --dev-ratio 0.05 \
+  --stratify-duration \
+  --backup
+
+# 2) Chạy thử xem thống kê (không ghi file)
+python split_train_to_dev.py \
+  --train-manifest .../train.jsonl \
+  --train-out .../train.jsonl \
+  --dev-out .../dev.jsonl \
+  --dev-ratio 0.1 \
+  --dry-run
+
+
