@@ -1,3 +1,5 @@
+nemo_eval_*
+
 # log and data files
 *.model
 *.pkl

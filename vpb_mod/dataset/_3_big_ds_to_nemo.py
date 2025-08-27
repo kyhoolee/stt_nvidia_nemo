@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# convert_vi_voice_to_nemo.py
+# convert_to_nemo.py
 import os, sys, json, argparse, logging
 from glob import glob
 
-# tqdm optional: nếu không có thì fallback sang không dùng progress bar
+# tqdm optional
 try:
     from tqdm import tqdm
     def iter_progress(it, total=None, desc=None):
@@ -38,6 +38,7 @@ def convert_file(
     in_path: str,
     out_path: str,
     audio_root: str,
+    dataset_name: str,
     sample_rate: int = 16000,
     skip_missing: bool = True,
     log_every: int = 2000,
@@ -46,10 +47,7 @@ def convert_file(
     max_records: int | None = None,
 ):
     split = guess_split_from_path(in_path)
-    stats = {
-        "in": 0, "out": 0, "miss": 0,
-        "miss_abs": 0, "miss_rel": 0, "parse_err": 0
-    }
+    stats = {"in": 0, "out": 0, "miss": 0, "miss_abs": 0, "miss_rel": 0, "parse_err": 0}
 
     if not dry_run:
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -57,7 +55,6 @@ def convert_file(
     else:
         fout = None
 
-    # đếm tổng dòng để hiển thị progress nếu có thể
     try:
         with open(in_path, "r", encoding="utf-8") as f:
             total_lines = sum(1 for _ in f)
@@ -69,7 +66,7 @@ def convert_file(
 
     with open(in_path, "r", encoding="utf-8") as fin:
         iterator = iter_progress(fin, total=total_lines, desc=f"{os.path.basename(in_path)}")
-        for idx, line in enumerate(iterator, start=1):
+        for _idx, line in enumerate(iterator, start=1):
             if max_records is not None and stats["in"] >= max_records:
                 break
 
@@ -86,12 +83,11 @@ def convert_file(
                     logging.warning(f"[PARSE] {in_path}:{stats['in']} -> {e}")
                 continue
 
-            # fields nguồn
             text = (obj.get("text") or "").strip()
             duration = obj.get("duration", None)
-            dataset = obj.get("dataset", "vi_voice")
-            wav_field = obj.get("wav") or obj.get("audio") or obj.get("audio_filepath")
 
+            # chấp nhận nhiều tên trường nguồn cho audio
+            wav_field = obj.get("wav") or obj.get("audio") or obj.get("audio_filepath")
             if not wav_field:
                 stats["miss"] += 1
                 if verbose:
@@ -102,16 +98,15 @@ def convert_file(
                 audio_fp = os.path.expanduser(wav_field)
                 rel = False
             else:
+                # audio_root/<split>/<wav_field>
                 audio_fp = os.path.join(audio_root, split, wav_field)
                 rel = True
 
             audio_fp = os.path.realpath(os.path.expanduser(audio_fp))
-
             if not os.path.exists(audio_fp):
                 stats["miss"] += 1
                 if rel: stats["miss_rel"] += 1
                 else:   stats["miss_abs"] += 1
-
                 msg = f"[MISS] Not found: {audio_fp}"
                 if skip_missing:
                     if verbose:
@@ -125,7 +120,7 @@ def convert_file(
                 "duration": duration,
                 "text": text,
                 "sample_rate": sample_rate,
-                "dataset": dataset
+                "dataset": dataset_name,  # <-- ép theo --dataset
             }
 
             if not dry_run:
@@ -136,14 +131,12 @@ def convert_file(
                 logging.info(
                     f"[{split}] {os.path.basename(in_path)} | seen={stats['in']:,} -> out={stats['out']:,} miss={stats['miss']:,}"
                 )
-                # in một mẫu minh họa
                 if verbose:
                     logging.debug(f"Sample #{stats['in']}: text='{text[:80]}' | audio='{audio_fp}' | dur={duration}")
 
     if fout:
         fout.close()
 
-    # báo cáo per-file
     logging.info(
         f"[DONE] {os.path.basename(in_path)} (split={split}) | in={stats['in']:,}, out={stats['out']:,}, "
         f"miss={stats['miss']:,} (rel={stats['miss_rel']:,}, abs={stats['miss_abs']:,}), parse_err={stats['parse_err']:,}"
@@ -151,11 +144,16 @@ def convert_file(
     return stats, split
 
 def main():
-    ap = argparse.ArgumentParser(description="Convert vi_voice manifests to NeMo JSONL with debug & progress")
-    ap.add_argument("--in-root", required=True, help="Thư mục manifest vi_voice (train/dev/test)")
-    ap.add_argument("--audio-root", required=True, help="Thư mục audio/vi_voice (train/dev/test)")
+    ap = argparse.ArgumentParser(description="Convert manifests to NeMo JSONL (debug + progress + dataset override)")
+    ap.add_argument("--dataset", required=True, help="Tên dataset (vd: vi_voice, viet_bud500, fpt_fosd, vivos)")
+    ap.add_argument("--in-root", required=True, help="Thư mục manifest của dataset (train/dev/test có thể nằm bên trong)")
+    ap.add_argument("--audio-root", required=True, help="Thư mục audio/<dataset> (train/dev/test bên trong)")
     ap.add_argument("--out-root", required=True, help="Thư mục output NeMo JSONL")
-    ap.add_argument("--pattern", default="vi_voice_*_manifest.json", help="Pattern file manifest nguồn")
+    ap.add_argument(
+        "--pattern",
+        default="{dataset}_*_manifest.json",
+        help="Pattern file manifest nguồn. Cho phép placeholder {dataset}. Mặc định: {dataset}_*_manifest.json",
+    )
     ap.add_argument("--sample-rate", type=int, default=16000)
     ap.add_argument("--skip-missing", action="store_true", default=True)
     ap.add_argument("--verbose", action="store_true", help="In log chi tiết")
@@ -166,9 +164,10 @@ def main():
 
     setup_logging(args.verbose)
 
-    in_root   = os.path.realpath(os.path.expanduser(args.in_root))
-    audio_root= os.path.realpath(os.path.expanduser(args.audio_root))
-    out_root  = os.path.realpath(os.path.expanduser(args.out_root))
+    # chuẩn hoá đường dẫn
+    in_root    = os.path.realpath(os.path.expanduser(args.in_root))
+    audio_root = os.path.realpath(os.path.expanduser(args.audio_root))
+    out_root   = os.path.realpath(os.path.expanduser(args.out_root))
 
     if not os.path.isdir(in_root):
         logging.error(f"in-root not found: {in_root}"); sys.exit(1)
@@ -176,25 +175,30 @@ def main():
         logging.error(f"audio-root not found: {audio_root}"); sys.exit(1)
     os.makedirs(out_root, exist_ok=True)
 
-    # gom tất cả manifest theo split
+    # pattern có thể chứa {dataset}
+    pattern = (args.pattern or "").replace("{dataset}", args.dataset)
+
+    # gom manifest theo split trước, nếu không có thì tìm ở gốc in_root
     candidates = []
     for split in ("train", "dev", "test"):
-        candidates += glob(os.path.join(in_root, split, args.pattern))
+        candidates += glob(os.path.join(in_root, split, pattern))
     if not candidates:
-        candidates = glob(os.path.join(in_root, args.pattern))
+        candidates = glob(os.path.join(in_root, pattern))
     if not candidates:
-        logging.error(f"No input manifests found with pattern '{args.pattern}' under {in_root}")
+        logging.error(f"No input manifests found with pattern '{pattern}' under {in_root}")
         sys.exit(2)
 
     total = {"in":0, "out":0, "miss":0, "miss_abs":0, "miss_rel":0, "parse_err":0}
     for src in sorted(candidates):
-        base = os.path.splitext(os.path.basename(src))[0]
+        base  = os.path.splitext(os.path.basename(src))[0]
         split = guess_split_from_path(src)
-        dst  = os.path.join(out_root, "vi_voice", split, f"{base}.jsonl")
+        dst   = os.path.join(out_root, args.dataset, split, f"{base}.jsonl")
+
         stats, _ = convert_file(
             in_path=src,
             out_path=dst,
             audio_root=audio_root,
+            dataset_name=args.dataset,
             sample_rate=args.sample_rate,
             skip_missing=args.skip_missing,
             log_every=args.log_every,

@@ -290,6 +290,100 @@ nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
   --exp-dir ../nemo_work/_1_small_vi_ds/experiments/merged_3_large \
   --exp-name vpb_asr_fastconformer > vpb_mod/logs/merged_3_large.log 2>&1 &
 
+---------------------------------
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_train.jsonl \
+  --val-manifest   ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_dev.jsonl \
+  --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests_processed_merged/merged_test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/merged_3_large \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 100 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 64 \
+  --accumulate-grad-batches 1 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/merged_3_large \
+  --exp-name vpb_asr_fastconformer > vpb_mod/logs/merged_3_large.log 2>&1 &
+
+(base) ubuntu@ip-10-0-14-129:~/work/public_datasets/vi_small/nemo_manifests_big/vi_voice$ tree
+.
+├── dev
+│   ├── vi_voice_dev_manifest.jsonl
+│   └── vi_voice_dev_manifest_origin.jsonl
+├── test
+│   ├── vi_voice_dev_manifest.jsonl
+│   ├── vi_voice_test_manifest.jsonl
+│   └── vi_voice_test_manifest_origin.jsonl
+└── train
+    └── vi_voice_train_manifest.jsonl
+
+
+-------------------------------------
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest ~/work/public_datasets/vi_small/nemo_manifests_big/vi_voice/train/vi_voice_train_manifest.jsonl \
+  --val-manifest   ~/work/public_datasets/vi_small/nemo_manifests_big/vi_voice/dev/vi_voice_dev_manifest_origin.jsonl \
+  --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests_big/vi_voice/test/vi_voice_test_manifest_origin.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vi_voice \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 20 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 64 \
+  --accumulate-grad-batches 1 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vi_voice \
+  --exp-name vpb_asr_fastconformer > vpb_mod/logs/vi_voice.log 2>&1 &
+
+
+--------------------------------------
+
+#### VIET_SPEECH
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest ~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits/train.jsonl \
+  --val-manifest   ~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits/dev.jsonl \
+  --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests/vietspeech_splits/test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vietspeech \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 20 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 64 \
+  --accumulate-grad-batches 1 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vietspeech \
+  --exp-name vpb_asr_fastconformer > vpb_mod/logs/vietspeech.log 2>&1 &
+
+
+
+#### COMMON_VOICE 
+
+CUDA_VISIBLE_DEVICES=0,1,2,3 nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest ~/work/public_datasets/vi_small/nemo_manifests/common_voice_8_0_vi/train.jsonl \
+  --val-manifest   ~/work/public_datasets/vi_small/nemo_manifests/common_voice_8_0_vi/dev.jsonl \
+  --test-manifest  ~/work/public_datasets/vi_small/nemo_manifests/common_voice_8_0_vi/test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/common_voice_vi \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 20 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 64 \
+  --accumulate-grad-batches 1 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/common_voice_vi \
+  --exp-name vpb_asr_fastconformer > vpb_mod/logs/common_voice_vi.log 2>&1 &
+
 
 
 ### TEST 
@@ -342,3 +436,22 @@ python -m vpb_mod.model._1_fastformer_trans_bpe \
   --exp-name vpb_asr_fastconformer_testonly \
   --nemo ../nemo_work/_1_small_vi_ds/experiments/lsvsc/vpb_asr_fastconformer/2025-08-16_16-36-49/checkpoints/vpb_asr_fastconformer.nemo \
   --test-only
+
+
+---------------------
+
+python -m vpb_mod.model._2_vpb_manifest_convert \
+  --input /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test_2/test_meta.json \
+  --audio-base /home/ubuntu/work/clean_dataset_vpb/audio \
+  --output /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test_2/test_meta_nemo.jsonl
+
+
+model	dataset	wer	log_path
+vpb_asr_fastconformer	standard_test_2	0.3547048917731137	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250827_042152/hardfix__standard_test_2__vpb_asr_fastconformer.log
+vpb_asr_fastconformer	standard_test	0.3380414312617702	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250827_042152/hardfix__standard_test__vpb_asr_fastconformer.log
+vpb_asr_fastconformer	next_day_test_debug	0.3419729480914949	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250827_042152/hardfix__next_day_test_debug__vpb_asr_fastconformer.log
+vpb_asr_fastconformer	vpb_right2_train	0.3635269210012869	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250827_042152/hardfix__vpb_right2_train__vpb_asr_fastconformer.log
+vpb_asr_fastconformer	vpb_right2_valid	0.3895623587425519	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250827_042152/hardfix__vpb_right2_valid__vpb_asr_fastconformer.log
+
+
+MODE="train" bash vpb_mod/model/_2_vpb_manifest_convert.sh
