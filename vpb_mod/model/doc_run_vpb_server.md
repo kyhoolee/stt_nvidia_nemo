@@ -446,6 +446,14 @@ python -m vpb_mod.model._2_vpb_manifest_convert \
   --output /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test_2/test_meta_nemo.jsonl
 
 
+python -m vpb_mod.model._2_fastformer_infer \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --hardfix-vpb
+  --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_v1/2025-08-27_07-42-39/checkpoints/vpb_asr_fastconformer_ft_v1.nemo
+
+
+
+
 model	dataset	wer	log_path
 vpb_asr_fastconformer	standard_test_2	0.3547048917731137	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250827_042152/hardfix__standard_test_2__vpb_asr_fastconformer.log
 vpb_asr_fastconformer	standard_test	0.3380414312617702	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250827_042152/hardfix__standard_test__vpb_asr_fastconformer.log
@@ -455,3 +463,34 @@ vpb_asr_fastconformer	vpb_right2_valid	0.3895623587425519	/home/ubuntu/work/stt_
 
 
 MODE="train" bash vpb_mod/model/_2_vpb_manifest_convert.sh
+
+
+
+#### FINE-TUNE VPB FROM VIET-SPEECH
+export CUDA_VISIBLE_DEVICES=4,5,6,7
+
+
+export CUDA_VISIBLE_DEVICES=4,5,6,7 
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/train_meta_train.jsonl \
+  --val-manifest   /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta_train.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vietspeech \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 100 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 32 \
+  --accumulate-grad-batches 2 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vpb_ft \
+  --exp-name vpb_asr_fastconformer_ft_v1 \
+  --init-from-nemo ../nemo_work/_1_small_vi_ds/experiments/vietspeech/vpb_asr_fastconformer/2025-08-25_07-42-00/checkpoints/vpb_asr_fastconformer.nemo \
+  --freeze-encoder-ratio 0.2 \
+  --unfreeze-at-epoch 2 \
+  --grad-clip 1.0 \
+  --fastemit-lambda 0.003  > vpb_mod/logs/vpb_ft.log 2>&1 &
+
+  

@@ -380,6 +380,32 @@ def parse_args() -> argparse.Namespace:
     p.add_argument('--max-duration', type=float, default=17.0)
     p.add_argument('--disable-specaug', action='store_true')
 
+    # ===== Fine-tune from pretrained .nemo =====
+    p.add_argument('--init-from-nemo', type=Path, default=None,
+                   help='Path to a .nemo checkpoint to initialize weights for fine-tuning')
+    p.add_argument('--resume-from-ckpt', type=Path, default=None,
+                   help='Resume training from a PTL/Nemo checkpoint .ckpt (not .nemo)')
+
+    # Freeze / Unfreeze plan
+    p.add_argument('--freeze-encoder-layers', type=int, default=0,
+                   help='Freeze bottom K encoder layers at start (0 = no freeze)')
+    p.add_argument('--freeze-encoder-ratio', type=float, default=0.0,
+                   help='If >0, freeze that ratio of bottom encoder layers (e.g. 0.5 -> 50%)')
+    p.add_argument('--unfreeze-at-epoch', type=int, default=-1,
+                   help='Epoch to unfreeze all layers (-1 = never)')
+
+    # Optim / Sched overrides when fine-tuning
+    p.add_argument('--lr', type=float, default=None, help='Override LR (AdamW) for FT')
+    p.add_argument('--min-lr', type=float, default=None, help='Override scheduler min_lr for FT')
+    p.add_argument('--warmup-steps', type=int, default=None, help='Override warmup_steps')
+    p.add_argument('--grad-clip', type=float, default=1.0, help='Gradient clipping norm')
+
+    # RNNT decoding / FastEmit tweak
+    p.add_argument('--fastemit-lambda', type=float, default=0.0,
+                   help='Set FastEmit lambda for RNNT loss (0.0 → off; small ~0.001–0.01 for latency bias)')
+
+
+
     # Logging / output
     p.add_argument('--exp-dir', type=Path, default=Path('./experiments'))
     p.add_argument('--exp-name', type=str, default='vpb_asr_fastconformer')
@@ -515,6 +541,186 @@ def test_from_checkpoint(
     print("=" * 100)
 
 
+
+# --------------------------- Freeze / Unfreeze helpers ---------------------------
+
+def build_or_restore_model_for_train(
+    args,
+    cfg: OmegaConf,
+    trainer: Trainer,
+):
+    """
+    - Nếu --init-from-nemo: restore model từ .nemo, merge cfg mới vào model.cfg,
+      ép lại manifest và re-setup dataloaders/optimizer đúng cách (giữ nguyên interpolation ${model.*}).
+    - Nếu không: khởi tạo model mới theo cfg hiện tại.
+    Trả về (model, effective_cfg)
+    """
+    # 1) Ghi FastEmit vào cfg (để đồng bộ config lưu log/ckpt)
+    if args.fastemit_lambda is not None and args.fastemit_lambda > 0.0:
+        try:
+            if not hasattr(cfg.model, "rnnt_loss"):
+                cfg.model.rnnt_loss = OmegaConf.create({})
+            if not hasattr(cfg.model.rnnt_loss, "warprnnt_numba_kwargs"):
+                cfg.model.rnnt_loss.warprnnt_numba_kwargs = OmegaConf.create({})
+            cfg.model.rnnt_loss.warprnnt_numba_kwargs.fastemit_lambda = float(args.fastemit_lambda)
+            print(f"⏩ Set FastEmit lambda (cfg) = {args.fastemit_lambda}")
+        except Exception as e:
+            print(f"⚠️ Could not set fastemit_lambda in cfg: {e}")
+
+    # 2) Ghi gradient clip vào cfg.trainer (Lightning đọc giá trị này)
+    if args.grad_clip is not None:
+        try:
+            cfg.trainer.gradient_clip_val = float(args.grad_clip)
+            cfg.trainer.gradient_clip_algorithm = "norm"
+            print(f"✂️  Grad clip = {args.grad_clip}")
+        except Exception:
+            pass
+
+    # 3) Nhánh fine-tune từ .nemo
+    if args.init_from_nemo is not None:
+        print(f"[FT] Restoring model from .nemo: {args.init_from_nemo}")
+        model = nemo_asr.models.EncDecRNNTBPEModel.restore_from(
+            restore_path=str(args.init_from_nemo),
+            trainer=trainer,
+            map_location=("cuda" if torch.cuda.is_available() else "cpu"),
+        )
+
+        # 3a) Merge cfg mới (CLI) vào model.cfg (giữ root 'model' để interpolation hoạt động)
+        try:
+            model.cfg = OmegaConf.merge(model.cfg, cfg.model)
+        except Exception as e:
+            print(f"⚠️ OmegaConf.merge(model.cfg, cfg.model) failed: {e}")
+
+        # 3b) Ép lại manifest filepath trên model.cfg (để chắc chắn trỏ đúng VPB)
+        try:
+            if getattr(cfg.model, "train_ds", None) and getattr(cfg.model.train_ds, "manifest_filepath", None):
+                model.cfg.train_ds.manifest_filepath = str(cfg.model.train_ds.manifest_filepath)
+            if getattr(cfg.model, "validation_ds", None) and getattr(cfg.model.validation_ds, "manifest_filepath", None):
+                model.cfg.validation_ds.manifest_filepath = str(cfg.model.validation_ds.manifest_filepath)
+            if getattr(cfg.model, "test_ds", None) and getattr(cfg.model.test_ds, "manifest_filepath", None):
+                model.cfg.test_ds.manifest_filepath = str(cfg.model.test_ds.manifest_filepath)
+        except Exception as e:
+            print(f"⚠️ Could not set manifest filepaths on model.cfg: {e}")
+
+        # 3c) Re-setup dataloaders BẰNG model.cfg.* (không truyền subtree rời rạc)
+        try:
+            model.setup_training_data(model.cfg.train_ds)
+            if getattr(model.cfg, "validation_ds", None):
+                model.setup_validation_data(model.cfg.validation_ds)
+            if getattr(model.cfg, "test_ds", None):
+                model.setup_test_data(model.cfg.test_ds)
+        except Exception as e:
+            print(f"⚠️ setup_*_data failed: {e}")
+
+        # 3d) Áp FastEmit trực tiếp lên module loss (do loss đã init từ checkpoint cũ)
+        try:
+            if args.fastemit_lambda and hasattr(model, "rnnt_loss"):
+                model.rnnt_loss.warprnnt_numba_kwargs["fastemit_lambda"] = float(args.fastemit_lambda)
+                # Giữ đồng bộ trong model.cfg (không bắt buộc nhưng tốt)
+                if not hasattr(model.cfg, "rnnt_loss"):
+                    model.cfg.rnnt_loss = OmegaConf.create({})
+                if not hasattr(model.cfg.rnnt_loss, "warprnnt_numba_kwargs"):
+                    model.cfg.rnnt_loss.warprnnt_numba_kwargs = OmegaConf.create({})
+                model.cfg.rnnt_loss.warprnnt_numba_kwargs.fastemit_lambda = float(args.fastemit_lambda)
+                print(f"⏩ Applied FastEmit lambda on loss module = {args.fastemit_lambda}")
+        except Exception as e:
+            print(f"⚠️ Could not apply fastemit_lambda on loss module: {e}")
+
+        # 3e) Re-setup optimization theo model.cfg.optim (nhận override CLI nếu có)
+        try:
+            if args.lr is not None:
+                model.cfg.optim.lr = float(args.lr)
+            if args.min_lr is not None:
+                model.cfg.optim.sched.min_lr = float(args.min_lr)
+            if args.warmup_steps is not None:
+                model.cfg.optim.sched.warmup_steps = int(args.warmup_steps)
+            model.setup_optimization(model.cfg.optim)
+            print(
+                f"🛠️  Optim set: lr={model.cfg.optim.lr} | "
+                f"min_lr={model.cfg.optim.sched.min_lr} | "
+                f"warmup={model.cfg.optim.sched.warmup_steps}"
+            )
+        except Exception as e:
+            print(f"⚠️ setup_optimization failed: {e}")
+
+        # 3f) Tắt log prediction ở WER (đỡ spam + tiết kiệm I/O)
+        if getattr(model, "wer", None) is not None:
+            try:
+                model.wer.log_prediction = False
+            except Exception:
+                pass
+
+        # 3g) Sanity: in manifest đang dùng
+        print("[SANITY] train manifest:", getattr(model.cfg.train_ds, "manifest_filepath", None))
+        print("[SANITY] val   manifest:", getattr(model.cfg.validation_ds, "manifest_filepath", None))
+        print("[SANITY] test  manifest:", getattr(model.cfg.test_ds, "manifest_filepath", None))
+
+        return model, cfg
+
+    # 4) Nhánh khởi tạo mới
+    else:
+        model = CustomFastConformerRNNTModel(cfg=cfg.model, trainer=trainer)
+        return model, cfg
+
+
+
+def _get_encoder_layers(model):
+    """
+    Trả về list các layer encoder theo thứ tự từ bottom->top.
+    Với FastConformer NeMo: model.encoder.layers là list[Module].
+    """
+    enc = getattr(model, "encoder", None)
+    if enc is None:
+        return []
+    layers = getattr(enc, "layers", None)
+    if layers is None:
+        # fallback: có kiến trúc khác
+        return []
+    return list(layers)
+
+def freeze_bottom_k_layers(model, k: int):
+    layers = _get_encoder_layers(model)
+    if k <= 0 or not layers:
+        return 0
+    k = min(k, len(layers))
+    for i in range(k):
+        for p in layers[i].parameters():
+            p.requires_grad = False
+    return k
+
+def freeze_bottom_ratio(model, ratio: float):
+    if ratio <= 0.0:
+        return 0
+    layers = _get_encoder_layers(model)
+    if not layers:
+        return 0
+    k = max(1, int(round(len(layers) * ratio)))
+    return freeze_bottom_k_layers(model, k)
+
+def unfreeze_all(model):
+    for p in model.parameters():
+        p.requires_grad = True
+
+# Lightning callback để unfreeze tại epoch chỉ định
+from lightning.pytorch.callbacks import Callback
+
+class UnfreezeAtEpoch(Callback):
+    def __init__(self, epoch_to_unfreeze: int):
+        super().__init__()
+        self.epoch_to_unfreeze = epoch_to_unfreeze
+        self._done = False
+
+    def on_train_epoch_start(self, trainer, pl_module):
+        if self._done:
+            return
+        current = trainer.current_epoch or 0
+        if self.epoch_to_unfreeze >= 0 and current >= self.epoch_to_unfreeze:
+            print(f"🔓 Unfreezing all params at epoch {current} …")
+            unfreeze_all(pl_module)
+            self._done = True
+
+
+
 # --------------------------------- Main --------------------------------
 
 def main():
@@ -548,17 +754,16 @@ def main():
     
 
 def main_train(args):
-
+    # -------------------- Paths & basic stats --------------------
     train_manifest = args.train_manifest.expanduser().resolve()
-    val_manifest = args.val_manifest.expanduser().resolve() if args.val_manifest else None
-    test_manifest = args.test_manifest.expanduser().resolve() if args.test_manifest else None
+    val_manifest   = args.val_manifest.expanduser().resolve() if args.val_manifest else None
+    test_manifest  = args.test_manifest.expanduser().resolve() if args.test_manifest else None
 
-    # Count training samples for LR/warmup scaling
     print("📊 Counting training samples…")
     train_samples = count_lines(train_manifest)
     print(f"📊 Number of training samples: {train_samples}")
 
-    # Prepare tokenizer
+    # -------------------- Tokenizer --------------------
     tokenizer_path, tokenizer_type_cfg = prepare_tokenizer(
         manifest_path=train_manifest,
         tokenizer_dir=args.tokenizer_dir,
@@ -567,7 +772,7 @@ def main_train(args):
         lowercase=args.lowercase_text,
     )
 
-    # Load + patch NeMo config
+    # -------------------- Load + patch NeMo YAML --------------------
     cfg = configure_from_yaml(
         base_config=args.base_config,
         train_manifest=train_manifest,
@@ -584,10 +789,10 @@ def main_train(args):
         disable_specaug=args.disable_specaug,
     )
 
-    # Set per-GPU batch size override from CLI
+    # Per-GPU batch size từ CLI
     cfg.model.train_ds.batch_size = int(args.batch_size)
 
-    # Scale LR and warmup using actual global batch size and epochs
+    # -------------------- Optim scale & warmup --------------------
     scale_optim_and_warmup(
         cfg,
         train_samples=train_samples,
@@ -596,7 +801,22 @@ def main_train(args):
         acc_steps=args.accumulate_grad_batches,
     )
 
-    # Build Trainer + loggers
+    # Nếu FT từ .nemo mà user KHÔNG chỉ định --lr, hạ LR mặc định xuống mức an toàn
+    if getattr(args, "init_from_nemo", None) is not None and args.init_from_nemo and args.lr is None:
+        cfg.model.optim.lr = min(cfg.model.optim.lr, 1e-4)
+        cfg.model.optim.sched.min_lr = cfg.model.optim.lr * 0.1
+        print(f"🔧 FT override LR → {cfg.model.optim.lr:.6f} (no --lr provided)")
+
+    # Gradient clipping qua cfg.trainer (Lightning sẽ đọc)
+    if getattr(args, "grad_clip", None) is not None:
+        try:
+            cfg.trainer.gradient_clip_val = float(args.grad_clip)
+            cfg.trainer.gradient_clip_algorithm = "norm"
+            print(f"✂️  Grad clip = {args.grad_clip}")
+        except Exception:
+            pass
+
+    # -------------------- Trainer & loggers --------------------
     exp_dir = args.exp_dir.expanduser().resolve()
     exp_name = args.exp_name
 
@@ -608,19 +828,38 @@ def main_train(args):
         devices=args.devices,
     )
 
-    # Attach NeMo exp_manager (creates final run directory, ckpt callbacks, etc.)
     attach_exp_manager(trainer, cfg, exp_dir=exp_dir, exp_name=exp_name)
-
-    # Add CSV logger alongside TB
     maybe_add_csv_logger(trainer)
 
-    # Instantiate model
-    print("🧠 Initializing model…")
-    # model = nemo_asr.models.EncDecRNNTBPEModel(cfg=cfg.model, trainer=trainer)
-    model = CustomFastConformerRNNTModel(cfg=cfg.model, trainer=trainer)
+    # -------------------- Build/Restore model for TRAIN --------------------
+    print("🧠 Initializing / Restoring model…")
+    model, cfg = build_or_restore_model_for_train(args, cfg, trainer)
 
+    # -------------------- Freeze plan at start --------------------
+    frozen = 0
+    if getattr(args, "freeze_encoder_layers", 0) > 0:
+        frozen = freeze_bottom_k_layers(model, int(args.freeze_encoder_layers))
+    elif getattr(args, "freeze_encoder_ratio", 0.0) > 0.0:
+        frozen = freeze_bottom_ratio(model, float(args.freeze_encoder_ratio))
+    if frozen > 0:
+        print(f"❄️  Frozen bottom {frozen} encoder layer(s).")
 
-    # Clean memory a bit before training starts
+    # -------------------- Unfreeze callback --------------------
+    callbacks = []
+    if getattr(args, "unfreeze_at_epoch", -1) is not None and int(args.unfreeze_at_epoch) >= 0:
+        callbacks.append(UnfreezeAtEpoch(int(args.unfreeze_at_epoch)))
+        # Đảm bảo callback được gắn vào trainer (PL v2 thường nhận qua Trainer(..., callbacks=[...]))
+        # Nếu trainer không có thuộc tính .callbacks dạng list thì append an toàn:
+        if hasattr(trainer, "callbacks") and isinstance(trainer.callbacks, list):
+            trainer.callbacks.extend(callbacks)
+
+    # Double-check grad clipping runtime (trong trường hợp Trainer hỗ trợ)
+    if getattr(args, "grad_clip", None) is not None and hasattr(trainer, "gradient_clip_val"):
+        trainer.gradient_clip_val = float(args.grad_clip)
+        trainer.gradient_clip_algorithm = "norm"
+
+    # -------------------- Memory hygiene --------------------
+    import gc, torch
     gc.collect()
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
@@ -629,28 +868,31 @@ def main_train(args):
     try:
         print(model.summarize(max_depth=4))
     except Exception:
-        # summarize() can fail on some PTL/Nemo combos; not critical
         pass
-
     print("=" * 100)
-    
 
-
-    # Train
+    # -------------------- Train (with optional resume) --------------------
     print("🏋️ Starting training…")
-    trainer.fit(model)
+    fit_kwargs = {}
+    if getattr(args, "resume_from_ckpt", None):
+        fit_kwargs["ckpt_path"] = str(args.resume_from_ckpt)
+        print(f"↩️  Resuming from ckpt: {args.resume_from_ckpt}")
 
-    # Log last val metrics, if available
+    # Với PL v2, callbacks thường nên truyền vào Trainer(...), nhưng nếu đã append ở trên thì fit() bình thường:
+    trainer.fit(model, **fit_kwargs)
+
+    # -------------------- Log last val metrics --------------------
     try:
-        log_dir = Path(trainer.log_dir) if getattr(trainer, 'log_dir', None) else exp_dir / exp_name
-        val_wer = float(trainer.callback_metrics.get('val_wer', 0.0))
+        from pathlib import Path as _Path
+        log_dir = _Path(trainer.log_dir) if getattr(trainer, 'log_dir', None) else exp_dir / exp_name
+        val_wer  = float(trainer.callback_metrics.get('val_wer', 0.0))
         val_loss = float(trainer.callback_metrics.get('val_loss', 0.0))
         log_val_metrics_to_txt(log_dir, trainer.current_epoch or 0, val_wer, val_loss)
     except Exception:
         pass
 
-    # Test
-    if args.test_manifest is not None:
+    # -------------------- Test (optional) --------------------
+    if test_manifest is not None:
         print("🔍 Running test…")
         trainer.test(model)
 
