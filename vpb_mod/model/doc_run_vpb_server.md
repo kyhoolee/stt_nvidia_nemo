@@ -452,6 +452,10 @@ python -m vpb_mod.model._2_fastformer_infer \
   --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_v1/2025-08-27_07-42-39/checkpoints/vpb_asr_fastconformer_ft_v1.nemo
 
 
+python -m vpb_mod.model._2_fastformer_infer \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --hardfix-vpb \
+  --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_v1/2025-08-27_08-54-05/checkpoints/vpb_asr_fastconformer_ft_v1.nemo
 
 
 model	dataset	wer	log_path
@@ -494,3 +498,48 @@ nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
   --fastemit-lambda 0.003  > vpb_mod/logs/vpb_ft.log 2>&1 &
 
   
+
+=============
+
+model	dataset	wer	log_path
+vpb_asr_fastconformer_ft_v1	standard_test	0.3100282485875706	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250827_121021/hardfix__standard_test__vpb_asr_fastconformer_ft_v1.log
+vpb_asr_fastconformer_ft_v1	next_day_test_debug	0.2634374336095177	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250827_121021/hardfix__next_day_test_debug__vpb_asr_fastconformer_ft_v1.log
+vpb_asr_fastconformer_ft_v1	vpb_right2_train	0.047033915895221885	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250827_121021/hardfix__vpb_right2_train__vpb_asr_fastconformer_ft_v1.log
+vpb_asr_fastconformer_ft_v1	vpb_right2_valid	0.30675981097185123	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250827_121021/hardfix__vpb_right2_valid__vpb_asr_fastconformer_ft_v1.log
+
+===============
+
+@TODO: viết script kiểm tra xem standard_test_2, standard_test, next_day_test_debug có bị duplicate data với vpb_right2_train ko ???
+-> Đảm bảo dữ liệu ko bị leak (trực tiếp)
+
+python -m vpb_mod.model._2_vpb_manifest_verify \
+  /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test_2/test_meta_nemo.jsonl \
+  /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/test_meta_nemo.jsonl \
+  /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/next_day_test_meta_debug_nemo.jsonl \
+  /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/train_meta_nemo.jsonl \
+  /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta_nemo.jsonl
+
+
+python -m vpb_mod.model._2_vpb_manifest_verify \
+  --anchor /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/train_meta_nemo.jsonl \
+  /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test_2/test_meta_nemo.jsonl \
+  /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/test_meta_nemo.jsonl \
+  /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/next_day_test_meta_debug_nemo.jsonl \
+  /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta_nemo.jsonl
+
+
+(nemo) ubuntu@ip-10-0-14-129:~/work/stt_nvidia_nemo$ python -m vpb_mod.model._2_vpb_manifest_verify \
+  --anchor /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/train_meta_nemo.jsonl \
+  /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test_2/test_meta_nemo.jsonl \
+  /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/test_meta_nemo.jsonl \
+  /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/next_day_test_meta_debug_nemo.jsonl \
+  /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta_nemo.jsonl
+[ANCHOR] /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/train_meta_nemo.jsonl -> lines=3072 unique_ids=3072
+
+=== Overlap with Anchor (Summary) ===
+/home/ubuntu/work/clean_dataset_vpb/manifest/standard_test_2/test_meta_nemo.jsonl -> unique=2993, overlap=2096 (0.700301)
+/home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/test_meta_nemo.jsonl -> unique=29, overlap=0 (0.000000)
+/home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/next_day_test_meta_debug_nemo.jsonl -> unique=1650, overlap=0 (0.000000)
+/home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta_nemo.jsonl -> unique=630, overlap=0 (0.000000)
+
+

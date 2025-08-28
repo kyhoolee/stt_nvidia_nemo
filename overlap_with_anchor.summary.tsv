@@ -1,0 +1,5 @@
+file	lines	unique_ids	overlap_with_anchor	overlap_ratio_unique
+/home/ubuntu/work/clean_dataset_vpb/manifest/standard_test_2/test_meta_nemo.jsonl	2993	2993	2096	0.700301
+/home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/test_meta_nemo.jsonl	29	29	0	0.000000
+/home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/next_day_test_meta_debug_nemo.jsonl	1650	1650	0	0.000000
+/home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta_nemo.jsonl	630	630	0	0.000000
