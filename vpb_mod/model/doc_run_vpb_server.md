@@ -497,6 +497,35 @@ nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
   --grad-clip 1.0 \
   --fastemit-lambda 0.003  > vpb_mod/logs/vpb_ft.log 2>&1 &
 
+
+============= PSEUDO_LABEL_FINE_TUNE
+
+export CUDA_VISIBLE_DEVICES=4,5,6,7
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/train_meta_nemo.jsonl \
+  --val-manifest   /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/valid_meta_nemo.jsonl \
+  --test-manifest  /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/test_meta_nemo.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vietspeech \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 100 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 32 \
+  --accumulate-grad-batches 2 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vpb_ft \
+  --exp-name vpb_asr_fastconformer_ft_poc_qc_v1 \
+  --init-from-nemo ../nemo_work/_1_small_vi_ds/experiments/vietspeech/vpb_asr_fastconformer/2025-08-25_07-42-00/checkpoints/vpb_asr_fastconformer.nemo \
+  --freeze-encoder-ratio 0.2 \
+  --unfreeze-at-epoch 2 \
+  --grad-clip 1.0 \
+  --fastemit-lambda 0.003 \
+  > vpb_mod/logs/vpb_ft_poc_qc.log 2>&1 &
+
+
   
 
 =============
