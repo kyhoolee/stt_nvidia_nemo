@@ -2,14 +2,12 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import json
 import librosa
 import torch
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Tuple
 from nemo.collections import asr as nemo_asr
-
-from jiwer import wer  # <-- Import the 'wer' function from 'jiwer'
+from jiwer import wer  # corpus WER
 
 from ._1_fastformer_trans_bpe import SIZE_PRESETS
 
@@ -40,6 +38,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument('--max-duration', type=float, default=17.0)
     p.add_argument('--disable-specaug', action='store_true')
 
+    # Hard-sample options (áp dụng cho test-only & hard-fix)
+    p.add_argument('--hard-topk', type=int, default=50, help='Số lượng mẫu tệ nhất sẽ xuất ra (0 để tắt).')
+    p.add_argument('--min-words', type=int, default=4, help='Chỉ xét các mẫu có >= số từ này trong reference.')
+    p.add_argument('--hard-out', type=Path, default=None, help='Đường dẫn file TSV để ghi hard samples (mặc định auto).')
+
     # Hard-fix VPB test-suite
     p.add_argument('--hardfix-vpb', action='store_true',
                    help='Run fixed VPB test suite on a given .nemo (ignores train/val).')
@@ -52,7 +55,6 @@ def parse_args() -> argparse.Namespace:
     ), help='Root folder of VPB manifests (contains standard_test, standard_test_2, manifest_vpb_right_2).')
     p.add_argument('--hardfix-outdir', type=Path, default=Path("./nemo_eval_hardfix"),
                    help='Output folder for logs and summary.tsv in hard-fix mode.')
-
 
     # Logging / output
     p.add_argument('--exp-dir', type=Path, default=Path('./experiments'))
@@ -67,6 +69,95 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+# --------------------------------- Helpers ---------------------------------
+
+def _pred_to_text(x):
+    """
+    NeMo EncDecRNNTBPEModel.transcribe thường trả về List[str].
+    Một số API khác có thể trả Hypothesis với thuộc tính .text.
+    Hàm này normalize về string.
+    """
+    if x is None:
+        return ""
+    if isinstance(x, str):
+        return x
+    # Hypothesis-like
+    txt = getattr(x, "text", None)
+    if isinstance(txt, str):
+        return txt
+    # List 1 phần tử?
+    if isinstance(x, (list, tuple)) and x and isinstance(x[0], str):
+        return x[0]
+    return str(x)
+
+
+def _word_count(s: str) -> int:
+    return len(s.strip().split())
+
+
+def _sample_wer(ref: str, hyp: str) -> float:
+    from jiwer import wer as _wer_single
+    if _word_count(ref) == 0:
+        return float('nan')
+    # dùng WER của jiwer với list 1 phần tử để nhất quán định nghĩa
+    return float(_wer_single([ref], [hyp]))
+
+
+def _write_hard_samples_tsv(rows: List[dict], out_path: Path):
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open('w', encoding='utf-8') as f:
+        f.write("idx\taudio_path\tref_len\tpred_len\twer\treference\tprediction\n")
+        for r in rows:
+            ref = r['reference'].replace('\t', ' ').replace('\n', ' ')
+            pred = r['prediction'].replace('\t', ' ').replace('\n', ' ')
+            f.write(
+                f"{r['idx']}\t{r['audio_path']}\t{r['ref_len']}\t{r['pred_len']}\t{r['wer']:.4f}\t{ref}\t{pred}\n"
+            )
+
+
+def _write_hard_samples_jsonl(rows: List[dict], out_path: Path):
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open('w', encoding='utf-8') as f:
+        for r in rows:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+
+def _pick_device_from_flag(devices: int) -> str:
+    """
+    - devices:
+        -1 -> auto (cuda:0 nếu có, nếu không thì cpu)
+        >=0 -> cuda:{devices} nếu hợp lệ, nếu không hợp lệ thì fallback sang cpu
+        < -1 -> luôn fallback sang cpu
+    """
+    if torch.cuda.is_available():
+        if isinstance(devices, int) and devices >= 0:
+            if devices < torch.cuda.device_count():
+                return f"cuda:{devices}"
+            else:
+                print(f"[WARN] devices={devices} vượt quá số GPU khả dụng ({torch.cuda.device_count()}), fallback CPU.")
+                return "cpu"
+        elif devices == -1:
+            return "cuda:0"
+        else:
+            print(f"[WARN] devices={devices} không hợp lệ, fallback CPU.")
+            return "cpu"
+    else:
+        return "cpu"
+
+
+def _amp_setup(precision: str, device_str: str) -> Tuple[bool, Optional[torch.dtype]]:
+    use_amp = (str(precision).strip() in {"16", "bf16"}) and device_str != "cpu"
+    amp_dtype = None
+    if use_amp:
+        if str(precision).strip() == "16":
+            amp_dtype = torch.float16
+        elif str(precision).strip() == "bf16":
+            amp_dtype = torch.bfloat16
+    return use_amp, amp_dtype
+
+
+# --------------------------------- TEST (single/batch) ---------------------------------
+
 def test_from_checkpoint(
     base_config: Path,
     test_manifest: Path,
@@ -78,9 +169,10 @@ def test_from_checkpoint(
     nemo_path: Optional[Path] = None,
     ckpt_path: Optional[Path] = None,
 ):
+    """
+    (giữ lại để tham chiếu; không dùng hard-samples ở hàm này)
+    """
     print("🚀 Starting test-only mode...")
-
-
 
     if nemo_path:
         print(f"🧠 Restoring model from .nemo: {nemo_path}")
@@ -116,13 +208,6 @@ def test_from_checkpoint(
             model.wer.log_prediction = False
     except Exception as e:
         print(f"⚠️ Could not set greedy decoder: {e}")
-
-    # print("=" * 100)
-    # try:
-    #     print(model.summarize(max_depth=4))
-    # except Exception:
-    #     pass
-    # print("=" * 100)
 
     tokenizer = model.tokenizer
 
@@ -145,28 +230,21 @@ def test_from_checkpoint(
         lines = f.readlines()
         for i, line in enumerate(lines):
             item = json.loads(line)
-            # path = os.path.expanduser
             audio_path = os.path.expanduser(item['audio_filepath'])
             reference_text = item['text']
 
             predicted_text = transcribe_audio(audio_path, model).text
 
-            # print(predicted_text)
-            
-            # Normalize texts for consistent WER calculation
             all_predictions.append(predicted_text.lower())
             all_references.append(reference_text.lower())
 
-            # Print results every 100 samples for progress tracking
             if (i + 1) % 100 == 0:
                 print(f"Processed {i + 1}/{len(lines)} samples.")
-
                 print(f"Sample {i + 1}:")
                 print(f"predicted: {predicted_text}")
                 print(f"reference: {reference_text}")
                 print("-" * 50)
     
-    # --- Calculation using `jiwer` ---
     wer_score = wer(all_references, all_predictions)
     
     print("=" * 100)
@@ -175,9 +253,7 @@ def test_from_checkpoint(
     print("=" * 100)
 
 
-# --------------------------------- BATCH ---------------------------------
-
-# --- Sửa đổi hàm test_from_checkpoint ---
+# --- BATCH với hard-samples ---
 def test_batch_from_checkpoint(
     base_config: Path,
     test_manifest: Path,
@@ -188,6 +264,9 @@ def test_batch_from_checkpoint(
     batch_size: int,
     nemo_path: Optional[Path] = None,
     ckpt_path: Optional[Path] = None,
+    hard_topk: int = 50,
+    min_words: int = 4,
+    hard_out: Optional[Path] = None,
 ):
     print("🚀 Starting test-only mode...")
 
@@ -203,6 +282,11 @@ def test_batch_from_checkpoint(
         )
     else:
         raise ValueError("Must provide either --nemo or --ckpt for test-only mode.")
+
+    # Device & precision
+    device_str = _pick_device_from_flag(devices)
+    model.to(device_str)
+    use_amp, amp_dtype = _amp_setup(precision, device_str)
 
     model.eval()
     try:
@@ -226,25 +310,16 @@ def test_batch_from_checkpoint(
     except Exception as e:
         print(f"⚠️ Could not set greedy decoder: {e}")
 
-    # print("=" * 100)
-    # try:
-    #     print(model.summarize(max_depth=4))
-    # except Exception:
-    #     pass
-    # print("=" * 100)
-
-    # --- Phần tính WER được bổ sung ---
-    all_predictions = []
-    all_references = []
+    # --- Phần tính WER + hard-samples ---
+    all_predictions: List[str] = []
+    all_references: List[str] = []
+    audio_paths: List[str] = []
     
-    print("🔍 Running manual transcription and WER calculation...")
-    
-    # Đọc tất cả các dòng từ manifest một lần
+    print("🔍 Running batch transcription and WER calculation...")
     with open(test_manifest, 'r', encoding='utf-8') as f:
         manifest_lines = f.readlines()
         
     num_samples = len(manifest_lines)
-    audio_paths = []
     reference_texts = []
 
     for line in manifest_lines:
@@ -260,11 +335,13 @@ def test_batch_from_checkpoint(
         batch_audio_paths = audio_paths[i:i + batch_size]
         batch_reference_texts = reference_texts[i:i + batch_size]
 
-        # Sử dụng phương thức transcribe được tích hợp sẵn của NeMo, nó tự động xử lý batch
-        predicted_texts = model.transcribe(batch_audio_paths, batch_size=batch_size)
+        if use_amp and amp_dtype is not None and device_str.startswith("cuda"):
+            with torch.cuda.amp.autocast(dtype=amp_dtype):
+                predicted_texts = model.transcribe(batch_audio_paths, batch_size=batch_size)
+        else:
+            predicted_texts = model.transcribe(batch_audio_paths, batch_size=batch_size)
 
-        # Normalize kết quả → string
-        norm_preds = [ _pred_to_text(p) for p in predicted_texts ]
+        norm_preds = [_pred_to_text(p) for p in predicted_texts]
 
         for j in range(len(norm_preds)):
             pred_text = norm_preds[j]
@@ -282,7 +359,7 @@ def test_batch_from_checkpoint(
 
         print(f"Processed {min(i + batch_size, num_samples)}/{num_samples} samples.")
 
-    # --- Calculation using `jiwer` ---
+    # --- Corpus WER ---
     wer_score = wer(all_references, all_predictions)
     
     print("=" * 100)
@@ -290,32 +367,51 @@ def test_batch_from_checkpoint(
     print(f"✨ Final WER for the test set: {wer_score:.4f}")
     print("=" * 100)
 
+    # ===== Hard samples (per-utterance WER) =====
+    # Xác định output file
+    if hard_out is not None:
+        hard_tsv = hard_out
+        hard_jsonl = hard_out.with_suffix('.jsonl')
+    else:
+        hard_tsv = (exp_dir / f"{exp_name}_hard.tsv") if exp_dir else Path("./hard.tsv")
+        hard_jsonl = (exp_dir / f"{exp_name}_hard.jsonl") if exp_dir else Path("./hard.jsonl")
+
+    per_samples: List[dict] = []
+    for idx, (ap, ref, pred) in enumerate(zip(audio_paths, all_references, all_predictions)):
+        ref_len = _word_count(ref)
+        if ref_len < int(min_words):
+            continue
+        s_wer = _sample_wer(ref, pred)
+        if s_wer != s_wer:  # NaN
+            continue
+        per_samples.append({
+            "idx": idx,
+            "audio_path": ap,
+            "ref_len": ref_len,
+            "pred_len": _word_count(pred),
+            "wer": float(s_wer),
+            "reference": ref,
+            "prediction": pred,
+        })
+
+    if hard_topk > 0 and len(per_samples) > 0:
+        per_samples.sort(key=lambda x: x["wer"], reverse=True)
+        hard_rows = per_samples[:hard_topk]
+        _write_hard_samples_tsv(hard_rows, hard_tsv)
+        _write_hard_samples_jsonl(hard_rows, hard_jsonl)
+        print(f"📄 Saved hard samples (Top-{hard_topk}) to:")
+        print(f"   - TSV:   {hard_tsv}")
+        print(f"   - JSONL: {hard_jsonl}")
+    else:
+        print("ℹ️ Hard samples disabled or no eligible samples (check --hard-topk and --min-words).")
+
+    return wer_score  # tiện nếu cần dùng tiếp
 
 
-# -----------------------------------------------------------------------
+# --------------------------------- HARD-FIX VPB SUITE ---------------------------------
 
 from datetime import datetime
 from collections import OrderedDict
-
-def _pred_to_text(x):
-    """
-    NeMo EncDecRNNTBPEModel.transcribe thường trả về List[str].
-    Một số API khác có thể trả Hypothesis với thuộc tính .text.
-    Hàm này normalize về string.
-    """
-    if x is None:
-        return ""
-    if isinstance(x, str):
-        return x
-    # Hypothesis-like
-    txt = getattr(x, "text", None)
-    if isinstance(txt, str):
-        return txt
-    # List 1 phần tử?
-    if isinstance(x, (list, tuple)) and x and isinstance(x[0], str):
-        return x[0]
-    return str(x)
-
 
 def run_hardfix_vpb_suite(
     base_config: Path,
@@ -325,11 +421,13 @@ def run_hardfix_vpb_suite(
     nemo_path: Path,
     manifest_root: Path,
     outdir: Path,
+    hard_topk: int = 50,
+    min_words: int = 4,
 ):
     """
-    Chạy cố định 5 bộ VPB \*_nemo.jsonl với 1 model .nemo, ghi summary.tsv.
+    Chạy cố định 5 bộ VPB *_nemo.jsonl với 1 model .nemo, ghi summary.tsv.
+    ĐÃ BỔ SUNG: xuất hard samples (Top-K per-utterance WER) cho từng dataset vào logs_{ts}/.
     """
-    # Danh sách manifest cố định (khớp với batch bash trước đó)
     mf = OrderedDict([
         ("standard_test_2",      manifest_root / "standard_test_2" / "test_meta_nemo.jsonl"),
         ("standard_test",        manifest_root / "standard_test"   / "test_meta_nemo.jsonl"),
@@ -343,7 +441,7 @@ def run_hardfix_vpb_suite(
     out_logs.mkdir(parents=True, exist_ok=True)
     summary_path = outdir / f"summary_{ts}.tsv"
     with summary_path.open("w", encoding="utf-8") as sw:
-        sw.write("model\tdataset\twer\tlog_path\n")
+        sw.write("model\tdataset\twer\tlog_path\thard_samples\n")
 
     print("==> HARD-FIX VPB SUITE")
     print(f"Model .nemo: {nemo_path}")
@@ -351,19 +449,19 @@ def run_hardfix_vpb_suite(
     print(f"Logs dir: {out_logs}")
     print(f"Summary: {summary_path}")
 
-    # Chạy lần lượt
     for ds_name, path in mf.items():
         if not path.is_file():
             print(f"[!] MISSING manifest: {path} (skip {ds_name})")
             continue
 
-        # exp_name cho rõ ràng
         exp_name = f"hardfix__{ds_name}__{nemo_path.stem}"
         print(f"\n--- Dataset: {ds_name}")
         print(f"    Manifest: {path}")
 
-        # Chạy test batch → in WER; wrap để lấy WER trả về
-        # Ta copy một bản rút gọn của test_batch_from_checkpoint cho phép return WER:
+        # Log file (stdout capture) + Hard samples file path
+        log_path = out_logs / f"{exp_name}.log"
+        hard_out_path = out_logs / f"{exp_name}_hard.tsv"  # tsv; jsonl auto theo suffix trong _run_single_test_return_wer
+
         wer_score = _run_single_test_return_wer(
             base_config=base_config,
             test_manifest=path,
@@ -373,14 +471,16 @@ def run_hardfix_vpb_suite(
             nemo_path=nemo_path,
             exp_name=exp_name,
             log_dir=out_logs,
+            hard_topk=hard_topk,
+            min_words=min_words,
+            hard_out=hard_out_path,
         )
 
-        # Ghi summary
-        log_path = out_logs / f"{exp_name}.log"
         with summary_path.open("a", encoding="utf-8") as sw:
-            sw.write(f"{nemo_path.stem}\t{ds_name}\t{wer_score if wer_score is not None else 'NA'}\t{log_path}\n")
+            sw.write(f"{nemo_path.stem}\t{ds_name}\t{wer_score if wer_score is not None else 'NA'}\t{log_path}\t{hard_out_path}\n")
 
     print("\n==> DONE HARD-FIX VPB. See summary:", summary_path)
+
 
 def _run_single_test_return_wer(
     base_config: Path,
@@ -391,39 +491,23 @@ def _run_single_test_return_wer(
     nemo_path: Path,
     exp_name: str,
     log_dir: Path,
+    hard_topk: int = 50,
+    min_words: int = 4,
+    hard_out: Optional[Path] = None,
 ):
     """
-    Chạy 1 dataset và return WER (float). Đồng thời log ra file.
-    - devices:
-        -1 -> auto (cuda:0 nếu có, nếu không thì cpu)
-        >=0 -> cuda:{devices} nếu hợp lệ, nếu không hợp lệ thì fallback sang cpu
-        < -1 -> luôn fallback sang cpu
-    - precision: "16" -> autocast float16 khi có CUDA
+    Chạy 1 dataset và return WER (float). Đồng thời:
+      - log stdout vào {log_dir}/{exp_name}.log
+      - xuất hard samples (TSV + JSONL) vào:
+          + nếu hard_out != None -> hard_out (TSV) và hard_out.with_suffix('.jsonl')
+          + nếu None -> {log_dir}/{exp_name}_hard.tsv|jsonl
+    - devices: giống _pick_device_from_flag()
+    - precision: "16"/"bf16" dùng autocast khi chạy CUDA
     """
-    import io, sys, os, json, torch
-    from nemo.collections import asr as nemo_asr
+    import io, sys
 
-    # ---- Chọn device
-    if torch.cuda.is_available():
-        if isinstance(devices, int) and devices >= 0:
-            if devices < torch.cuda.device_count():
-                device_str = f"cuda:{devices}"
-            else:
-                print(f"[WARN] devices={devices} vượt quá số GPU khả dụng ({torch.cuda.device_count()}), fallback sang CPU.")
-                device_str = "cpu"
-        elif devices == -1:
-            device_str = "cuda:0"
-        else:
-            print(f"[WARN] devices={devices} không hợp lệ, fallback sang CPU.")
-            device_str = "cpu"
-    else:
-        device_str = "cpu"
-
-    # ---- Precision
-    use_amp = (str(precision).strip() in {"16", "bf16"}) and device_str != "cpu"
-    amp_dtype = torch.float16 if str(precision).strip() == "16" else (
-        torch.bfloat16 if str(precision).strip() == "bf16" else None
-    )
+    device_str = _pick_device_from_flag(devices)
+    use_amp, amp_dtype = _amp_setup(precision, device_str)
 
     log_fp = log_dir / f"{exp_name}.log"
     buf = io.StringIO()
@@ -459,34 +543,73 @@ def _run_single_test_return_wer(
         # Đọc manifest
         with open(test_manifest, 'r', encoding='utf-8') as f:
             lines = f.readlines()
-        audio_paths = []
-        ref_texts = []
+        audio_paths: List[str] = []
+        ref_texts: List[str] = []
         for line in lines:
             item = json.loads(line)
             audio_paths.append(os.path.expanduser(item['audio_filepath']))
-            ref_texts.append(item['text'])
+            ref_texts.append(str(item['text']))
 
         # Batch transcribe
-        preds = []
+        preds: List[str] = []
         for i in range(0, len(audio_paths), batch_size):
             chunk = audio_paths[i:i+batch_size]
-            if use_amp and amp_dtype is not None:
+            if use_amp and amp_dtype is not None and device_str.startswith("cuda"):
                 with torch.cuda.amp.autocast(dtype=amp_dtype):
                     outs = model.transcribe(chunk, batch_size=batch_size)
             else:
                 outs = model.transcribe(chunk, batch_size=batch_size)
             outs = [_pred_to_text(x) for x in outs]
-            preds.extend(outs)
+            preds.extend([o.lower() for o in outs])
+            ref_texts[i:i+batch_size] = [r.lower() for r in ref_texts[i:i+batch_size]]
             print(f"Processed {min(i+batch_size, len(audio_paths))}/{len(audio_paths)} samples.")
 
-        # Tính WER
+        # Tính corpus WER
         from jiwer import wer as _wer
-        wer_score = _wer([t.lower() for t in ref_texts], [p.lower() for p in preds])
+        wer_score = _wer(ref_texts, preds)
 
         print("=" * 100)
         print("✅ Finished testing.")
         print(f"✨ Final WER for the test set: {wer_score:.4f}")
         print("=" * 100)
+
+        # ===== Hard samples (per-utterance WER) =====
+        if hard_out is not None:
+            hard_tsv = hard_out
+            hard_jsonl = hard_out.with_suffix('.jsonl')
+        else:
+            hard_tsv = log_dir / f"{exp_name}_hard.tsv"
+            hard_jsonl = log_dir / f"{exp_name}_hard.jsonl"
+
+        per_samples: List[dict] = []
+        for idx, (ap, ref, pred) in enumerate(zip(audio_paths, ref_texts, preds)):
+            ref_len = _word_count(ref)
+            if ref_len < int(min_words):
+                continue
+            s_wer = _sample_wer(ref, pred)
+            if s_wer != s_wer:  # NaN
+                continue
+            per_samples.append({
+                "idx": idx,
+                "audio_path": ap,
+                "ref_len": ref_len,
+                "pred_len": _word_count(pred),
+                "wer": float(s_wer),
+                "reference": ref,
+                "prediction": pred,
+            })
+
+        if hard_topk > 0 and len(per_samples) > 0:
+            per_samples.sort(key=lambda x: x["wer"], reverse=True)
+            hard_rows = per_samples[:hard_topk]
+            _write_hard_samples_tsv(hard_rows, hard_tsv)
+            _write_hard_samples_jsonl(hard_rows, hard_jsonl)
+            print(f"📄 Saved hard samples (Top-{hard_topk}) to:")
+            print(f"   - TSV:   {hard_tsv}")
+            print(f"   - JSONL: {hard_jsonl}")
+        else:
+            print("ℹ️ Hard samples disabled or no eligible samples (check --hard-topk and --min-words).")
+
     finally:
         sys.stdout = old_stdout
         with log_fp.open("w", encoding="utf-8") as fw:
@@ -511,6 +634,8 @@ def main():
             nemo_path=args.hardfix_model.expanduser().resolve(),
             manifest_root=args.hardfix_manifest_root.expanduser().resolve(),
             outdir=args.hardfix_outdir.expanduser().resolve(),
+            hard_topk=args.hard_topk,
+            min_words=args.min_words,
         )
         return
 
@@ -528,9 +653,11 @@ def main():
             batch_size=args.batch_size,
             nemo_path=(args.nemo.expanduser().resolve() if args.nemo else None),
             ckpt_path=(args.ckpt.expanduser().resolve() if args.ckpt else None),
+            hard_topk=args.hard_topk,
+            min_words=args.min_words,
+            hard_out=(args.hard_out.expanduser().resolve() if args.hard_out else None),
         )
         return
-    
 
 
 if __name__ == '__main__':
