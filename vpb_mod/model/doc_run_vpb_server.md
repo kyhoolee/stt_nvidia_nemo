@@ -452,6 +452,8 @@ python -m vpb_mod.model._2_fastformer_infer \
   --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_v1/2025-08-27_07-42-39/checkpoints/vpb_asr_fastconformer_ft_v1.nemo
 
 
+
+
 python -m vpb_mod.model._2_fastformer_infer \
   --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
   --hardfix-vpb \
@@ -572,3 +574,17 @@ python -m vpb_mod.model._2_vpb_manifest_verify \
 /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta_nemo.jsonl -> unique=630, overlap=0 (0.000000)
 
 
+
+[text](../../../nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v1/2025-08-29_09-18-14/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v1.nemo)
+
+python -m vpb_mod.model._2_fastformer_infer \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --hardfix-vpb \
+  --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v1/2025-08-29_09-18-14/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v1.nemo
+
+model	dataset	wer	log_path
+vpb_asr_fastconformer_ft_poc_qc_v1	standard_test_2	0.3045139031502855	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_022954/hardfix__standard_test_2__vpb_asr_fastconformer_ft_poc_qc_v1.log
+vpb_asr_fastconformer_ft_poc_qc_v1	standard_test	0.2558851224105461	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_022954/hardfix__standard_test__vpb_asr_fastconformer_ft_poc_qc_v1.log
+vpb_asr_fastconformer_ft_poc_qc_v1	next_day_test_debug	0.26867785567594366	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_022954/hardfix__next_day_test_debug__vpb_asr_fastconformer_ft_poc_qc_v1.log
+vpb_asr_fastconformer_ft_poc_qc_v1	vpb_right2_train	0.29606874507036407	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_022954/hardfix__vpb_right2_train__vpb_asr_fastconformer_ft_poc_qc_v1.log
+vpb_asr_fastconformer_ft_poc_qc_v1	vpb_right2_valid	0.32525169508937746	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_022954/hardfix__vpb_right2_valid__vpb_asr_fastconformer_ft_poc_qc_v1.log
