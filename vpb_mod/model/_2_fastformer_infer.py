@@ -382,7 +382,6 @@ def run_hardfix_vpb_suite(
 
     print("\n==> DONE HARD-FIX VPB. See summary:", summary_path)
 
-
 def _run_single_test_return_wer(
     base_config: Path,
     test_manifest: Path,
@@ -395,17 +394,48 @@ def _run_single_test_return_wer(
 ):
     """
     Chạy 1 dataset và return WER (float). Đồng thời log ra file.
+    - devices:
+        -1 -> auto (cuda:0 nếu có, nếu không thì cpu)
+        >=0 -> cuda:{devices} nếu hợp lệ, nếu không hợp lệ thì fallback sang cpu
+        < -1 -> luôn fallback sang cpu
+    - precision: "16" -> autocast float16 khi có CUDA
     """
+    import io, sys, os, json, torch
+    from nemo.collections import asr as nemo_asr
+
+    # ---- Chọn device
+    if torch.cuda.is_available():
+        if isinstance(devices, int) and devices >= 0:
+            if devices < torch.cuda.device_count():
+                device_str = f"cuda:{devices}"
+            else:
+                print(f"[WARN] devices={devices} vượt quá số GPU khả dụng ({torch.cuda.device_count()}), fallback sang CPU.")
+                device_str = "cpu"
+        elif devices == -1:
+            device_str = "cuda:0"
+        else:
+            print(f"[WARN] devices={devices} không hợp lệ, fallback sang CPU.")
+            device_str = "cpu"
+    else:
+        device_str = "cpu"
+
+    # ---- Precision
+    use_amp = (str(precision).strip() in {"16", "bf16"}) and device_str != "cpu"
+    amp_dtype = torch.float16 if str(precision).strip() == "16" else (
+        torch.bfloat16 if str(precision).strip() == "bf16" else None
+    )
+
     log_fp = log_dir / f"{exp_name}.log"
-    import io, sys
     buf = io.StringIO()
     old_stdout = sys.stdout
     sys.stdout = buf
     try:
-        # Tái sử dụng pipeline batch (in ra console được redirect)
-        # NOTE: test_batch_from_checkpoint hiện chỉ print WER, mình tính lại để return
+        # Khôi phục model
         model = nemo_asr.models.EncDecRNNTBPEModel.restore_from(restore_path=str(nemo_path))
+        model.to(device_str)
         model.eval()
+
+        # Disable augment khi test
         try:
             if hasattr(model, 'spec_augmentation') and model.spec_augmentation is not None:
                 model.spec_augmentation.mask_prob = 0.0
@@ -417,6 +447,8 @@ def _run_single_test_return_wer(
                     model.preprocessor.pad_to = 0
         except Exception:
             pass
+
+        # Set greedy decode
         try:
             model.change_decoding_strategy(decoder_type="greedy_batch")
             if hasattr(model, 'wer'):
@@ -438,12 +470,16 @@ def _run_single_test_return_wer(
         preds = []
         for i in range(0, len(audio_paths), batch_size):
             chunk = audio_paths[i:i+batch_size]
-            outs = model.transcribe(chunk, batch_size=batch_size)
-            outs = [ _pred_to_text(x) for x in outs ]
+            if use_amp and amp_dtype is not None:
+                with torch.cuda.amp.autocast(dtype=amp_dtype):
+                    outs = model.transcribe(chunk, batch_size=batch_size)
+            else:
+                outs = model.transcribe(chunk, batch_size=batch_size)
+            outs = [_pred_to_text(x) for x in outs]
             preds.extend(outs)
             print(f"Processed {min(i+batch_size, len(audio_paths))}/{len(audio_paths)} samples.")
 
-        # WER
+        # Tính WER
         from jiwer import wer as _wer
         wer_score = _wer([t.lower() for t in ref_texts], [p.lower() for p in preds])
 
@@ -453,10 +489,9 @@ def _run_single_test_return_wer(
         print("=" * 100)
     finally:
         sys.stdout = old_stdout
-        # Ghi log
         with log_fp.open("w", encoding="utf-8") as fw:
             fw.write(buf.getvalue())
-    # In ra console 1 dòng tóm tắt
+
     print(f"[{exp_name}] WER={wer_score:.4f} | log={log_fp}")
     return float(wer_score)
 

@@ -448,8 +448,9 @@ python -m vpb_mod.model._2_vpb_manifest_convert \
 
 python -m vpb_mod.model._2_fastformer_infer \
   --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
-  --hardfix-vpb
+  --hardfix-vpb \
   --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_v1/2025-08-27_07-42-39/checkpoints/vpb_asr_fastconformer_ft_v1.nemo
+
 
 
 
@@ -458,6 +459,14 @@ python -m vpb_mod.model._2_fastformer_infer \
   --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
   --hardfix-vpb \
   --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_v1/2025-08-27_08-54-05/checkpoints/vpb_asr_fastconformer_ft_v1.nemo
+
+python -m vpb_mod.model._2_fastformer_infer \
+  --devices 3 \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --hardfix-vpb \
+  --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v2/2025-09-03_03-23-34/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v2.nemo
+
+/home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v2/2025-09-03_03-23-34/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v2.nemo
 
 
 model	dataset	wer	log_path
@@ -588,3 +597,70 @@ vpb_asr_fastconformer_ft_poc_qc_v1	standard_test	0.2558851224105461	/home/ubuntu
 vpb_asr_fastconformer_ft_poc_qc_v1	next_day_test_debug	0.26867785567594366	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_022954/hardfix__next_day_test_debug__vpb_asr_fastconformer_ft_poc_qc_v1.log
 vpb_asr_fastconformer_ft_poc_qc_v1	vpb_right2_train	0.29606874507036407	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_022954/hardfix__vpb_right2_train__vpb_asr_fastconformer_ft_poc_qc_v1.log
 vpb_asr_fastconformer_ft_poc_qc_v1	vpb_right2_valid	0.32525169508937746	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_022954/hardfix__vpb_right2_valid__vpb_asr_fastconformer_ft_poc_qc_v1.log
+
+
+============
+
+export CUDA_VISIBLE_DEVICES=4,5,6,7
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/train_meta_train.jsonl \
+  --val-manifest   /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta_train.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vietspeech \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 50 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 64 \
+  --accumulate-grad-batches 2 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vpb_ft \
+  --exp-name vpb_asr_fastconformer_ft_poc_qc_v2 \
+  --init-from-nemo ../nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v1/2025-08-29_09-18-14/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v1.nemo \
+  --freeze-encoder-ratio 0.4 \
+  --unfreeze-at-epoch 2 \
+  --grad-clip 1.0 \
+  --fastemit-lambda 0.003 \
+  > vpb_mod/logs/vpb_ft_poc_qc_v2.log 2>&1 &
+
+-------============-------
+
+# Tạo session mới tên vpb_ft
+tmux new -s vpb_ft
+tmux attach -t vpb_ft
+
+
+# Trong cửa sổ tmux, chạy lệnh sau:
+export CUDA_VISIBLE_DEVICES=4,5,6,7
+
+python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/train_meta_train.jsonl \
+  --val-manifest   /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta_train.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vietspeech \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 50 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 64 \
+  --accumulate-grad-batches 2 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vpb_ft \
+  --exp-name vpb_asr_fastconformer_ft_poc_qc_v2 \
+  --init-from-nemo ../nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v1/2025-08-29_09-18-14/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v1.nemo \
+  --freeze-encoder-ratio 0.4 \
+  --unfreeze-at-epoch 2 \
+  --grad-clip 1.0 \
+  --fastemit-lambda 0.003 \
+  > vpb_mod/logs/vpb_ft_poc_qc_v2.log 2>&1
+
+
+model	dataset	wer	log_path
+vpb_asr_fastconformer_ft_poc_qc_v2	standard_test_2	0.24204214071548857	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_070603/hardfix__standard_test_2__vpb_asr_fastconformer_ft_poc_qc_v2.log
+vpb_asr_fastconformer_ft_poc_qc_v2	standard_test	0.4293785310734463	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_070603/hardfix__standard_test__vpb_asr_fastconformer_ft_poc_qc_v2.log
+vpb_asr_fastconformer_ft_poc_qc_v2	next_day_test_debug	0.26485376389774096	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_070603/hardfix__next_day_test_debug__vpb_asr_fastconformer_ft_poc_qc_v2.log
+vpb_asr_fastconformer_ft_poc_qc_v2	vpb_right2_train	0.24563078583585868	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_070603/hardfix__vpb_right2_train__vpb_asr_fastconformer_ft_poc_qc_v2.log
+vpb_asr_fastconformer_ft_poc_qc_v2	vpb_right2_valid	0.2821039654818163	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_070603/hardfix__vpb_right2_valid__vpb_asr_fastconformer_ft_poc_qc_v2.log
