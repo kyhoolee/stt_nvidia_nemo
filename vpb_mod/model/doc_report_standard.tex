@@ -1,0 +1,131 @@
+% Setting up the document with beamer class for slides
+\documentclass{beamer}
+\usetheme{Copenhagen}
+\usecolortheme{seahorse}
+
+% Including necessary packages for formatting and tables
+\usepackage[utf8]{vietnam}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+% Defining title, author, and date
+\title{Performance ASR Models cho VPB Callbot}
+\author{}
+\date{\today}
+
+% Starting the document
+\begin{document}
+
+% Title slide
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% Slide 1: Bối cảnh
+\begin{frame}{Bối cảnh}
+    \begin{itemize}
+        \item \textbf{Chunkformer (đóng, in-use):} 
+            \begin{itemize}
+                \item WER $\sim$23--27\%, chất lượng tốt.
+                \item \textbf{Không thể fine-tune} thêm.
+            \end{itemize}
+        \item \textbf{Fast-Conformer (open, pretrained VietSpeech):}
+            \begin{itemize}
+                \item WER 35--39\%, kém hơn rõ rệt.
+            \end{itemize}
+        \item \textbf{Phương pháp cải thiện:}
+            \begin{enumerate}
+                \item v1: Fine-tune với pseudo-label từ data VPB.
+                \item v2: Fine-tune tiếp trên tập train VPB\_right2 (dữ liệu gán nhãn thực tế).
+            \end{enumerate}
+    \end{itemize}
+\end{frame}
+
+% Slide 2: Kết quả WER
+\begin{frame}{Kết quả WER}
+    \begin{table}[ht]
+        \centering
+        \scriptsize
+        \begin{tabular}{l|c|c|c|c|p{3cm}}
+            \toprule
+            \textbf{Dataset} & \textbf{Chunkformer} & \textbf{Fast-Conformer (pretrain)} & \textbf{v1 (pseudo)} & \textbf{v2 (pseudo$\to$VPB)} & \textbf{Ghi chú} \\
+            \midrule
+            standard\_test\_2 & 0.2499 & 0.3546 & 0.3040 & \textbf{0.2420} & $\sim$70\% overlap với train \\
+            standard\_test & 0.1613 & 0.3378 & \textbf{0.2582} & 0.4294 & Nhỏ (29 mẫu), dao động cao \\
+            next\_day\_test\_debug & 0.2076 & 0.3414 & 0.2687 & \textbf{0.2649} & Bộ test độc lập \\
+            vpb\_right2\_train & 0.2420 & 0.3633 & 0.2956 & \textbf{0.2456} & WER thấp, không generalize \\
+            vpb\_right2\_valid & 0.2696 & 0.3902 & 0.3240 & \textbf{0.2821} & Bộ valid, phản ánh tốt \\
+            \bottomrule
+        \end{tabular}
+    \end{table}
+    \vspace{0.2cm}
+    \textbf{Tóm tắt xu hướng:}
+    \begin{itemize}
+        \item Pretrain: WER $\sim$0.35--0.39 (rất kém).
+        \item v1: WER $\sim$0.26--0.32, cải thiện mạnh.
+        \item v2: WER $\sim$0.24--0.28, \textbf{tiệm cận/vượt Chunkformer}.
+    \end{itemize}
+\end{frame}
+
+% Slide 3: Lưu ý về trùng lặp
+\begin{frame}{Lưu ý về trùng lặp}
+    \begin{itemize}
+        \item \textbf{standard\_test\_2} và \textbf{train VPB\_right2}: \textbf{Overlap $\sim$70\%}.
+            \begin{itemize}
+                \item WER 0.2420 đẹp nhưng \textbf{không phản ánh generalization}.
+            \end{itemize}
+        \item Các tập \textbf{không trùng lặp} (valid, next\_day):
+            \begin{itemize}
+                \item Thước đo đáng tin.
+                \item Kết quả 0.26--0.28: Mô hình \textbf{cải thiện thực chất}.
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+% Slide 4: Insight chính - User Voice đa dạng
+\begin{frame}{Insight chính: User Voice đa dạng}
+    \begin{itemize}
+        \item \textbf{Thách thức lớn nhất}: Đa dạng và nhiễu của giọng User:
+            \begin{itemize}
+                \item Accent vùng miền, tốc độ nói, từ viết tắt, xen lẫn tiếng Anh, số liệu.
+                \item Nhiễu môi trường (đường phố, quán xá, tín hiệu điện thoại).
+            \end{itemize}
+        \item \textbf{Hậu quả}: Tạo robust model cực khó, cần xử lý \textbf{nhiều dạng User unseen}.
+        \item \textbf{Giải pháp}: Gán nhãn dữ liệu chuẩn từ call User là \textbf{cách duy nhất} để thích nghi thực tế.
+    \end{itemize}
+\end{frame}
+
+% Slide 5: Kết luận & Hướng đi
+\begin{frame}{Kết luận & Hướng đi}
+    \begin{itemize}
+        \item \textbf{Chunkformer}: Baseline tốt, WER $\sim$23--27\%, nhưng \textbf{không mở rộng}.
+        \item \textbf{Fast-Conformer + fine-tune}: Tiệm cận/vượt Chunkformer trên data nội bộ.
+        \item \textbf{Dữ liệu gán nhãn chuẩn}: 
+            \begin{itemize}
+                \item Bắt buộc để cải thiện robust ASR.
+                \item Xây dựng \textbf{tài sản dữ liệu dài hạn} (Callbot, QA, đào tạo Agent).
+            \end{itemize}
+        \item \textbf{Next step}:
+            \begin{itemize}
+                \item Hoàn tất gán nhãn 6k file (100h audio) trước 15/09 (AWS credit \$15k, hết hạn 20/09).
+                \item Fine-tune thêm, kiểm chứng trên \textbf{test set độc lập}.
+                \item Nghiên cứu augment, robust hoá cho unseen User voice.
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+% Slide 6: Thông điệp cho BU
+\begin{frame}{Thông điệp cho BU}
+    \begin{itemize}
+        \item \textbf{Không gán nhãn}: Mô hình dừng ở \textbf{70--75\%}.
+        \item \textbf{Có gán nhãn}: Cơ hội cải thiện \textbf{75--80\%}, xây dựng \textbf{tài sản dữ liệu chiến lược}.
+        \item \textbf{Đầu tư 100 triệu VND}: Hợp lý để tận dụng AWS credit, tạo nền tảng cho AI Callbot robust.
+    \end{itemize}
+\end{frame}
+
+% Ending the document
+\end{document}

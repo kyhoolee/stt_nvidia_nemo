@@ -2,22 +2,31 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import librosa
-import torch
 from pathlib import Path
 from typing import Optional, List, Tuple
+
+import librosa
+import soundfile as sf
+import torch
 from nemo.collections import asr as nemo_asr
 from jiwer import wer  # corpus WER
 
 from ._1_fastformer_trans_bpe import SIZE_PRESETS
 
+# Try optional DeepFilterNet import
+_HAS_DF = True
+try:
+    from df import enhance as df_enhance, init_df as df_init
+except Exception:
+    _HAS_DF = False
+
+
 # --------------------------------- CLI ---------------------------------
-# --- (2) Ở parse_args(): thêm nhóm lựa chọn resume + flag test-only ---
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Train / Test FastConformer-Transducer on NeMo manifests")
 
     # Data + tokenizer
-    p.add_argument('--train-manifest', type=Path, required=False)  # <-- bỏ required để test-only không cần
+    p.add_argument('--train-manifest', type=Path, required=False)
     p.add_argument('--val-manifest', type=Path, default=None)
     p.add_argument('--test-manifest', type=Path, default=None)
     p.add_argument('--tokenizer-dir', type=Path, required=False)
@@ -38,7 +47,15 @@ def parse_args() -> argparse.Namespace:
     p.add_argument('--max-duration', type=float, default=17.0)
     p.add_argument('--disable-specaug', action='store_true')
 
-    # Hard-sample options (áp dụng cho test-only & hard-fix)
+    # Noise filter (DeepFilterNet v3) options
+    p.add_argument('--denoise', action='store_true', help='Bật lọc nhiễu bằng DeepFilterNet v3 trước khi ASR.')
+    p.add_argument('--df-sr', type=int, default=48000, help='Sample rate cho DeepFilterNet (mặc định 48000).')
+    p.add_argument('--df-cache', type=Path, default=None,
+                  help='Thư mục lưu WAV tạm sau khi denoise (mặc định: auto trong exp/logs).')
+    p.add_argument('--df-keep-temp', action='store_true',
+                  help='Giữ lại file WAV tạm sau khi chạy. Mặc định xóa.')
+
+    # Hard-sample options
     p.add_argument('--hard-topk', type=int, default=50, help='Số lượng mẫu tệ nhất sẽ xuất ra (0 để tắt).')
     p.add_argument('--min-words', type=int, default=4, help='Chỉ xét các mẫu có >= số từ này trong reference.')
     p.add_argument('--hard-out', type=Path, default=None, help='Đường dẫn file TSV để ghi hard samples (mặc định auto).')
@@ -49,12 +66,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument('--hardfix-model', type=Path, default=Path(
         "/home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vietspeech/"
         "vpb_asr_fastconformer/2025-08-25_07-42-00/checkpoints/vpb_asr_fastconformer.nemo"
-    ), help='Override model .nemo for hard-fix VPB suite.')
+    ))
     p.add_argument('--hardfix-manifest-root', type=Path, default=Path(
         "/home/ubuntu/work/clean_dataset_vpb/manifest"
-    ), help='Root folder of VPB manifests (contains standard_test, standard_test_2, manifest_vpb_right_2).')
-    p.add_argument('--hardfix-outdir', type=Path, default=Path("./nemo_eval_hardfix"),
-                   help='Output folder for logs and summary.tsv in hard-fix mode.')
+    ))
+    p.add_argument('--hardfix-outdir', type=Path, default=Path("./nemo_eval_hardfix"))
 
     # Logging / output
     p.add_argument('--exp-dir', type=Path, default=Path('./experiments'))
@@ -72,20 +88,13 @@ def parse_args() -> argparse.Namespace:
 # --------------------------------- Helpers ---------------------------------
 
 def _pred_to_text(x):
-    """
-    NeMo EncDecRNNTBPEModel.transcribe thường trả về List[str].
-    Một số API khác có thể trả Hypothesis với thuộc tính .text.
-    Hàm này normalize về string.
-    """
     if x is None:
         return ""
     if isinstance(x, str):
         return x
-    # Hypothesis-like
     txt = getattr(x, "text", None)
     if isinstance(txt, str):
         return txt
-    # List 1 phần tử?
     if isinstance(x, (list, tuple)) and x and isinstance(x[0], str):
         return x[0]
     return str(x)
@@ -99,7 +108,6 @@ def _sample_wer(ref: str, hyp: str) -> float:
     from jiwer import wer as _wer_single
     if _word_count(ref) == 0:
         return float('nan')
-    # dùng WER của jiwer với list 1 phần tử để nhất quán định nghĩa
     return float(_wer_single([ref], [hyp]))
 
 
@@ -123,18 +131,12 @@ def _write_hard_samples_jsonl(rows: List[dict], out_path: Path):
 
 
 def _pick_device_from_flag(devices: int) -> str:
-    """
-    - devices:
-        -1 -> auto (cuda:0 nếu có, nếu không thì cpu)
-        >=0 -> cuda:{devices} nếu hợp lệ, nếu không hợp lệ thì fallback sang cpu
-        < -1 -> luôn fallback sang cpu
-    """
     if torch.cuda.is_available():
         if isinstance(devices, int) and devices >= 0:
             if devices < torch.cuda.device_count():
                 return f"cuda:{devices}"
             else:
-                print(f"[WARN] devices={devices} vượt quá số GPU khả dụng ({torch.cuda.device_count()}), fallback CPU.")
+                print(f"[WARN] devices={devices} vượt quá số GPU ({torch.cuda.device_count()}), fallback CPU.")
                 return "cpu"
         elif devices == -1:
             return "cuda:0"
@@ -156,7 +158,127 @@ def _amp_setup(precision: str, device_str: str) -> Tuple[bool, Optional[torch.dt
     return use_amp, amp_dtype
 
 
-# --------------------------------- TEST (single/batch) ---------------------------------
+# -------- DeepFilterNet wrapper (optional) --------
+
+class _DFWrapper:
+    def __init__(self, sr: int):
+        self.sr = int(sr)
+        self.model = None
+        self.state = None
+
+    def ensure_loaded(self):
+        if not _HAS_DF:
+            raise RuntimeError("DeepFilterNet (df) chưa được cài/không import được.")
+        if self.model is None or self.state is None:
+            self.model, self.state, _ = df_init()
+            # đảm bảo eval mode nếu có
+            try:
+                self.model.eval()
+            except Exception:
+                pass
+
+    def enhance_wav(self, wav: np.ndarray, in_sr: int, out_sr: int = 16000) -> np.ndarray:
+        """
+        Trả về ndarray float32 1 kênh, SR=out_sr (mặc định 16k).
+        DF yêu cầu input dạng [C, T] (2D).
+        """
+        import numpy as np
+        import torch
+
+        self.ensure_loaded()
+
+        # 1) Mono hoá -> [T]
+        if wav.ndim > 1:
+            # librosa.load(mono=False) -> shape [C, T]; lấy trung bình kênh
+            # (nếu lỡ shape [T, C] hiếm gặp: đảo lại)
+            if wav.shape[0] < wav.shape[1]:
+                wav = wav.mean(axis=0)
+            else:
+                wav = wav.mean(axis=1)
+        wav = wav.astype('float32', copy=False)
+
+        # 2) Resample lên SR của DF (thường 48000)
+        if in_sr != self.sr:
+            wav = librosa.resample(wav, orig_sr=in_sr, target_sr=self.sr, res_type='polyphase')
+
+        # 3) Chuyển sang torch và thêm trục kênh -> [1, T]
+        audio_t = torch.from_numpy(wav).to(torch.float32).contiguous()
+        if audio_t.ndim == 1:
+            audio_t = audio_t.unsqueeze(0)  # [1, T]
+
+        # 4) Enhance
+        with torch.no_grad():
+            enh_t = df_enhance(self.model, self.state, audio_t)  # expect [C, T] -> [C, T]
+
+        # 5) Về numpy 1 kênh [T]
+        if enh_t.ndim == 2 and enh_t.shape[0] == 1:
+            enh = enh_t[0].detach().cpu().numpy()
+        else:
+            enh = enh_t.detach().cpu().numpy()
+            if enh.ndim == 2:
+                enh = enh.mean(axis=0)  # phòng trường hợp trả nhiều kênh
+
+        enh = enh.astype('float32', copy=False)
+
+        # 6) Resample về out_sr (NeMo 16k)
+        if self.sr != out_sr:
+            enh = librosa.resample(enh, orig_sr=self.sr, target_sr=out_sr, res_type='polyphase')
+
+        return enh
+
+
+# numpy import (placed late to avoid import if unneeded)
+import numpy as np
+
+
+def _maybe_build_denoised_files(
+    in_paths: List[str],
+    df_sr: int,
+    tmp_dir: Path,
+    keep_temp: bool,
+) -> Tuple[List[str], List[Path]]:
+    """
+    Tạo WAV tạm (16k mono, PCM16) sau khi denoise. Trả:
+      - out_paths: list[str] các file 16k để feed vào NeMo
+      - created_files: list[Path] các file đã tạo (để cleanup)
+    """
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    dfw = _DFWrapper(sr=df_sr)
+
+    out_paths: List[str] = []
+    created_files: List[Path] = []
+
+    for idx, p in enumerate(in_paths):
+        # load giữ SR gốc; mono=False để mình tự quyết mono (theo wrapper)
+        y, sr = librosa.load(p, sr=None, mono=False)
+        # đảm bảo float32
+        if y.dtype != np.float32:
+            y = y.astype(np.float32, copy=False)
+
+        # enhance → 16k mono
+        enh_16k = dfw.enhance_wav(y, in_sr=sr, out_sr=16000)
+
+        # ghi PCM16
+        out_fp = tmp_dir / f"df_{idx:07d}.wav"
+        sf.write(str(out_fp), enh_16k, 16000, subtype="PCM_16")
+
+        out_paths.append(str(out_fp))
+        created_files.append(out_fp)
+
+    # (nếu keep_temp=False, caller sẽ dọn sau khi transcribe xong)
+    return out_paths, created_files
+
+
+def _cleanup_files(paths: List[Path]):
+    for p in paths:
+        try:
+            if p.is_file():
+                p.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+
+# --------------------------------- TEST (manual - giữ tham chiếu) ---------------------------------
 
 def test_from_checkpoint(
     base_config: Path,
@@ -170,20 +292,16 @@ def test_from_checkpoint(
     ckpt_path: Optional[Path] = None,
 ):
     """
-    (giữ lại để tham chiếu; không dùng hard-samples ở hàm này)
+    Manual path (không dùng denoise ở đây để giữ nguyên tham chiếu; pipeline chính dùng batch + transcribe).
     """
     print("🚀 Starting test-only mode...")
 
     if nemo_path:
         print(f"🧠 Restoring model from .nemo: {nemo_path}")
-        model = nemo_asr.models.EncDecRNNTBPEModel.restore_from(
-            restore_path=str(nemo_path)
-        )
+        model = nemo_asr.models.EncDecRNNTBPEModel.restore_from(restore_path=str(nemo_path))
     elif ckpt_path:
         print(f"🧠 Restoring model from .ckpt: {ckpt_path}")
-        model = nemo_asr.models.EncDecRNNTBPEModel.load_from_checkpoint(
-            checkpoint_path=str(ckpt_path)
-        )
+        model = nemo_asr.models.EncDecRNNTBPEModel.load_from_checkpoint(checkpoint_path=str(ckpt_path))
     else:
         raise ValueError("Must provide either --nemo or --ckpt for test-only mode.")
 
@@ -209,22 +327,16 @@ def test_from_checkpoint(
     except Exception as e:
         print(f"⚠️ Could not set greedy decoder: {e}")
 
-    tokenizer = model.tokenizer
-
     def transcribe_audio(audio_path, model):
         audio, _ = librosa.load(audio_path, sr=16000)
         audio_tensor = torch.from_numpy(audio).unsqueeze(0).to(model.device)
         audio_len = torch.tensor([audio_tensor.shape[1]]).to(model.device)
-
         with torch.no_grad():
             logits = model.forward(input_signal=audio_tensor, input_signal_length=audio_len)
             transcripts = model.decoding.rnnt_decoder_predictions_tensor(logits[0], logits[1])
             return transcripts[0]
 
-    # --- Phần tính WER được bổ sung ---
-    all_predictions = []
-    all_references = []
-    
+    all_predictions, all_references = [], []
     print("🔍 Running manual transcription and WER calculation...")
     with open(test_manifest, 'r', encoding='utf-8') as f:
         lines = f.readlines()
@@ -234,7 +346,6 @@ def test_from_checkpoint(
             reference_text = item['text']
 
             predicted_text = transcribe_audio(audio_path, model).text
-
             all_predictions.append(predicted_text.lower())
             all_references.append(reference_text.lower())
 
@@ -244,16 +355,15 @@ def test_from_checkpoint(
                 print(f"predicted: {predicted_text}")
                 print(f"reference: {reference_text}")
                 print("-" * 50)
-    
+
     wer_score = wer(all_references, all_predictions)
-    
     print("=" * 100)
     print(f"✅ Finished testing.")
     print(f"✨ Final WER for the test set: {wer_score:.4f}")
     print("=" * 100)
 
 
-# --- BATCH với hard-samples ---
+# --- BATCH + denoise + hard-samples ---
 def test_batch_from_checkpoint(
     base_config: Path,
     test_manifest: Path,
@@ -267,19 +377,19 @@ def test_batch_from_checkpoint(
     hard_topk: int = 50,
     min_words: int = 4,
     hard_out: Optional[Path] = None,
+    denoise: bool = False,
+    df_sr: int = 48000,
+    df_cache: Optional[Path] = None,
+    df_keep_temp: bool = False,
 ):
     print("🚀 Starting test-only mode...")
 
     if nemo_path:
         print(f"🧠 Restoring model from .nemo: {nemo_path}")
-        model = nemo_asr.models.EncDecRNNTBPEModel.restore_from(
-            restore_path=str(nemo_path)
-        )
+        model = nemo_asr.models.EncDecRNNTBPEModel.restore_from(restore_path=str(nemo_path))
     elif ckpt_path:
         print(f"🧠 Restoring model from .ckpt: {ckpt_path}")
-        model = nemo_asr.models.EncDecRNNTBPEModel.load_from_checkpoint(
-            checkpoint_path=str(ckpt_path)
-        )
+        model = nemo_asr.models.EncDecRNNTBPEModel.load_from_checkpoint(checkpoint_path=str(ckpt_path))
     else:
         raise ValueError("Must provide either --nemo or --ckpt for test-only mode.")
 
@@ -287,6 +397,18 @@ def test_batch_from_checkpoint(
     device_str = _pick_device_from_flag(devices)
     model.to(device_str)
     use_amp, amp_dtype = _amp_setup(precision, device_str)
+
+    # Prepare DF cache dir
+    if denoise and not _HAS_DF:
+        print("[WARN] --denoise bật nhưng không import được 'df'. Tiếp tục *không* lọc nhiễu.")
+        denoise = False
+    if denoise:
+        # ưu tiên df_cache; nếu không, tạo trong exp_dir/exp_name
+        if df_cache is None:
+            df_cache = (exp_dir / f"{exp_name}_dfcache") if exp_dir else Path("./_dfcache")
+        df_cache = df_cache.expanduser().resolve()
+        df_cache.mkdir(parents=True, exist_ok=True)
+        print(f"🔊 DeepFilterNet enabled (sr={df_sr}). Temp WAV dir: {df_cache}")
 
     model.eval()
     try:
@@ -310,29 +432,35 @@ def test_batch_from_checkpoint(
     except Exception as e:
         print(f"⚠️ Could not set greedy decoder: {e}")
 
-    # --- Phần tính WER + hard-samples ---
-    all_predictions: List[str] = []
-    all_references: List[str] = []
-    audio_paths: List[str] = []
-    
-    print("🔍 Running batch transcription and WER calculation...")
+    # --- Read manifest ---
     with open(test_manifest, 'r', encoding='utf-8') as f:
         manifest_lines = f.readlines()
-        
-    num_samples = len(manifest_lines)
-    reference_texts = []
 
+    num_samples = len(manifest_lines)
+    audio_paths: List[str] = []
+    reference_texts: List[str] = []
     for line in manifest_lines:
         item = json.loads(line)
-        audio_path = os.path.expanduser(item['audio_filepath'])
-        reference_text = item['text']
-        
-        audio_paths.append(audio_path)
-        reference_texts.append(reference_text)
+        audio_paths.append(os.path.expanduser(item['audio_filepath']))
+        reference_texts.append(str(item['text']))
 
-    # Chia danh sách thành các batch và xử lý
+    # If denoise: build temp WAV list
+    created_files: List[Path] = []
+    paths_for_transcribe = audio_paths
+    if denoise:
+        paths_for_transcribe, created_files = _maybe_build_denoised_files(
+            in_paths=audio_paths,
+            df_sr=df_sr,
+            tmp_dir=df_cache,
+            keep_temp=df_keep_temp,
+        )
+
+    # --- Batch transcribe ---
+    all_predictions: List[str] = []
+    all_references: List[str] = []
+    print("🔍 Running batch transcription and WER calculation...")
     for i in range(0, num_samples, batch_size):
-        batch_audio_paths = audio_paths[i:i + batch_size]
+        batch_audio_paths = paths_for_transcribe[i:i + batch_size]
         batch_reference_texts = reference_texts[i:i + batch_size]
 
         if use_amp and amp_dtype is not None and device_str.startswith("cuda"):
@@ -346,11 +474,9 @@ def test_batch_from_checkpoint(
         for j in range(len(norm_preds)):
             pred_text = norm_preds[j]
             ref_text = batch_reference_texts[j]
-
             all_predictions.append(pred_text.lower())
             all_references.append(ref_text.lower())
 
-        # In ví dụ 1 sample đầu tiên
         if i == 0 and len(norm_preds) > 0:
             print(f"Sample 1:")
             print(f"predicted: {norm_preds[0]}")
@@ -359,16 +485,18 @@ def test_batch_from_checkpoint(
 
         print(f"Processed {min(i + batch_size, num_samples)}/{num_samples} samples.")
 
+    # Cleanup temp files
+    if denoise and not df_keep_temp:
+        _cleanup_files(created_files)
+
     # --- Corpus WER ---
     wer_score = wer(all_references, all_predictions)
-    
     print("=" * 100)
     print(f"✅ Finished testing.")
     print(f"✨ Final WER for the test set: {wer_score:.4f}")
     print("=" * 100)
 
-    # ===== Hard samples (per-utterance WER) =====
-    # Xác định output file
+    # ===== Hard samples =====
     if hard_out is not None:
         hard_tsv = hard_out
         hard_jsonl = hard_out.with_suffix('.jsonl')
@@ -405,7 +533,7 @@ def test_batch_from_checkpoint(
     else:
         print("ℹ️ Hard samples disabled or no eligible samples (check --hard-topk and --min-words).")
 
-    return wer_score  # tiện nếu cần dùng tiếp
+    return wer_score
 
 
 # --------------------------------- HARD-FIX VPB SUITE ---------------------------------
@@ -423,10 +551,14 @@ def run_hardfix_vpb_suite(
     outdir: Path,
     hard_topk: int = 50,
     min_words: int = 4,
+    denoise: bool = False,
+    df_sr: int = 48000,
+    df_cache: Optional[Path] = None,
+    df_keep_temp: bool = False,
 ):
     """
     Chạy cố định 5 bộ VPB *_nemo.jsonl với 1 model .nemo, ghi summary.tsv.
-    ĐÃ BỔ SUNG: xuất hard samples (Top-K per-utterance WER) cho từng dataset vào logs_{ts}/.
+    ĐÃ BỔ SUNG: denoise (DF v3) và hard samples cho từng dataset.
     """
     mf = OrderedDict([
         ("standard_test_2",      manifest_root / "standard_test_2" / "test_meta_nemo.jsonl"),
@@ -458,9 +590,8 @@ def run_hardfix_vpb_suite(
         print(f"\n--- Dataset: {ds_name}")
         print(f"    Manifest: {path}")
 
-        # Log file (stdout capture) + Hard samples file path
         log_path = out_logs / f"{exp_name}.log"
-        hard_out_path = out_logs / f"{exp_name}_hard.tsv"  # tsv; jsonl auto theo suffix trong _run_single_test_return_wer
+        hard_out_path = out_logs / f"{exp_name}_hard.tsv"
 
         wer_score = _run_single_test_return_wer(
             base_config=base_config,
@@ -474,6 +605,10 @@ def run_hardfix_vpb_suite(
             hard_topk=hard_topk,
             min_words=min_words,
             hard_out=hard_out_path,
+            denoise=denoise,
+            df_sr=df_sr,
+            df_cache=(df_cache if df_cache is not None else out_logs / f"{exp_name}_dfcache"),
+            df_keep_temp=df_keep_temp,
         )
 
         with summary_path.open("a", encoding="utf-8") as sw:
@@ -494,15 +629,16 @@ def _run_single_test_return_wer(
     hard_topk: int = 50,
     min_words: int = 4,
     hard_out: Optional[Path] = None,
+    denoise: bool = False,
+    df_sr: int = 48000,
+    df_cache: Optional[Path] = None,
+    df_keep_temp: bool = False,
 ):
     """
     Chạy 1 dataset và return WER (float). Đồng thời:
       - log stdout vào {log_dir}/{exp_name}.log
-      - xuất hard samples (TSV + JSONL) vào:
-          + nếu hard_out != None -> hard_out (TSV) và hard_out.with_suffix('.jsonl')
-          + nếu None -> {log_dir}/{exp_name}_hard.tsv|jsonl
-    - devices: giống _pick_device_from_flag()
-    - precision: "16"/"bf16" dùng autocast khi chạy CUDA
+      - denoise (nếu bật) và lưu WAV tạm (16k)
+      - xuất hard samples (TSV + JSONL)
     """
     import io, sys
 
@@ -513,13 +649,12 @@ def _run_single_test_return_wer(
     buf = io.StringIO()
     old_stdout = sys.stdout
     sys.stdout = buf
+    created_files: List[Path] = []
     try:
-        # Khôi phục model
         model = nemo_asr.models.EncDecRNNTBPEModel.restore_from(restore_path=str(nemo_path))
         model.to(device_str)
         model.eval()
 
-        # Disable augment khi test
         try:
             if hasattr(model, 'spec_augmentation') and model.spec_augmentation is not None:
                 model.spec_augmentation.mask_prob = 0.0
@@ -532,7 +667,6 @@ def _run_single_test_return_wer(
         except Exception:
             pass
 
-        # Set greedy decode
         try:
             model.change_decoding_strategy(decoder_type="greedy_batch")
             if hasattr(model, 'wer'):
@@ -540,7 +674,6 @@ def _run_single_test_return_wer(
         except Exception:
             pass
 
-        # Đọc manifest
         with open(test_manifest, 'r', encoding='utf-8') as f:
             lines = f.readlines()
         audio_paths: List[str] = []
@@ -550,10 +683,30 @@ def _run_single_test_return_wer(
             audio_paths.append(os.path.expanduser(item['audio_filepath']))
             ref_texts.append(str(item['text']))
 
+        # Denoise (nếu có)
+        if denoise and not _HAS_DF:
+            print("[WARN] --denoise bật nhưng không import được 'df'. Tiếp tục *không* lọc nhiễu.")
+            denoise = False
+        if denoise:
+            if df_cache is None:
+                df_cache = log_dir / f"{exp_name}_dfcache"
+            df_cache = df_cache.expanduser().resolve()
+            df_cache.mkdir(parents=True, exist_ok=True)
+            print(f"🔊 DeepFilterNet enabled (sr={df_sr}). Temp WAV dir: {df_cache}")
+
+            paths_for_transcribe, created_files = _maybe_build_denoised_files(
+                in_paths=audio_paths,
+                df_sr=df_sr,
+                tmp_dir=df_cache,
+                keep_temp=df_keep_temp,
+            )
+        else:
+            paths_for_transcribe = audio_paths
+
         # Batch transcribe
         preds: List[str] = []
-        for i in range(0, len(audio_paths), batch_size):
-            chunk = audio_paths[i:i+batch_size]
+        for i in range(0, len(paths_for_transcribe), batch_size):
+            chunk = paths_for_transcribe[i:i+batch_size]
             if use_amp and amp_dtype is not None and device_str.startswith("cuda"):
                 with torch.cuda.amp.autocast(dtype=amp_dtype):
                     outs = model.transcribe(chunk, batch_size=batch_size)
@@ -562,9 +715,8 @@ def _run_single_test_return_wer(
             outs = [_pred_to_text(x) for x in outs]
             preds.extend([o.lower() for o in outs])
             ref_texts[i:i+batch_size] = [r.lower() for r in ref_texts[i:i+batch_size]]
-            print(f"Processed {min(i+batch_size, len(audio_paths))}/{len(audio_paths)} samples.")
+            print(f"Processed {min(i+batch_size, len(paths_for_transcribe))}/{len(paths_for_transcribe)} samples.")
 
-        # Tính corpus WER
         from jiwer import wer as _wer
         wer_score = _wer(ref_texts, preds)
 
@@ -573,7 +725,7 @@ def _run_single_test_return_wer(
         print(f"✨ Final WER for the test set: {wer_score:.4f}")
         print("=" * 100)
 
-        # ===== Hard samples (per-utterance WER) =====
+        # ===== Hard samples =====
         if hard_out is not None:
             hard_tsv = hard_out
             hard_jsonl = hard_out.with_suffix('.jsonl')
@@ -587,7 +739,7 @@ def _run_single_test_return_wer(
             if ref_len < int(min_words):
                 continue
             s_wer = _sample_wer(ref, pred)
-            if s_wer != s_wer:  # NaN
+            if s_wer != s_wer:
                 continue
             per_samples.append({
                 "idx": idx,
@@ -614,6 +766,9 @@ def _run_single_test_return_wer(
         sys.stdout = old_stdout
         with log_fp.open("w", encoding="utf-8") as fw:
             fw.write(buf.getvalue())
+        # cleanup temp WAVs nếu có
+        if denoise and not df_keep_temp:
+            _cleanup_files(created_files)
 
     print(f"[{exp_name}] WER={wer_score:.4f} | log={log_fp}")
     return float(wer_score)
@@ -636,10 +791,14 @@ def main():
             outdir=args.hardfix_outdir.expanduser().resolve(),
             hard_topk=args.hard_topk,
             min_words=args.min_words,
+            denoise=args.denoise,
+            df_sr=args.df_sr,
+            df_cache=args.df_cache.expanduser().resolve() if args.df_cache else None,
+            df_keep_temp=args.df_keep_temp,
         )
         return
 
-    # Nhánh TEST-ONLY: không cần tokenizer build lại, không cần train manifest
+    # ===== TEST-ONLY =====
     if args.test_only:
         if args.test_manifest is None:
             raise ValueError("--test-only requires --test-manifest")
@@ -656,6 +815,10 @@ def main():
             hard_topk=args.hard_topk,
             min_words=args.min_words,
             hard_out=(args.hard_out.expanduser().resolve() if args.hard_out else None),
+            denoise=args.denoise,
+            df_sr=args.df_sr,
+            df_cache=args.df_cache.expanduser().resolve() if args.df_cache else None,
+            df_keep_temp=args.df_keep_temp,
         )
         return
 

@@ -1,0 +1,7 @@
+file	total	valid	skip_empty_ref	skip_missing	wer
+/home/ubuntu/work/clean_dataset_vpb/manifest/standard_test_2/test_meta.json	2993	2993	0	0	0.2499
+/home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/next_day_test_meta_debug.json	1650	1650	0	0	0.2076
+/home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/test_meta.json	29	29	0	0	0.1613
+/home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/train_meta.json	3072	3072	0	0	0.2420
+/home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta.json	630	630	0	0	0.2696
+OVERALL	8374	8374	0	0	0.2350

@@ -458,7 +458,7 @@ python -m vpb_mod.model._2_fastformer_infer \
 python -m vpb_mod.model._2_fastformer_infer \
   --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
   --hardfix-vpb \
-  --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_v1/2025-08-27_08-54-05/checkpoints/vpb_asr_fastconformer_ft_v1.nemo
+  --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vietspeech/vpb_asr_fastconformer/2025-08-25_07-42-00/checkpoints/vpb_asr_fastconformer.nemo
 
 python -m vpb_mod.model._2_fastformer_infer \
   --devices 3 \
@@ -601,6 +601,13 @@ vpb_asr_fastconformer_ft_poc_qc_v1	vpb_right2_train	0.29606874507036407	/home/ub
 vpb_asr_fastconformer_ft_poc_qc_v1	vpb_right2_valid	0.32525169508937746	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250903_022954/hardfix__vpb_right2_valid__vpb_asr_fastconformer_ft_poc_qc_v1.log
 
 
+python -m vpb_mod.model._2_fastformer_infer \
+  --devices 3 \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --hardfix-vpb \
+  --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v1/2025-08-29_09-18-14/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v1.nemo \
+  --denoise --df-sr 48000 \
+  --hard-topk 80 --min-words 5
 
 
 ============
