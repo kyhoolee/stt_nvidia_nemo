@@ -49,17 +49,21 @@
             \begin{itemize}
                 \item WER 35-39\%, underperforms.
             \end{itemize}
+        \item \textbf{Parakeet (open-source, pre-trained and fine-tuned):}
+            \begin{itemize}
+                \item Slightly better and more stable performance than Fast-Conformer (see results).
+            \end{itemize}
         \item \textbf{Approach:} Two-step fine-tuning:
             \begin{itemize}
                 \item v1: Pseudo-labeling.
                 \item v2: Pseudo-labels $\to$ VPB training data.
             \end{itemize}
-        \item \textbf{Utilization of AWS Credits:} \$14,000 in GPU credits used for training and fine-tuning the Fast-Conformer model on AWS infrastructure.
+        \item \textbf{Utilization of AWS Credits:} \$14,000 in GPU credits used for training and fine-tuning both Fast-Conformer and Parakeet models on AWS infrastructure.
     \end{itemize}
 \end{frame}
 
-% Slide 3: WER Results (VPB Small Dataset)
-\begin{frame}{WER Results (VPB Small Dataset)}
+% Slide 3: WER Results (Fast-Conformer)
+\begin{frame}{WER Results (Fast-Conformer, VPB Small Dataset)}
     \centering
     \resizebox{\textwidth}{!}{ % Resize table to fit slide
         \begin{tabular}{lccccp{2cm}}
@@ -79,22 +83,44 @@
     \end{itemize}
 \end{frame}
 
-% Slide 4: Analysis
+% Slide 4: WER/CER Results (Parakeet)
+\begin{frame}{WER/CER Results (Parakeet, VPB Small Dataset)}
+    \centering
+    \resizebox{\textwidth}{!}{ % Resize table to fit slide
+        \begin{tabular}{lccc}
+            \toprule
+            \textbf{Dataset} & \textbf{VietSpeech (v0)} & \textbf{Pseudo-labeling (v1)} & \textbf{Pseudo$\to$VPB (v2)} \\
+            \midrule
+            standard\_test\_2 & 33.55\% / 23.05\% & 28.29\% / 21.87\% & 23.26\% / 17.29\% \\
+            standard\_test & 27.92\% / 18.01\% & 21.70\% / 15.32\% & 21.00\% / 13.96\% \\
+            next\_day\_test\_debug & 31.24\% / 20.29\% & 25.49\% / 18.32\% & 21.78\% / 15.69\% \\
+            vpb\_right2\_train & 33.65\% / 23.36\% & 27.66\% / 21.29\% & 22.99\% / 16.91\% \\
+            vpb\_right2\_valid & 36.68\% / 25.79\% & 31.33\% / 25.05\% & 26.59\% / 20.44\% \\
+            \bottomrule
+        \end{tabular}
+    }
+    \begin{itemize}
+        \item Note: Parakeet shows slightly better and more stable WER/CER than Fast-Conformer across all sets (~10 hours).
+    \end{itemize}
+\end{frame}
+
+% Slide 5: Analysis
 \begin{frame}{Analysis}
     \begin{itemize}
-        \item \textbf{Pre-trained Model}: Significantly worse than Chunkformer (WER 0.35--0.39).
-        \item \textbf{Fine-tuning v1}: Strong improvement (WER reduction of 0.07--0.10).
-        \item \textbf{Fine-tuning v2}: Approaches Chunkformer on \textbf{key sets (validation, next\_day)}.
+        \item \textbf{Fast-Conformer (Pre-trained)}: WER 0.35--0.39, significantly worse than Chunkformer.
+        \item \textbf{Fast-Conformer (Fine-tuning v1)}: Strong improvement (WER reduction of 0.07--0.10).
+        \item \textbf{Fast-Conformer (Fine-tuning v2)}: Approaches Chunkformer on \textbf{key sets (validation, next\_day)}.
+        \item \textbf{Parakeet}: Consistently outperforms Fast-Conformer with lower WER/CER and better stability across all datasets.
         \item \textbf{Key Notes}:
             \begin{itemize}
                 \item Low WER on \textbf{standard\_test\_2} due to \textbf{data leakage} (70\% overlap with training).
                 \item Low WER on \textbf{train} indicates convergence, but \textbf{not representative of new user performance}.
             \end{itemize}
-        \item \textbf{Current Achievement}: Developed a fine-tuned Fast-Conformer model using AWS GPU resources.
+        \item \textbf{Current Achievement}: Developed fine-tuned Fast-Conformer and Parakeet models using AWS GPU resources.
     \end{itemize}
 \end{frame}
 
-% Slide 5: Key Insights
+% Slide 6: Key Insights
 \begin{frame}{Key Insights}
     \begin{itemize}
         \item \textbf{Core Challenge}: Diverse user voices \& noise:
@@ -110,7 +136,7 @@
     \end{itemize}
 \end{frame}
 
-% Slide 6: Value of Data Labeling
+% Slide 7: Value of Data Labeling
 \begin{frame}{Value of Data Labeling}
     \begin{itemize}
         \item \textbf{Essential for Fine-Tuning}: Required to improve and sustain performance.
@@ -125,7 +151,7 @@
     \end{itemize}
 \end{frame}
 
-% Slide 7: Urgency and Resource Needs
+% Slide 8: Urgency and Resource Needs
 \begin{frame}{Urgency and Resource Needs}
     \begin{itemize}
         \item \textbf{AWS Credits}: \$15,000 (expiring 09/20/2025) $\to$ \$14,000 already utilized for GPU training.
@@ -136,7 +162,7 @@
     \end{itemize}
 \end{frame}
 
-% Slide 8: Conclusion
+% Slide 9: Conclusion
 \begin{frame}{Conclusion}
     \begin{itemize}
         \item \textbf{Without Labeling}: Model stalls at 70-75\% accuracy.
@@ -151,7 +177,7 @@
     \end{itemize}
 \end{frame}
 
-% Slide 9: Acknowledgments
+% Slide 10: Acknowledgments
 \begin{frame}{Acknowledgments}
     \begin{itemize}
         \item \textbf{To AWS}: Heartfelt thanks for the \$14,000 GPU credits, enabling cutting-edge AI model development.
@@ -159,6 +185,15 @@
         \item \textbf{To AIC}: Appreciation for relentless innovation and dedication to building world-class AI capabilities.
         \item \textbf{Our Commitment}: VPBank will deepen partnerships with AWS and DCD, leveraging AIC’s expertise to drive AI innovation, enhance customer experiences, and maintain our position as a technology leader in banking.
         \item \textbf{Future Promise}: Continue delivering value to stakeholders, pushing the boundaries of AI-driven financial services, and fostering sustainable growth.
+    \end{itemize}
+\end{frame}
+
+% Slide 11: Contact
+\begin{frame}{Contact}
+    \begin{itemize}
+        \item \textbf{For any concerns or inquiries, please contact:}
+        \item \textbf{Le Hong Ky}: Senior Data Scientist, AI Center
+        \item \textbf{Email}: kylh2@vpbank.com
     \end{itemize}
 \end{frame}
 

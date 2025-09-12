@@ -1,7 +1,7 @@
 # Fdb version 4
-["pdflatex"] 1757566718.90304 "/home/kyhoolee/work/1_backend/4_financial_analysis/3_crypto/9_data_science/stt_repo/stt_nvidia_nemo/vpb_mod/model/reports_v2/0_slide.tex" "0_slide.pdf" "0_slide" 1757566720.77981 0
+["pdflatex"] 1757659660.73747 "/home/kyhoolee/work/1_backend/4_financial_analysis/3_crypto/9_data_science/stt_repo/stt_nvidia_nemo/vpb_mod/model/reports_v2/0_slide.tex" "0_slide.pdf" "0_slide" 1757659662.37104 0
   "/etc/texmf/web2c/texmf.cnf" 1755589873.72294 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/kyhoolee/work/1_backend/4_financial_analysis/3_crypto/9_data_science/stt_repo/stt_nvidia_nemo/vpb_mod/model/reports_v2/0_slide.tex" 1757566712.63368 8811 7f4e548475fc8e12f3aca5d473b4f15f ""
+  "/home/kyhoolee/work/1_backend/4_financial_analysis/3_crypto/9_data_science/stt_repo/stt_nvidia_nemo/vpb_mod/model/reports_v2/0_slide.tex" 1757659660.49572 10602 fb7b91e61140c6e83f402307c037a438 ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm" 1246382020 916 f87d7c45f9c908e672703b83b72241a3 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam5.tfm" 1246382020 924 9904cf1d39e9767e7a3622f2a125a565 ""
@@ -217,10 +217,10 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1755598916.43248 5472669 54eaf61a88b6b7896ebd0dac973cb29c ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1755598982 8213767 b1c80d2ca52ef53e12258dc186b914b6 ""
-  "0_slide.aux" 1757566720.5783 1802 8e7b8aee2ce858178a6da6dc48403728 "pdflatex"
-  "0_slide.nav" 1757566720.57968 1109 07396102f9d82bf25877ba7d82798efb "pdflatex"
-  "0_slide.out" 1757566719.92822 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
-  "0_slide.tex" 1757566712.63368 8811 7f4e548475fc8e12f3aca5d473b4f15f ""
+  "0_slide.aux" 1757659662.26261 2060 c61ea2830b2fd4868150d3545f0e6b0a "pdflatex"
+  "0_slide.nav" 1757659662.26368 1295 ef040a83926d85743749b42a2275f515 "pdflatex"
+  "0_slide.out" 1757659661.61084 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
+  "0_slide.tex" 1757659660.49572 10602 fb7b91e61140c6e83f402307c037a438 ""
   (generated)
   "0_slide.aux"
   "0_slide.log"
