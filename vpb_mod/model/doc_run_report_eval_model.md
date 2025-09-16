@@ -104,6 +104,14 @@ vpb_asr_fastconformer_ft_poc_qc_v2	vpb_label_left_test	0.27554595505913965	/home
 
 
 
+## Vpb-ds-1
+
+python -m vpb_mod.model._2_fastformer_infer \
+  --devices 3 \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --hardfix-vpb \
+  --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_vpb_ds_092025/2025-09-16_09-06-46/checkpoints/vpb_asr_fastconformer_ft_vpb_ds_092025.nemo
+
 
 ========================================================================
 
