@@ -334,3 +334,28 @@ python split_train_to_dev.py \
   --dry-run
 
 
+
+#### VPB-dataset NEMO_MANIFEST
+
+python -m vpb_mod.dataset._8_vpb_label_manifest \
+  --data-root /home/ubuntu/workspace/col.tool_label_speech_to_text/data/ods \
+  --out /home/ubuntu/work/clean_dataset_vpb/manifest/label_batch_092025
+
+
+
+
+
+(nemo) ubuntu@ip-10-0-14-129:~/work/stt_nvidia_nemo$ 
+
+python -m vpb_mod.dataset._8_1_split_vpb_ds \
+  --in /home/ubuntu/work/clean_dataset_vpb/manifest/label_batch_092025 \
+  --out-dir /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack \
+  --train-ratio 0.80 --val-ratio 0.1 --test-ratio 0.1 \
+  --seed 42
+  
+[SPLIT BY CLID] (group-wise, no time)
+  groups = CLID (fallback CALL::<audio_name>)
+  ratios(train/val/test) = 0.80/0.10/0.10 (seed=42)
+  all        : train=83633, val=10350, test=10584
+  right_only : train=36565, val=4572, test=4638
+  left_only  : train=47068, val=5778, test=5946
