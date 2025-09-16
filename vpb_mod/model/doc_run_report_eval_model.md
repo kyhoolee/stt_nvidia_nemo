@@ -101,3 +101,36 @@ vpb_asr_fastconformer_ft_poc_qc_v2	vpb_label_right_test	0.30803617839692277	/hom
 vpb_asr_fastconformer_ft_poc_qc_v2	vpb_label_left_train	0.2744641177317358	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250916_070643/hardfix__vpb_label_left_train__vpb_asr_fastconformer_ft_poc_qc_v2.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250916_070643/hardfix__vpb_label_left_train__vpb_asr_fastconformer_ft_poc_qc_v2_hard.tsv
 vpb_asr_fastconformer_ft_poc_qc_v2	vpb_label_left_valid	0.2750857481615312	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250916_070643/hardfix__vpb_label_left_valid__vpb_asr_fastconformer_ft_poc_qc_v2.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250916_070643/hardfix__vpb_label_left_valid__vpb_asr_fastconformer_ft_poc_qc_v2_hard.tsv
 vpb_asr_fastconformer_ft_poc_qc_v2	vpb_label_left_test	0.27554595505913965	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250916_070643/hardfix__vpb_label_left_test__vpb_asr_fastconformer_ft_poc_qc_v2.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250916_070643/hardfix__vpb_label_left_test__vpb_asr_fastconformer_ft_poc_qc_v2_hard.tsv
+
+
+
+
+========================================================================
+
+TRAIN-VALID-TEST on new DATA
+
+
+## Fine-tuning from Pseudo-checkpoint
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/train.jsonl \
+  --val-manifest   /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/val.jsonl \
+  --test-manifest   /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vietspeech \
+  --vocab-size 1024 \
+  --size large \
+  --epochs 50 \
+  --devices -1 \
+  --precision 16 \
+  --batch-size 32 \
+  --accumulate-grad-batches 2 \
+  --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vpb_ft \
+  --exp-name vpb_asr_fastconformer_ft_vpb_ds_092025 \
+  --init-from-nemo ../nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v1/2025-08-29_09-18-14/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v1.nemo \
+  --freeze-encoder-ratio 0.8 \
+  --unfreeze-at-epoch 2 \
+  --grad-clip 1.0 \
+  --fastemit-lambda 0.003 \
+  > vpb_mod/logs/vpb_ft_ds_092025_freeze_80.log 2>&1 &
