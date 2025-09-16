@@ -352,10 +352,27 @@ python -m vpb_mod.dataset._8_1_split_vpb_ds \
   --out-dir /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack \
   --train-ratio 0.80 --val-ratio 0.1 --test-ratio 0.1 \
   --seed 42
-  
+
 [SPLIT BY CLID] (group-wise, no time)
   groups = CLID (fallback CALL::<audio_name>)
   ratios(train/val/test) = 0.80/0.10/0.10 (seed=42)
   all        : train=83633, val=10350, test=10584
   right_only : train=36565, val=4572, test=4638
   left_only  : train=47068, val=5778, test=5946
+
+(base) ubuntu@ip-10-0-14-129:~/work/clean_dataset_vpb/manifest/splits_by_clid_tripack$ tree
+.
+├── all
+│   ├── test.jsonl
+│   ├── train.jsonl
+│   └── val.jsonl
+├── left_only
+│   ├── test.jsonl
+│   ├── train.jsonl
+│   └── val.jsonl
+└── right_only
+    ├── test.jsonl
+    ├── train.jsonl
+    └── val.jsonl
+
+3 directories, 9 files

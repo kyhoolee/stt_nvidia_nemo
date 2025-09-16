@@ -560,12 +560,34 @@ def run_hardfix_vpb_suite(
     Chạy cố định 5 bộ VPB *_nemo.jsonl với 1 model .nemo, ghi summary.tsv.
     ĐÃ BỔ SUNG: denoise (DF v3) và hard samples cho từng dataset.
     """
+    # mf = OrderedDict([
+    #     ("standard_test_2",      manifest_root / "standard_test_2" / "test_meta_nemo.jsonl"),
+    #     ("standard_test",        manifest_root / "standard_test"   / "test_meta_nemo.jsonl"),
+    #     ("next_day_test_debug",  manifest_root / "standard_test"   / "next_day_test_meta_debug_nemo.jsonl"),
+    #     ("vpb_right2_train",     manifest_root / "manifest_vpb_right_2" / "train_meta_nemo.jsonl"),
+    #     ("vpb_right2_valid",     manifest_root / "manifest_vpb_right_2" / "valid_meta_nemo.jsonl"),
+    # ])
+
     mf = OrderedDict([
         ("standard_test_2",      manifest_root / "standard_test_2" / "test_meta_nemo.jsonl"),
         ("standard_test",        manifest_root / "standard_test"   / "test_meta_nemo.jsonl"),
         ("next_day_test_debug",  manifest_root / "standard_test"   / "next_day_test_meta_debug_nemo.jsonl"),
         ("vpb_right2_train",     manifest_root / "manifest_vpb_right_2" / "train_meta_nemo.jsonl"),
         ("vpb_right2_valid",     manifest_root / "manifest_vpb_right_2" / "valid_meta_nemo.jsonl"),
+
+        # === New labeled splits (by CLID, no-time), generated at splits_by_clid_tripack ===
+        # All channels
+        ("vpb_label_all_train",   manifest_root / "splits_by_clid_tripack" / "all"        / "train.jsonl"),
+        ("vpb_label_all_valid",   manifest_root / "splits_by_clid_tripack" / "all"        / "val.jsonl"),
+        ("vpb_label_all_test",    manifest_root / "splits_by_clid_tripack" / "all"        / "test.jsonl"),
+        # Right only (user)
+        ("vpb_label_right_train", manifest_root / "splits_by_clid_tripack" / "right_only" / "train.jsonl"),
+        ("vpb_label_right_valid", manifest_root / "splits_by_clid_tripack" / "right_only" / "val.jsonl"),
+        ("vpb_label_right_test",  manifest_root / "splits_by_clid_tripack" / "right_only" / "test.jsonl"),
+        # Left only (agent)
+        ("vpb_label_left_train",  manifest_root / "splits_by_clid_tripack" / "left_only"  / "train.jsonl"),
+        ("vpb_label_left_valid",  manifest_root / "splits_by_clid_tripack" / "left_only"  / "val.jsonl"),
+        ("vpb_label_left_test",   manifest_root / "splits_by_clid_tripack" / "left_only"  / "test.jsonl"),
     ])
 
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")

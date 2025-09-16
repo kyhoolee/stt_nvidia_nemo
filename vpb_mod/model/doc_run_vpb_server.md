@@ -446,25 +446,7 @@ python -m vpb_mod.model._2_vpb_manifest_convert \
   --output /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test_2/test_meta_nemo.jsonl
 
 
-python -m vpb_mod.model._2_fastformer_infer \
-  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
-  --hardfix-vpb \
-  --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_v1/2025-08-27_07-42-39/checkpoints/vpb_asr_fastconformer_ft_v1.nemo
 
-
-
-
-
-python -m vpb_mod.model._2_fastformer_infer \
-  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
-  --hardfix-vpb \
-  --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vietspeech/vpb_asr_fastconformer/2025-08-25_07-42-00/checkpoints/vpb_asr_fastconformer.nemo
-
-python -m vpb_mod.model._2_fastformer_infer \
-  --devices 3 \
-  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
-  --hardfix-vpb \
-  --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v2/2025-09-03_03-23-34/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v2.nemo
 
 /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v2/2025-09-03_03-23-34/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v2.nemo
 
@@ -587,7 +569,7 @@ python -m vpb_mod.model._2_vpb_manifest_verify \
 [text](../../../nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v1/2025-08-29_09-18-14/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v1.nemo)
 
 python -m vpb_mod.model._2_fastformer_infer \
-  --devices 3 \
+  --devices 1 \
   --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
   --hardfix-vpb \
   --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v1/2025-08-29_09-18-14/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v1.nemo \
