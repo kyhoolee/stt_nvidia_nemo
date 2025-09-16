@@ -1,0 +1,201 @@
+% Setting up the document with beamer class for slides
+\documentclass{beamer}
+\usetheme{Copenhagen}
+\usecolortheme{seahorse}
+
+% Including necessary packages for UTF-8 support
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx} % Needed for \resizebox
+\usepackage{xcolor}
+\usepackage{amsmath} % Needed for \text{}
+
+% Defining title, author, and date
+\title{ASR Performance Report (VPB Small Dataset)}
+\author{VPBank AI Center (AIC)}
+\date{\today}
+
+% Starting the document
+\begin{document}
+
+% Title slide
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% Slide 1: Introduction and Context
+\begin{frame}{Introduction and Context}
+    \begin{itemize}
+        \item \textbf{VPBank Overview}: A leading bank in Vietnam, pioneering AI-driven financial solutions for digital transformation.
+        \item \textbf{AI Center (AIC)}: Dedicated to developing cutting-edge AI technologies for banking operations.
+        \item \textbf{Debt Collection Division (DCD)}: Manages 250k customers with ~25k daily calls, facing challenges in speech-to-text (STT) due to diverse user voices.
+        \item \textbf{Collaboration with AWS}: Utilized \$14,000 in GPU credits for training and fine-tuning ASR models.
+        \item \textbf{VPB Small Dataset}: ~2-3 hours of filtered call data, primarily user voices (agent voices largely removed due to repetition, ease of recognition, and irrelevance for Callbot model), split into 5 segments for processing and analysis.
+        \item \textbf{Goal}: Build robust, scalable STT models to enhance automated debt collection and customer interaction.
+    \end{itemize}
+\end{frame}
+
+% Slide 2: Technical Context
+\begin{frame}{Technical Context}
+    \begin{itemize}
+        \item \textbf{Chunkformer (closed-source, current in use):} 
+            \begin{itemize}
+                \item WER 23-27\%, performs well but \textbf{cannot be fine-tuned}.
+            \end{itemize}
+        \item \textbf{Fast-Conformer (open-source, pre-trained on VietSpeech):}
+            \begin{itemize}
+                \item WER 35-39\%, underperforms.
+            \end{itemize}
+        \item \textbf{Parakeet (open-source, pre-trained and fine-tuned):}
+            \begin{itemize}
+                \item Slightly better and more stable performance than Fast-Conformer (see results).
+            \end{itemize}
+        \item \textbf{Approach:} Two-step fine-tuning:
+            \begin{itemize}
+                \item v1: Pseudo-labeling.
+                \item v2: Pseudo-labels $\to$ VPB training data.
+            \end{itemize}
+        \item \textbf{Utilization of AWS Credits:} \$14,000 in GPU credits used for training and fine-tuning both Fast-Conformer and Parakeet models on AWS infrastructure.
+    \end{itemize}
+\end{frame}
+
+% Slide 3: WER Results (Fast-Conformer)
+\begin{frame}{WER Results (Fast-Conformer, VPB Small Dataset)}
+    \centering
+    \resizebox{\textwidth}{!}{ % Resize table to fit slide
+        \begin{tabular}{lccccp{2cm}}
+            \toprule
+            \textbf{Dataset} & \textbf{Chunkformer} & \textbf{v0 (VietSpeech)} & \textbf{v1 (Pseudo)} & \textbf{v2 (Pseudo$\to$VPB)} & \textbf{Notes} \\
+            \midrule
+            standard\_test\_2 & 0.2499 & 0.3546 & 0.3040 & 0.2420 & \text{70\% overlap} \\
+            standard\_test & 0.1613 & 0.3378 & 0.2582 & \textbf{0.4294} & \text{Small (29 samples)} \\
+            next\_day\_test\_debug & 0.2076 & 0.3414 & 0.2687 & 0.2649 & \text{Independent test} \\
+            vpb\_right2\_train & 0.2420 & 0.3633 & 0.2956 & 0.2456 & \text{Training set} \\
+            vpb\_right2\_valid & 0.2696 & 0.3902 & 0.3240 & 0.2821 & \text{Validation set} \\
+            \bottomrule
+        \end{tabular}
+    }
+    \begin{itemize}
+        \item Note: Metrics represent performance across 5 segments of VPB Small Dataset (~2-3 hours, primarily user voices).
+    \end{itemize}
+\end{frame}
+
+% Slide 4: WER/CER Results (Parakeet)
+\begin{frame}{WER/CER Results (Parakeet, VPB Small Dataset)}
+    \centering
+    \resizebox{\textwidth}{!}{ % Resize table to fit slide
+        \begin{tabular}{lccc}
+            \toprule
+            \textbf{Dataset} & \textbf{VietSpeech (v0)} & \textbf{Pseudo-labeling (v1)} & \textbf{Pseudo$\to$VPB (v2)} \\
+            \midrule
+            standard\_test\_2 & 33.55\% / 23.05\% & 28.29\% / 21.87\% & 23.26\% / 17.29\% \\
+            standard\_test & 27.92\% / 18.01\% & 21.70\% / 15.32\% & 21.00\% / 13.96\% \\
+            next\_day\_test\_debug & 31.24\% / 20.29\% & 25.49\% / 18.32\% & 21.78\% / 15.69\% \\
+            vpb\_right2\_train & 33.65\% / 23.36\% & 27.66\% / 21.29\% & 22.99\% / 16.91\% \\
+            vpb\_right2\_valid & 36.68\% / 25.79\% & 31.33\% / 25.05\% & 26.59\% / 20.44\% \\
+            \bottomrule
+        \end{tabular}
+    }
+    \begin{itemize}
+        \item Note: Parakeet shows slightly better and more stable WER/CER than Fast-Conformer across all sets (~2-3 hours, primarily user voices).
+    \end{itemize}
+\end{frame}
+
+% Slide 5: Analysis
+\begin{frame}{Analysis}
+    \begin{itemize}
+        \item \textbf{Fast-Conformer (Pre-trained)}: WER 0.35--0.39, significantly worse than Chunkformer.
+        \item \textbf{Fast-Conformer (Fine-tuning v1)}: Strong improvement (WER reduction of 0.07--0.10).
+        \item \textbf{Fast-Conformer (Fine-tuning v2)}: Approaches Chunkformer on \textbf{key sets (validation, next\_day)}.
+        \item \textbf{Parakeet}: Consistently outperforms Fast-Conformer with lower WER/CER and better stability across all datasets.
+        \item \textbf{Key Notes}:
+            \begin{itemize}
+                \item Low WER on \textbf{standard\_test\_2} due to \textbf{data leakage} (70\% overlap with training).
+                \item Low WER on \textbf{train} indicates convergence, but \textbf{not representative of new user performance}.
+            \end{itemize}
+        \item \textbf{Current Achievement}: Developed fine-tuned Fast-Conformer and Parakeet models using AWS GPU resources.
+    \end{itemize}
+\end{frame}
+
+% Slide 6: Key Insights
+\begin{frame}{Key Insights}
+    \begin{itemize}
+        \item \textbf{Core Challenge}: Diverse user voices \& noise:
+            \begin{itemize}
+                \item Regional accents, speech speed, stuttering, local dialects.
+                \item Environmental noise, poor call signals.
+            \end{itemize}
+        \item \textbf{Scale of Operations}: 250k customers in debt collection; 25k new calls daily $\to$ Major STT issues due to voice diversity vs. public datasets; even basic audio normalization (mean/std-based) fails.
+        \item \textbf{Data Accumulation}: Plan to collect larger datasets (~6,000 calls/week, ~100 hours) for future labeling and processing (pseudo-labeling, self-supervised, user-based STT, etc.).
+        \item \textbf{Model Potential}: Build robust models for unseen data (user voices).
+        \item \textbf{Solution}: Manual labeling $\to$ Internal gold-standard dataset; continuously update with new user voices.
+        \item \textbf{Future}: Collect user voices at loan contract stage $\to$ User verification, automated debt collection/reminders via voice-calls.
+    \end{itemize}
+\end{frame}
+
+% Slide 7: Value of Data Labeling
+\begin{frame}{Value of Data Labeling}
+    \begin{itemize}
+        \item \textbf{Essential for Fine-Tuning}: Required to improve and sustain performance.
+        \item \textbf{Long-Term Data Asset}:
+            \begin{itemize}
+                \item Call analysis, user verification, service quality evaluation.
+                \item Train NLP models.
+                \item Develop Callbot (automated voice interactions).
+            \end{itemize}
+        \item \textbf{One-Time Investment}: Reusable across multiple iterations and applications.
+        \item \textbf{Internal Potential}: Enhances model accuracy; builds strategic in-house data for competitive edge.
+    \end{itemize}
+\end{frame}
+
+% Slide 8: Urgency and Resource Needs
+\begin{frame}{Urgency and Resource Needs}
+    \begin{itemize}
+        \item \textbf{AWS Credits}: \$15,000 (expiring 09/20/2025) $\to$ \$14,000 already utilized for GPU training.
+        \item \textbf{Labeling Deadline}: 09/15/2025.
+        \item \textbf{Requirements}: 100 staff, 500 overtime hours (~100 million VND).
+        \item \textbf{Computing Needs}: Additional GPU resources for ongoing training, scaling to handle larger datasets in the future.
+        \item \textbf{Investment Alignment}: Coordinate with AWS, DCD, and AIC for further computing + data investments.
+    \end{itemize}
+\end{frame}
+
+% Slide 9: Conclusion
+\begin{frame}{Conclusion}
+    \begin{itemize}
+        \item \textbf{Without Labeling}: Model stalls at 70-75\% accuracy.
+        \item \textbf{With Investment in Labeling and Computing}: Expected to achieve \textbf{75-80\%+} accuracy and own \textbf{strategic gold-standard data}, with:
+            \begin{itemize}
+                \item VPBank DCD providing robust data support.
+                \item AWS contributing additional computing resources.
+            \end{itemize}
+        \item \textbf{Investment Rationale}: Leverage AWS credits, DCD collaboration, and AIC expertise for a sustainable Callbot ecosystem.
+        \item \textbf{VPBank’s Vision}: As a top-tier bank in Vietnam, VPBank leads in AI-driven banking, driving digital transformation and delivering innovative financial services.
+        \item \textbf{Next Steps}: Align with AWS, DCD, and AIC for additional resources to advance ASR and related applications.
+    \end{itemize}
+\end{frame}
+
+% Slide 10: Acknowledgments
+\begin{frame}{Acknowledgments}
+    \begin{itemize}
+        \item \textbf{To AWS}: Heartfelt thanks for the \$14,000 GPU credits, enabling cutting-edge AI model development.
+        \item \textbf{To DCD}: Gratitude for operational insights and collaboration, aligning AI solutions with debt collection needs.
+        \item \textbf{To AIC}: Appreciation for relentless innovation and dedication to building world-class AI capabilities.
+        \item \textbf{Our Commitment}: VPBank will deepen partnerships with AWS and DCD, leveraging AIC’s expertise to drive AI innovation, enhance customer experiences, and maintain our position as a technology leader in banking.
+        \item \textbf{Future Promise}: Continue delivering value to stakeholders, pushing the boundaries of AI-driven financial services, and fostering sustainable growth.
+    \end{itemize}
+\end{frame}
+
+% Slide 11: Contact
+\begin{frame}{Contact}
+    \begin{itemize}
+        \item \textbf{For any concerns or inquiries, please contact:}
+        \item \textbf{Name}: Senior Data Scientist, AI Center
+        \item \textbf{Email}: kylh2@vpbank.com
+    \end{itemize}
+\end{frame}
+
+% Ending the document
+\end{document}
