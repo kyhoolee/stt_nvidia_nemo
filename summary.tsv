@@ -1,0 +1,14 @@
+level	name	n_records	total_seconds	hhmmss
+file	/home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/all/test.jsonl	10584	20220.450000	05:37:00
+file	/home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/all/train.jsonl	83633	159140.858000	44:12:21
+file	/home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/all/val.jsonl	10350	19294.222000	05:21:34
+file	/home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/left_only/test.jsonl	5946	13771.104000	03:49:31
+file	/home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/left_only/train.jsonl	47068	108326.903000	30:05:27
+file	/home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/left_only/val.jsonl	5778	12979.297000	03:36:19
+file	/home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/test.jsonl	4638	6449.346000	01:47:29
+file	/home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/train.jsonl	36565	50813.955000	14:06:54
+file	/home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/val.jsonl	4572	6314.925000	01:45:15
+dataset	all	104567	198655.530000	55:10:56
+dataset	left_only	58792	135077.304000	37:31:17
+dataset	right_only	45775	63578.226000	17:39:38
+overall	ALL	209134	397311.060000	110:21:51

@@ -376,3 +376,12 @@ python -m vpb_mod.dataset._8_1_split_vpb_ds \
     └── val.jsonl
 
 3 directories, 9 files
+
+
+python -m vpb_mod.dataset._8_2_ds_duration --root /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack --out summary.tsv
+
+
+== Per-dataset summary ==
+*        all: n=104,567, sec=198,655.53 (55:10:56)
+*  left_only: n=58,792, sec=135,077.30 (37:31:17)
+* right_only: n=45,775, sec=63,578.23 (17:39:38)
