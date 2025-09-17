@@ -138,3 +138,63 @@ nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
   --fastemit-lambda 0.003 \
   > vpb_mod/logs/vpb_ft_ds_092025_freeze_80.log 2>&1 &
 
+
+## Fine-tuning with different freezing option 
+
+## 1. Freeze bottom then unblock 
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/train.jsonl \
+  --val-manifest   /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/val.jsonl \
+  --test-manifest  /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vietspeech \
+  --vocab-size 1024 --size large --epochs 30 --devices -1 --precision 16 \
+  --batch-size 32 --accumulate-grad-batches 2 --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vpb_ft \
+  --exp-name vpb_asr_fastconformer_ft_vpb_ds_sched_A \
+  --init-from-nemo ../nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v1/2025-08-29_09-18-14/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v1.nemo \
+  --grad-clip 1.0 --fastemit-lambda 0.003 --freeze-dump \
+  --stage 'e=0,enc_bottom_k=12,pre=1,subs=1,pos=1,dec_all=1,joint=1' \
+  --stage 'e=6,enc_bottom_k=6'  --freeze-dump-stages \
+  > vpb_mod/logs/vpb_bigset_ft_sched_A.log 2>&1 &
+
+
+
+## 2. Mid/High only 
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/train.jsonl \
+  --val-manifest   /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/val.jsonl \
+  --test-manifest  /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vietspeech \
+  --vocab-size 1024 --size large --epochs 15 --devices -1 --precision 16 \
+  --batch-size 32 --accumulate-grad-batches 2 --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vpb_ft \
+  --exp-name vpb_asr_fastconformer_ft_vpb_ds_sched_B \
+  --init-from-nemo ../nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v1/2025-08-29_09-18-14/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v1.nemo \
+  --grad-clip 1.0 --fastemit-lambda 0.003 --freeze-dump \
+  --stage 'e=0,enc_bottom_k=11,pre=1,subs=1,pos=1,dec_all=1,joint=1'   --freeze-dump-stages \
+  > vpb_mod/logs/vpb_bigset_ft_sched_B.log 2>&1 &
+
+
+
+## 3. Sandwich 
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/train.jsonl \
+  --val-manifest   /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/val.jsonl \
+  --test-manifest  /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vietspeech \
+  --vocab-size 1024 --size large --epochs 18 --devices -1 --precision 16 \
+  --batch-size 32 --accumulate-grad-batches 2 --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vpb_ft \
+  --exp-name vpb_asr_fastconformer_ft_vpb_ds_sched_C \
+  --init-from-nemo ../nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v1/2025-08-29_09-18-14/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v1.nemo \
+  --grad-clip 1.0 --fastemit-lambda 0.003 --freeze-dump \
+  --stage 'e=0,enc_bottom_k=8,enc_top_k=3,pre=1,subs=1,pos=1,dec_all=1,joint=1'   --freeze-dump-stages \
+  > vpb_mod/logs/vpb_bigset_ft_sched_C.log 2>&1 &
+
+

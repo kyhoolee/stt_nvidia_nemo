@@ -41,6 +41,16 @@ import gc
 import torch
 from omegaconf import OmegaConf
 
+# Freeze utils
+from ._0_freeze_utils import (
+    freeze_bottom_k_layers, freeze_bottom_ratio, freeze_top_k_layers,
+    freeze_preprocessor, freeze_subsampling, freeze_pos_enc, freeze_spec_augment,
+    freeze_decoder, freeze_decoder_embedding, freeze_decoder_rnn, freeze_joint,
+    freeze_by_prefixes, freeze_by_regex, freeze_by_types,
+    count_params, snapshot_frozen,
+    FreezeScheduleCallback, _parse_stage_str, 
+)
+
 # Lightning (PyTorch Lightning v2 name-space)
 from lightning.pytorch import Trainer
 from lightning.pytorch.loggers import TensorBoardLogger, CSVLogger
@@ -52,6 +62,7 @@ import nemo.collections.asr as nemo_asr
 
 # NeMo tokenizer helper
 from nemo.collections.common.tokenizers.sentencepiece_tokenizer import create_spt_model
+
 
 # ----------------------------- Customized Model -----------------------------
 # Tùy chỉnh class để vô hiệu hóa logging dự đoán
@@ -286,22 +297,36 @@ def build_trainer(exp_dir: Path, exp_name: str, epochs: int, precision: str, dev
     print("🚀 Building Trainer…")
     tb_logger = TensorBoardLogger(save_dir=str(exp_dir), name=exp_name, log_graph=False)
 
-    # Accelerator auto: PTL decides CPU/GPU based on availability
+    # Chọn accelerator
     accelerator = "gpu" if torch.cuda.is_available() else "cpu"
+
+    # Điều kiện kích hoạt DDP (nhiều GPU)
+    is_ddp = accelerator == "gpu" and (devices == -1 or (isinstance(devices, int) and devices > 1))
+
+    # Chiến lược DDP: bật find_unused_parameters cho case freeze/schedule
+    strategy = (
+        DDPStrategy(
+            find_unused_parameters=True,     # 👈 QUAN TRỌNG: tránh lỗi "not used in producing the loss"
+            gradient_as_bucket_view=True,
+            static_graph=False               # 👈 vì bạn thay đổi freeze theo epoch
+        )
+        if is_ddp else "auto"
+    )
 
     trainer = Trainer(
         accelerator=accelerator,
         devices=devices,
         max_epochs=epochs,
-        enable_checkpointing=False,  # handled by exp_manager
-        logger=False,  # we use exp_manager + CSV logger
+        enable_checkpointing=False,   # handled by exp_manager
+        logger=False,                 # nếu muốn dùng TB logger, đổi thành logger=tb_logger
         log_every_n_steps=10,
         check_val_every_n_epoch=1,
         num_sanity_val_steps=0,
-        precision=precision,
-        strategy=DDPStrategy(gradient_as_bucket_view=True) if (accelerator == "gpu" and (devices == -1 or (isinstance(devices, int) and devices > 1))) else "auto",
+        precision=precision,          # '16', '32', 'bf16' (Lightning v2 OK)
+        strategy=strategy,
     )
     return trainer
+
 
 
 def attach_exp_manager(trainer: Trainer, cfg: OmegaConf, exp_dir: Path, exp_name: str):
@@ -387,12 +412,64 @@ def parse_args() -> argparse.Namespace:
                    help='Resume training from a PTL/Nemo checkpoint .ckpt (not .nemo)')
 
     # Freeze / Unfreeze plan
-    p.add_argument('--freeze-encoder-layers', type=int, default=0,
-                   help='Freeze bottom K encoder layers at start (0 = no freeze)')
-    p.add_argument('--freeze-encoder-ratio', type=float, default=0.0,
-                   help='If >0, freeze that ratio of bottom encoder layers (e.g. 0.5 -> 50%)')
-    p.add_argument('--unfreeze-at-epoch', type=int, default=-1,
-                   help='Epoch to unfreeze all layers (-1 = never)')
+
+    # --- Encoder ---
+    p.add_argument("--freeze-encoder-layers", type=int, default=0,
+                        help="Đóng băng K lớp dưới cùng của encoder (bottom-K).")
+    p.add_argument("--freeze-encoder-ratio", type=float, default=0.0,
+                        help="Đóng băng theo tỉ lệ bottom (0..1).")
+    p.add_argument("--freeze-encoder-top-k", type=int, default=0,
+                        help="Đóng băng K lớp trên cùng của encoder (top-K).")
+
+    # --- Blocks / Components ---
+    p.add_argument("--freeze-preprocessor", action="store_true",
+                        help="Đóng băng Audio preprocessor.")
+    p.add_argument("--freeze-subsampling", action="store_true",
+                        help="Đóng băng encoder.pre_encode (ConvSubsampling + projection).")
+    p.add_argument("--freeze-pos-enc", action="store_true",
+                        help="Đóng băng positional encoding.")
+    p.add_argument("--freeze-specaug", action="store_true",
+                        help="Đóng băng SpecAug (thường không có params, nhưng để đồng bộ).")
+
+    # --- Decoder & Joint ---
+    p.add_argument("--freeze-decoder-all", action="store_true",
+                        help="Đóng băng toàn bộ decoder.")
+    p.add_argument("--freeze-decoder-embed", action="store_true",
+                        help="Chỉ đóng băng embedding trong decoder.")
+    p.add_argument("--freeze-decoder-rnn", action="store_true",
+                        help="Chỉ đóng băng RNN trong decoder.")
+    p.add_argument("--freeze-joint", action="store_true",
+                        help="Đóng băng RNNT joint.")
+
+    # --- Advanced (optional) ---
+    p.add_argument("--freeze-prefix", nargs="*", default=[],
+                        help="Đóng băng theo prefix tên tham số, vd: encoder.pre_encode.out decoder.prediction.embed")
+    p.add_argument("--freeze-regex", nargs="*", default=[],
+                        help=r"Đóng băng theo regex trên tên tham số, vd: ^encoder\.layers\.(?:0|1|2)\.")
+    p.add_argument("--freeze-types", nargs="*", default=[],
+                        help="Đóng băng theo kiểu lớp torch.nn, vd: LayerNorm BatchNorm1d BatchNorm2d")
+    p.add_argument("--freeze-dump", action="store_true",
+                        help="In tóm tắt số param trainable và vài tên đã freeze để kiểm tra.")
+
+
+
+    # --- Advanced freeze schedule ---
+    p.add_argument(
+        "--stage", action="append", default=[],
+        help=(
+            "Định nghĩa 1 stage freeze/unfreeze áp dụng từ epoch e trở đi. "
+            "Ví dụ: "
+            "  --stage 'e=0,enc_bottom_k=12,pre=1,subs=1,pos=1,dec_all=1,joint=1' "
+            "  --stage 'e=6,enc_bottom_k=6' "
+            "  --stage 'e=10,dec_all=0,dec_rnn=0' "
+            "Hỗ trợ: e, enc_bottom_k, enc_bottom_ratio, enc_top_k, pre, subs, pos, spec, "
+            "dec_all, dec_embed, dec_rnn, joint, prefix, regex, types"
+        )
+    )
+
+    p.add_argument("--freeze-dump-stages", action="store_true", help="In summary trainable params sau khi áp dụng stage.")
+
+                
 
     # Optim / Sched overrides when fine-tuning
     p.add_argument('--lr', type=float, default=None, help='Override LR (AdamW) for FT')
@@ -542,7 +619,7 @@ def test_from_checkpoint(
 
 
 
-# --------------------------- Freeze / Unfreeze helpers ---------------------------
+
 
 def build_or_restore_model_for_train(
     args,
@@ -664,61 +741,6 @@ def build_or_restore_model_for_train(
 
 
 
-def _get_encoder_layers(model):
-    """
-    Trả về list các layer encoder theo thứ tự từ bottom->top.
-    Với FastConformer NeMo: model.encoder.layers là list[Module].
-    """
-    enc = getattr(model, "encoder", None)
-    if enc is None:
-        return []
-    layers = getattr(enc, "layers", None)
-    if layers is None:
-        # fallback: có kiến trúc khác
-        return []
-    return list(layers)
-
-def freeze_bottom_k_layers(model, k: int):
-    layers = _get_encoder_layers(model)
-    if k <= 0 or not layers:
-        return 0
-    k = min(k, len(layers))
-    for i in range(k):
-        for p in layers[i].parameters():
-            p.requires_grad = False
-    return k
-
-def freeze_bottom_ratio(model, ratio: float):
-    if ratio <= 0.0:
-        return 0
-    layers = _get_encoder_layers(model)
-    if not layers:
-        return 0
-    k = max(1, int(round(len(layers) * ratio)))
-    return freeze_bottom_k_layers(model, k)
-
-def unfreeze_all(model):
-    for p in model.parameters():
-        p.requires_grad = True
-
-# Lightning callback để unfreeze tại epoch chỉ định
-from lightning.pytorch.callbacks import Callback
-
-class UnfreezeAtEpoch(Callback):
-    def __init__(self, epoch_to_unfreeze: int):
-        super().__init__()
-        self.epoch_to_unfreeze = epoch_to_unfreeze
-        self._done = False
-
-    def on_train_epoch_start(self, trainer, pl_module):
-        if self._done:
-            return
-        current = trainer.current_epoch or 0
-        if self.epoch_to_unfreeze >= 0 and current >= self.epoch_to_unfreeze:
-            print(f"🔓 Unfreezing all params at epoch {current} …")
-            unfreeze_all(pl_module)
-            self._done = True
-
 
 
 # --------------------------------- Main --------------------------------
@@ -837,26 +859,104 @@ def main_train(args):
 
     # -------------------- Freeze plan at start --------------------
     frozen = 0
+
+    # 3.1 Encoder (bottom-first ưu tiên, rồi top-K)
     if getattr(args, "freeze_encoder_layers", 0) > 0:
         frozen = freeze_bottom_k_layers(model, int(args.freeze_encoder_layers))
     elif getattr(args, "freeze_encoder_ratio", 0.0) > 0.0:
         frozen = freeze_bottom_ratio(model, float(args.freeze_encoder_ratio))
+    if getattr(args, "freeze_encoder_top_k", 0) > 0:
+        # có thể freeze cả bottom lẫn top (tuỳ ý)
+        _ = freeze_top_k_layers(model, int(args.freeze_encoder_top_k))
+
     if frozen > 0:
         print(f"❄️  Frozen bottom {frozen} encoder layer(s).")
+    topk = getattr(args, "freeze_encoder_top_k", 0)
+    if topk and topk > 0:
+        print(f"❄️  Frozen TOP {topk} encoder layer(s).")
 
-    # -------------------- Unfreeze callback --------------------
-    callbacks = []
-    if getattr(args, "unfreeze_at_epoch", -1) is not None and int(args.unfreeze_at_epoch) >= 0:
-        callbacks.append(UnfreezeAtEpoch(int(args.unfreeze_at_epoch)))
-        # Đảm bảo callback được gắn vào trainer (PL v2 thường nhận qua Trainer(..., callbacks=[...]))
-        # Nếu trainer không có thuộc tính .callbacks dạng list thì append an toàn:
-        if hasattr(trainer, "callbacks") and isinstance(trainer.callbacks, list):
-            trainer.callbacks.extend(callbacks)
+    # 3.2 Blocks / Components
+    if getattr(args, "freeze_preprocessor", False):
+        n = freeze_preprocessor(model)
+        if n: print(f"❄️  Frozen preprocessor ({n} params).")
 
-    # Double-check grad clipping runtime (trong trường hợp Trainer hỗ trợ)
-    if getattr(args, "grad_clip", None) is not None and hasattr(trainer, "gradient_clip_val"):
-        trainer.gradient_clip_val = float(args.grad_clip)
-        trainer.gradient_clip_algorithm = "norm"
+    if getattr(args, "freeze_subsampling", False):
+        n = freeze_subsampling(model)
+        if n: print(f"❄️  Frozen subsampling ({n} params).")
+
+    if getattr(args, "freeze_pos_enc", False):
+        n = freeze_pos_enc(model)
+        if n: print(f"❄️  Frozen pos_enc ({n} params).")
+
+    if getattr(args, "freeze_specaug", False):
+        n = freeze_spec_augment(model)
+        if n: print(f"❄️  Frozen spec_augmentation ({n} params).")
+
+    # 3.3 Decoder & Joint
+    if getattr(args, "freeze_decoder_all", False):
+        n = freeze_decoder(model)
+        if n: print(f"❄️  Frozen decoder (all, {n} params).")
+    else:
+        if getattr(args, "freeze_decoder_embed", False):
+            n = freeze_decoder_embedding(model)
+            if n: print(f"❄️  Frozen decoder.embed ({n} params).")
+        if getattr(args, "freeze_decoder_rnn", False):
+            n = freeze_decoder_rnn(model)
+            if n: print(f"❄️  Frozen decoder.rnn ({n} params).")
+
+    if getattr(args, "freeze_joint", False):
+        n = freeze_joint(model)
+        if n: print(f"❄️  Frozen joint ({n} params).")
+
+    # 3.4 Advanced: prefix / regex / types
+    pref_list = getattr(args, "freeze_prefix", []) or []
+    if pref_list:
+        affected = freeze_by_prefixes(model, pref_list)
+        # chỉ in những prefix có ảnh hưởng >0
+        affected = {k:v for k,v in affected.items() if v > 0}
+        if affected:
+            print(f"❄️  Frozen by prefixes: {affected}")
+
+    regex_list = getattr(args, "freeze_regex", []) or []
+    for pat in regex_list:
+        n = freeze_by_regex(model, pat)
+        if n > 0:
+            print(f"❄️  Frozen by regex '{pat}' ({n} params).")
+
+    type_list = getattr(args, "freeze_types", []) or []
+    if type_list:
+        # Hỗ trợ các tên: LayerNorm, BatchNorm1d, BatchNorm2d, BatchNorm3d, InstanceNorm1d/2d/3d
+        n = freeze_by_types(model, tuple(type_list))  # freeze_utils chấp nhận tên dạng list[str]
+        if n > 0:
+            print(f"❄️  Frozen by types {type_list} ({n} params).")
+
+    # 3.5 (Optional) Dump summary
+    if getattr(args, "freeze_dump", False):
+        tr, tot = count_params(model)
+        print(f"Trainable params: {tr:,} / Total: {tot:,}")
+        print("Frozen sample names:", snapshot_frozen(model, topk=15))
+
+
+
+
+
+    # -------------------- Freeze plan (single-run schedule) --------------------
+
+    # 3.b. Parse các --stage thành lịch
+    stages = []
+    for s in getattr(args, "stage", []) or []:
+        stages.append(_parse_stage_str(s))
+
+    # 3.c. Gắn callback lịch
+    callbacks = getattr(trainer, "callbacks", [])
+    sched_cb = FreezeScheduleCallback(stages=stages, dump=getattr(args, "freeze_dump_stages", False))
+    if isinstance(callbacks, list):
+        callbacks.append(sched_cb)
+        trainer.callbacks = callbacks
+    else:
+        trainer.callbacks = [sched_cb]
+
+
 
     # -------------------- Memory hygiene --------------------
     import gc, torch
