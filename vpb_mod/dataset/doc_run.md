@@ -385,3 +385,15 @@ python -m vpb_mod.dataset._8_2_ds_duration --root /home/ubuntu/work/clean_datase
 *        all: n=104,567, sec=198,655.53 (55:10:56)
 *  left_only: n=58,792, sec=135,077.30 (37:31:17)
 * right_only: n=45,775, sec=63,578.23 (17:39:38)
+
+
+==========
+
+
+python -m vpb_mod.dataset._8_3_original_WER_ds \
+  --new-manifest /home/ubuntu/work/clean_dataset_vpb/manifest/label_batch_092025 \
+  --splits-root  /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack \
+  --out          /home/ubuntu/work/clean_dataset_vpb/manifest/wer_original_jiwer.tsv
+
+# Nếu muốn chuẩn hoá mạnh (không bắt buộc):
+#  --normalize-strong

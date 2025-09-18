@@ -11,14 +11,15 @@ Quét cấu trúc dữ liệu VPB:
     transcript_original/*.txt
 
 Tạo NeMo manifest (JSONL) với các field:
-  - utt_id: tên file (không kèm đường dẫn), ví dụ: <audio_name>___<start_ms>___<channel>___<end_ms>.wav
-  - audio_filepath: đường dẫn tuyệt đối đến file WAV trong audio_chunk
-  - text: nội dung transcript đã DCD edit (từ transcript_edited)
-  - duration: độ dài audio theo giây (float)
+  - utt_id: tên file WAV (không kèm đường dẫn)
+  - audio_filepath: đường dẫn tuyệt đối tới file WAV
+  - text: transcript đã DCD edit (từ transcript_edited)
+  - original_text: transcript gốc (model output, từ transcript_original; nếu thiếu => "")
+  - duration: độ dài audio (giây, float)
 
 Luật chọn mẫu:
-  - Chỉ ghi vào manifest các audio có file transcript_edited tương ứng.
-  - Bỏ qua những audio chưa gán nhãn (không có transcript_edited).
+  - Chỉ ghi các audio có transcript_edited tương ứng.
+  - Bỏ qua audio chưa gán nhãn (không có transcript_edited) hoặc WAV hỏng (duration<=0).
   - Có thể xuất 1 file gộp hoặc mỗi batch 1 file (tùy tham số).
 """
 
@@ -27,7 +28,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import contextlib
 import wave
 
@@ -40,7 +41,7 @@ except Exception:
 
 def read_text_file(fp: Path) -> str:
     """
-    Đọc file text UTF-8 (fallback sang cp1258/latin-1 nếu cần), strip khoảng trắng thừa.
+    Đọc file text, chuẩn hóa khoảng trắng 1 dòng.
     """
     for enc in ("utf-8", "utf-8-sig", "cp1258", "latin-1"):
         try:
@@ -49,18 +50,26 @@ def read_text_file(fp: Path) -> str:
         except Exception:
             continue
     else:
-        # nếu vẫn lỗi, đọc 'replace' để không crash
         txt = fp.read_text(encoding="utf-8", errors="replace")
+    return " ".join(txt.strip().split())
 
-    # Chuẩn hóa khoảng trắng 1 dòng
-    txt = " ".join(txt.strip().split())
-    return txt
+
+def read_text_if_exists(fp: Optional[Path]) -> str:
+    """
+    Đọc file nếu tồn tại, ngược lại trả về chuỗi rỗng.
+    """
+    if not fp or not fp.exists():
+        return ""
+    try:
+        return read_text_file(fp)
+    except Exception:
+        # Không chặn pipeline chỉ vì lỗi 1 file gốc
+        return ""
 
 
 def wav_duration_seconds(wav_path: Path) -> float:
     """
     Tính duration cho WAV bằng stdlib wave.
-    Có thể fail nếu file không phải PCM WAV hợp lệ.
     """
     with contextlib.closing(wave.open(str(wav_path), "rb")) as wf:
         frames = wf.getnframes()
@@ -70,48 +79,54 @@ def wav_duration_seconds(wav_path: Path) -> float:
         return frames / float(frate)
 
 
-def pair_paths(batch_dir: Path) -> List[Tuple[Path, Path]]:
+def pair_paths(batch_dir: Path) -> List[Tuple[Path, Path, Optional[Path]]]:
     """
-    Trả về danh sách (audio_wav, transcript_edited_txt) trong 1 batch_*,
-    chỉ lấy những item có transcript_edited tương ứng.
+    Trả về danh sách (audio_wav, transcript_edited_txt, transcript_original_txt|None)
+    trong 1 batch_*, chỉ lấy những item có transcript_edited tương ứng.
     """
     audio_dir = batch_dir / "audio_chunk"
     edited_dir = batch_dir / "transcript_edited"
+    orig_dir  = batch_dir / "transcript_original"
 
     if not audio_dir.is_dir():
         return []
 
-    pairs: List[Tuple[Path, Path]] = []
+    pairs: List[Tuple[Path, Path, Optional[Path]]] = []
     for wav in audio_dir.glob("*.wav"):
-        basename = wav.name  # ví dụ: <audio_name>___<start>___<ch>___<end>.wav
-        txt_name = basename.rsplit(".", 1)[0] + ".txt"
-        txt_path = edited_dir / txt_name
-        if txt_path.exists():
-            pairs.append((wav, txt_path))
+        stem = wav.stem  # <audio_name>___<start>___<ch>___<end>
+        edited_txt = edited_dir / f"{stem}.txt"
+        if edited_txt.exists():
+            orig_txt = orig_dir / f"{stem}.txt"
+            if not orig_txt.exists():
+                orig_txt = None
+            pairs.append((wav, edited_txt, orig_txt))
     return pairs
 
 
-def make_manifest_records(pairs: List[Tuple[Path, Path]]) -> List[dict]:
+def make_manifest_records(pairs: List[Tuple[Path, Path, Optional[Path]]]) -> List[dict]:
     out = []
-    for wav_path, txt_path in tqdm(pairs, desc="Building records"):
+    for wav_path, edited_txt_path, orig_txt_path in tqdm(pairs, desc="Building records"):
         try:
-            text = read_text_file(txt_path)
+            text = read_text_file(edited_txt_path)
             if not text:
-                # Bỏ qua mẫu text rỗng
+                # Bỏ qua mẫu text rỗng (edited)
                 continue
             duration = wav_duration_seconds(wav_path)
             if duration <= 0.0:
                 # Bỏ qua file hỏng/không hợp lệ
                 continue
+
+            original_text = read_text_if_exists(orig_txt_path)
+
             rec = {
-                "utt_id": wav_path.name,                       # yêu cầu: dùng tên file
+                "utt_id": wav_path.name,                       # dùng tên file wav
                 "audio_filepath": str(wav_path.resolve()),     # đường dẫn tuyệt đối
                 "text": text,                                  # transcript đã DCD edit
+                "original_text": original_text,                # transcript gốc (có thể rỗng)
                 "duration": round(float(duration), 4),         # làm tròn 4 chữ số thập phân
             }
             out.append(rec)
         except Exception as e:
-            # Không dừng toàn bộ; log ngắn gọn ra stderr
             print(f"[WARN] Skip {wav_path.name}: {e}", file=sys.stderr)
     return out
 
@@ -156,7 +171,6 @@ def main():
         ap.error(f"Không tìm thấy thư mục batch_* trong: {data_root}")
 
     if args.per_batch:
-        # Xuất từng batch một file
         out_dir = args.out
         out_dir.mkdir(parents=True, exist_ok=True)
         total = 0
@@ -169,8 +183,7 @@ def main():
             total += len(records)
         print(f"[DONE] Tổng số mẫu ghi: {total}")
     else:
-        # Xuất gộp vào 1 file
-        all_pairs: List[Tuple[Path, Path]] = []
+        all_pairs: List[Tuple[Path, Path, Optional[Path]]] = []
         for bdir in batch_dirs:
             all_pairs.extend(pair_paths(bdir))
         records = make_manifest_records(all_pairs)
