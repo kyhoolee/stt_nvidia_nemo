@@ -107,6 +107,33 @@ vpb_asr_fastconformer_ft_vpb_ds_092025	vpb_label_left_valid	0.2254435614775502	/
 vpb_asr_fastconformer_ft_vpb_ds_092025	vpb_label_left_test	0.22761518400463635	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250916_115249/hardfix__vpb_label_left_test__vpb_asr_fastconformer_ft_vpb_ds_092025.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250916_115249/hardfix__vpb_label_left_test__vpb_asr_fastconformer_ft_vpb_ds_092025_hard.tsv
 
 
+## Vpb-bigset-1 train all(left_right)
+
+python -m vpb_mod.model._2_fastformer_infer \
+  --devices 3 \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --hardfix-vpb \
+  --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_bigset_full_sched_eqv/2025-09-17_11-50-52/checkpoints/vpb_asr_fastconformer_bigset_full_sched_eqv.nemo
+
+
+model	dataset	wer	log_path	hard_samples
+vpb_asr_fastconformer_bigset_full_sched_eqv	standard_test_2	0.2333757752495174	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__standard_test_2__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__standard_test_2__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+vpb_asr_fastconformer_bigset_full_sched_eqv	standard_test	0.2193973634651601	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__standard_test__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__standard_test__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+vpb_asr_fastconformer_bigset_full_sched_eqv	next_day_test_debug	0.16854330429856243	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__next_day_test_debug__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__next_day_test_debug__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+vpb_asr_fastconformer_bigset_full_sched_eqv	vpb_right2_train	0.2326788160571215	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_right2_train__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_right2_train__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+vpb_asr_fastconformer_bigset_full_sched_eqv	vpb_right2_valid	0.2424491473186768	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_right2_valid__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_right2_valid__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+vpb_asr_fastconformer_bigset_full_sched_eqv	vpb_label_all_train	0.0851139704812087	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_all_train__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_all_train__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+vpb_asr_fastconformer_bigset_full_sched_eqv	vpb_label_all_valid	0.15870224865864196	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_all_valid__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_all_valid__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+vpb_asr_fastconformer_bigset_full_sched_eqv	vpb_label_all_test	0.1605569818379637	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_all_test__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_all_test__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+vpb_asr_fastconformer_bigset_full_sched_eqv	vpb_label_right_train	0.12223455713266196	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_right_train__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_right_train__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+vpb_asr_fastconformer_bigset_full_sched_eqv	vpb_label_right_valid	0.2510547787579762	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_right_valid__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_right_valid__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+vpb_asr_fastconformer_bigset_full_sched_eqv	vpb_label_right_test	0.2521398620785251	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_right_test__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_right_test__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+vpb_asr_fastconformer_bigset_full_sched_eqv	vpb_label_left_train	0.07100460977593878	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_left_train__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_left_train__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+vpb_asr_fastconformer_bigset_full_sched_eqv	vpb_label_left_valid	0.12119073496407752	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_left_valid__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_left_valid__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+vpb_asr_fastconformer_bigset_full_sched_eqv	vpb_label_left_test	0.1255235636574379	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_left_test__vpb_asr_fastconformer_bigset_full_sched_eqv.log	/home/ubuntu/work/stt_nvidia_nemo/nemo_eval_hardfix/logs_20250918_020631/hardfix__vpb_label_left_test__vpb_asr_fastconformer_bigset_full_sched_eqv_hard.tsv
+
+
+
 
 ========================================================================
 
@@ -160,6 +187,13 @@ nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
   > vpb_mod/logs/vpb_bigset_ft_sched_A.log 2>&1 &
 
 
+python -m vpb_mod.model._2_fastformer_infer \
+  --devices 3 \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --hardfix-vpb \
+  --hardfix-model /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_vpb_ds_sched_A/2025-09-17_08-15-17/checkpoints/vpb_asr_fastconformer_ft_vpb_ds_sched_A.nemo
+
+
 
 ## 2. Mid/High only 
 
@@ -196,5 +230,28 @@ nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
   --grad-clip 1.0 --fastemit-lambda 0.003 --freeze-dump \
   --stage 'e=0,enc_bottom_k=8,enc_top_k=3,pre=1,subs=1,pos=1,dec_all=1,joint=1'   --freeze-dump-stages \
   > vpb_mod/logs/vpb_bigset_ft_sched_C.log 2>&1 &
+
+
+
+====================
+
+## Train with full data
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/all/train.jsonl \
+  --val-manifest   /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/all/val.jsonl \
+  --test-manifest  /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/all/test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vietspeech \
+  --vocab-size 1024 --size large --epochs 40 --devices -1 --precision 16 \
+  --batch-size 16 --accumulate-grad-batches 2 --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vpb_ft \
+  --exp-name vpb_asr_fastconformer_bigset_full_sched_eqv \
+  --init-from-nemo ../nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_ft_poc_qc_v1/2025-08-29_09-18-14/checkpoints/vpb_asr_fastconformer_ft_poc_qc_v1.nemo \
+  --grad-clip 1.0 --fastemit-lambda 0.003 --freeze-dump \
+  --stage 'e=0,enc_bottom_ratio=0.6' \
+  --stage 'e=10,unfreeze_all=1' \
+  > vpb_mod/logs/vpb_ft__bigset_full_eqv.log 2>&1 &
+
 
 
