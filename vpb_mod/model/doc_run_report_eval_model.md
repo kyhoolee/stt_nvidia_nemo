@@ -254,6 +254,26 @@ nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
   > vpb_mod/logs/vpb_ft__bigset_full_eqv.log 2>&1 &
 
 
+## Fine-tune from Full-train with Right data
+
+export CUDA_VISIBLE_DEVICES=4,5,6,7
+
+nohup python -m vpb_mod.model._1_fastformer_trans_bpe \
+  --base-config tutorials/asr/configs/fast-conformer_transducer_bpe.yaml \
+  --train-manifest /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/train.jsonl \
+  --val-manifest   /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/val.jsonl \
+  --test-manifest  /home/ubuntu/work/clean_dataset_vpb/manifest/splits_by_clid_tripack/right_only/test.jsonl \
+  --tokenizer-dir  ../nemo_work/_1_small_vi_ds/tokenizers/vietspeech \
+  --vocab-size 1024 --size large --epochs 50 --devices -1 --precision 16 \
+  --batch-size 64 --accumulate-grad-batches 2 --max-duration 17.0 \
+  --exp-dir ../nemo_work/_1_small_vi_ds/experiments/vpb_ft \
+  --exp-name vpb_asr_fastconformer_bigset_cont_right \
+  --init-from-nemo ../nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_bigset_full_sched_eqv/2025-09-17_11-50-52/checkpoints/vpb_asr_fastconformer_bigset_full_sched_eqv.nemo \
+  --grad-clip 1.0 --fastemit-lambda 0.003 --freeze-dump \
+  --stage 'e=0,pre=1,subs=1,pos=1'   --freeze-dump-stages \
+  > vpb_mod/logs/vpb_ft__bigset_cont_right.log 2>&1 &
+
+
 
 
 ===============================
