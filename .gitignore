@@ -176,6 +176,7 @@ dump.py
 docs/sources/source/test_build/
 
 vpb_mod/preprocess/dfn_quickwin/data
+vpb_mod/export/asr_deploy
 
 # Checkpoints, config files and temporary files created in tutorials.
 examples/neural_graphs/*.chkpt
