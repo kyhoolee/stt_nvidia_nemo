@@ -217,3 +217,28 @@ drwxrwxr-x 4 ubuntu ubuntu      4096 Sep 22 12:13 vpb_fastconformer_deployed
 
 mình hỏi chút 
 sao model nemo fastconformer lại export 2 file onnx có tiền tố là encoder và decoder vậy nhỉ ? 
+
+
+
+=======================
+
+
+python _0_hardfix_infer.py \
+  --nemo_model="/home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_bigset_full_sched_eqv/2025-09-17_11-50-52/checkpoints/vpb_asr_fastconformer_bigset_full_sched_eqv.nemo" \
+  --dataset_manifest="/home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/test_meta_nemo.jsonl" \
+  --batch_size=32 \
+  --max_symbold_per_step=5 \
+  --log
+
+
+
+
+python _0_hardfix_infer.py \
+  --onnx_encoder="./encoder-vpb_fastconformer.onnx" \
+  --onnx_decoder="./decoder_joint-vpb_fastconformer.onnx" \
+  --nemo_model="/home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_bigset_full_sched_eqv/2025-09-17_11-50-52/checkpoints/vpb_asr_fastconformer_bigset_full_sched_eqv_fixed.nemo" \
+  --dataset_manifest="/home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/test_meta_nemo.jsonl" \
+  --batch_size=32 \
+  --max_symbold_per_step=5 \
+  --log
+

@@ -44,10 +44,10 @@ try:
 
 
     # Thực hiện export
-    # print(f"📦 Đang export sang ONNX:: {onnx_output_path}")
-    # asr_model.export(onnx_output_path)
+    print(f"📦 Đang export sang ONNX:: {onnx_output_path}")
+    asr_model.export(onnx_output_path)
 
-    # print(f"✅ Export thành công! File ONNX đã được lưu tại: {onnx_output_path}")
+    print(f"✅ Export thành công! File ONNX đã được lưu tại: {onnx_output_path}")
 
 except Exception as e:
     print(f"❌ Đã xảy ra lỗi: {e}")

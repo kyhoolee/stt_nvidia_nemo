@@ -52,3 +52,14 @@ python -m vpb_mod.export.probe_tokenizer_decode --nemo /home/ubuntu/work/nemo_wo
 python -m vpb_mod.export.run_onnx_infer_manifest \
   --deploy /home/ubuntu/work/stt_nvidia_nemo/vpb_mod/export/asr_deploy \
   --manifest standard_test_2=/home/ubuntu/work/clean_dataset_vpb/manifest/standard_test_2/test_meta_nemo.jsonl
+
+
+
+
+python run_onnx_infer_v3.py \
+  --encoder "/home/ubuntu/work/stt_nvidia_nemo/vpb_mod/export/asr_deploy/onnx/encoder.onnx" \
+  --predictor "/home/ubuntu/work/stt_nvidia_nemo/vpb_mod/export/asr_deploy/onnx/predictor.onnx" \
+  --joint "/home/ubuntu/work/stt_nvidia_nemo/vpb_mod/export/asr_deploy/onnx/joint.onnx" \
+  --nemo "/home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_bigset_full_sched_eqv/2025-09-17_11-50-52/checkpoints/vpb_asr_fastconformer_bigset_full_sched_eqv.nemo" \
+  --manifest "/home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/test_meta_nemo.jsonl"
+  
