@@ -9,6 +9,7 @@ onnx_model_path = "vpb_fastconformer.onnx"
 # 2. Đường dẫn đến file âm thanh bạn muốn test
 # !!! THAY ĐỔI ĐƯỜNG DẪN NÀY !!!
 audio_file_path = "/home/ubuntu/work/clean_dataset_vpb/audio/archive_2/wavs/E_huongds_D_2025-06-02_H_091735_844_CLID_0813494717___000040066___right___000040926.wav"
+
 # -----------------
 
 # --- 1. Khởi tạo ONNX Runtime Session ---
