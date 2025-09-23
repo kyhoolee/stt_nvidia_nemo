@@ -177,6 +177,8 @@ docs/sources/source/test_build/
 
 vpb_mod/preprocess/dfn_quickwin/data
 vpb_mod/export/asr_deploy
+vpb_mod/export_direct/vpb_fastconformer_deployed
+**.onnx
 
 # Checkpoints, config files and temporary files created in tutorials.
 examples/neural_graphs/*.chkpt
