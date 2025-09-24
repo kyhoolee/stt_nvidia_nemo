@@ -1,0 +1,33 @@
+# Sử dụng image chính thức của NVIDIA Triton Server.
+# Phiên bản này đi kèm với Python 3.10, PyTorch 2.1 và CUDA 12.1.
+# Đây là nền tảng rất ổn định để xây dựng.
+FROM nvcr.io/nvidia/tritonserver:24.01-py3
+
+# Cài đặt các thư viện hệ thống cần thiết cho việc xử lý audio.
+# libsndfile1 là bắt buộc cho các thư viện đọc file audio mà NeMo sử dụng.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libsndfile1 \
+    ffmpeg \
+ && rm -rf /var/lib/apt/lists/*
+
+# Cài đặt các thư viện Python.
+# Ta sẽ chỉ định các phiên bản cụ thể để đảm bảo không có xung đột.
+# - nemo_toolkit[asr]==1.23.0: Tương thích tốt với PyTorch 2.1 trong image gốc.
+# - onnxruntime-gpu: Dùng phiên bản này nếu bạn chạy trên GPU. Nó sẽ được tối ưu với CUDA có sẵn.
+# - onnx: Cần thiết để làm việc với các model ONNX.
+#
+# *** LƯU Ý QUAN TRỌNG ***
+# Chọn MỘT trong hai dòng RUN pip install dưới đây tùy vào môi trường của bạn (GPU hoặc CPU).
+# Xóa hoặc comment dòng còn lại.
+
+# --- Dành cho môi trường có GPU (KHUYẾN KHÍCH) ---
+# RUN pip install --no-cache-dir nemo_toolkit['asr']==1.23.0 onnxruntime-gpu==1.17.1 onnx
+
+# --- Dành cho môi trường CHỈ CÓ CPU ---
+RUN pip install --no-cache-dir nemo_toolkit['asr']==1.23.0 onnxruntime==1.17.1 onnx
+
+# Thiết lập thư mục làm việc mặc định cho model repository
+WORKDIR /models
+
+# ENTRYPOINT và CMD đã được định nghĩa trong image gốc để khởi động tritonserver.
+# Chúng ta không cần định nghĩa lại, chỉ cần đảm bảo model repository được copy đúng chỗ.

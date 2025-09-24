@@ -190,3 +190,6 @@ experiments/
 lightning_logs/
 
 slurm*.out
+
+
+*.nemo

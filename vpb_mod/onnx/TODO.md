@@ -1,0 +1,115 @@
+Để chạy được trọn vẹn service + client theo hướng A, bạn cần các package sau (mình chia thành 2 phần: **server** và **client/test**):
+
+---
+
+## 🔹 1. Trên server (chạy Triton + model.py)
+
+Bạn chạy Triton qua container NVIDIA thì bản thân image `nvcr.io/nvidia/tritonserver:24.xx-py3` đã có sẵn:
+
+* **Python backend runtime**
+* **onnxruntime**
+* **PyTorch (torch)**
+
+Nhưng vì `model.py` của mình dùng thêm NeMo, bạn cần mount/cài bổ sung:
+
+```bash
+pip install nemo_toolkit['all']==1.23.0
+pip install onnxruntime
+pip install soundfile
+```
+
+Tuỳ môi trường bạn có GPU hay CPU mà có thể cần:
+
+```bash
+pip install torch==2.1.2 torchaudio==2.1.2
+```
+
+---
+
+## 🔹 2. Trên client (script `client_infer.py`)
+
+```bash
+pip install tritonclient[grpc]
+pip install soundfile
+pip install librosa
+```
+
+(thêm `numpy` và `argparse` đã có sẵn trong Python chuẩn)
+
+---
+
+## 🔹 3. Tổng hợp nhanh
+
+### Server
+
+* torch
+* nemo\_toolkit\[all]
+* onnxruntime
+* soundfile
+
+### Client
+
+* tritonclient\[grpc]
+* soundfile
+* librosa
+* numpy
+
+---
+
+👉 Nếu bạn dùng Docker Triton thì cách tiện nhất:
+
+* Chạy Triton server trong container,
+* Cài thêm `nemo_toolkit`, `torch`, `onnxruntime`, `soundfile` bằng pip ngay trong container hoặc mount môi trường ảo vào.
+
+Bạn có muốn mình viết sẵn Dockerfile mở rộng từ `tritonserver:24.06-py3` có cài đủ các package cần thiết cho bạn không?
+
+
+==============================================
+
+
+
+cd vpb_mod/onnx/server
+
+# Build image
+docker build -t my_triton_rnnt:latest .
+
+# Run CPU:
+docker run --rm --net=host \
+  -v $PWD:/models \
+  my_triton_rnnt:latest \
+  tritonserver --model-repository=/models
+
+# (Nếu có GPU)
+# docker run --rm --net=host --gpus=all \
+#   -v $PWD:/models \
+#   my_triton_rnnt:latest \
+#   tritonserver --model-repository=/models
+
+
+docker run --rm --net=host \
+  -v "$PWD:/models" \
+  my_triton_rnnt:cpu \
+  tritonserver --model-repository=/models
+
+docker run --rm \
+  -p 8000:8000 -p 8001:8001 -p 8002:8002 \
+  -v "$PWD:/models" \
+  my_triton_rnnt:cpu \
+  tritonserver --model-repository=/models
+
+
+
+
+
+=================================
+
+
+pip install tritonclient[grpc] soundfile librosa numpy
+
+
+
+python vpb_mod/onnx/client/client_infer.py \
+  --server localhost:8001 \
+  --model rnnt_greedy \
+  --manifest /path/to/your/test_manifest.jsonl \
+  --limit 1
