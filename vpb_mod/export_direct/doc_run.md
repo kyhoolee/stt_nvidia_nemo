@@ -242,3 +242,16 @@ python _0_hardfix_infer.py \
   --max_symbold_per_step=5 \
   --log
 
+
+
+# Chạy Triton với SHM lớn + RAM thoải mái
+docker run --rm --net=host \
+  --shm-size=8g \
+  --memory=64g --memory-swap=64g \
+  --ipc=host \
+  -e DEVICE=cpu \
+  -e OMP_NUM_THREADS=4 -e MKL_NUM_THREADS=4 \
+  -v "$PWD:/models" \
+  my_triton_rnnt:cpu \
+  --model-repository=/models \
+  --model-control-mode=poll --repository-poll-secs=5

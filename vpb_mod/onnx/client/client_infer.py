@@ -49,16 +49,17 @@ def main():
     args = ap.parse_args()
 
     audio_paths = load_from_manifest(args.manifest, limit=args.limit)
-
     triton = grpcclient.InferenceServerClient(url=args.server, verbose=False)
 
     for idx, apath in enumerate(audio_paths):
         pcm = load_audio_pcm_f32(apath, target_sr=16000)
-        length = np.array([[pcm.shape[0]]], dtype=np.int32)
+        # === IMPORTANT === add batch dim -> (1, T)
+        pcm_batched = pcm.reshape(1, -1).astype(np.float32)
+        length = np.array([[pcm.shape[0]]], dtype=np.int32)  # INT32 & shape (1,1)
 
-        inp_signal = grpcclient.InferInput("AUDIO_SIGNAL", pcm.shape, "FP32")
+        inp_signal = grpcclient.InferInput("AUDIO_SIGNAL", pcm_batched.shape, "FP32")
         inp_len    = grpcclient.InferInput("AUDIO_LENGTH", length.shape, "INT32")
-        inp_signal.set_data_from_numpy(pcm)
+        inp_signal.set_data_from_numpy(pcm_batched)
         inp_len.set_data_from_numpy(length)
 
         out = grpcclient.InferRequestedOutput("TRANSCRIPT")
@@ -73,12 +74,14 @@ def main():
         dt = (time.perf_counter() - t0) * 1000.0  # ms
 
         texts = resp.as_numpy("TRANSCRIPT")
-        # texts là mảng dtype=object/bytes; in ra chuỗi
-        text = texts[0].decode("utf-8") if hasattr(texts[0], "decode") else str(texts[0])
+        # TYPE_BYTES -> bytes; TYPE_STRING -> str
+        v = texts[0]
+        text = v.decode("utf-8") if isinstance(v, (bytes, bytearray)) else str(v)
 
         print(f"[{idx}] file: {apath}")
         print(f" -> transcript: {text}")
         print(f" -> latency: {dt:.2f} ms")
+
 
 if __name__ == "__main__":
     main()

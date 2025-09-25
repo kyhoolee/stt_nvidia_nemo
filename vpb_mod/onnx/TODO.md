@@ -113,3 +113,47 @@ python vpb_mod/onnx/client/client_infer.py \
   --model rnnt_greedy \
   --manifest /path/to/your/test_manifest.jsonl \
   --limit 1
+
+
+========================
+
+
+# Health
+curl -s http://localhost:8000/v2/health/ready
+curl -s http://localhost:8000/v2/health/live
+
+# Model index
+curl -s http://localhost:8000/v2/models
+
+# Metadata model rnnt_greedy (đổi tên model nếu khác)
+curl -s http://localhost:8000/v2/models/rnnt_greedy
+
+
+=========================
+
+
+python client_infer.py \
+  --server localhost:8001 \
+  --model rnnt_greedy \
+  --manifest /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/test_meta_nemo.jsonl \
+  --limit 1 --warmup 2
+
+
+
+python client_batch_infer.py \
+  --server localhost:8001 \
+  --model rnnt_greedy \
+  --manifest /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/test_meta_nemo.jsonl \
+  --limit 8 \
+  --batch-size 8 \
+  --warmup 1
+
+
+python client_batch_infer.py \
+  --server localhost:8001 \
+  --model rnnt_greedy \
+  --manifest /home/ubuntu/work/clean_dataset_vpb/manifest/standard_test/test_meta_nemo.jsonl \
+  --limit 64 \
+  --batch-size 8 \
+  --concurrency 8 \
+  --warmup 1

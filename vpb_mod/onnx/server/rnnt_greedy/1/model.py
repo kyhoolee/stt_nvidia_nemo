@@ -62,7 +62,7 @@ class TritonPythonModel:
         if hasattr(self.asr_model, "wer"):
             self.asr_model.wer = None  # tránh side effects logging trong env Triton
 
-    def execute(self, requests):
+    def execute_v1(self, requests):
         responses = []
         for req in requests:
             x = pb_utils.get_input_tensor_by_name(req, "AUDIO_SIGNAL").as_numpy()  # float32 mono PCM
@@ -95,5 +95,78 @@ class TritonPythonModel:
             out = np.array([t.encode("utf-8") for t in texts], dtype=np.object_)
             responses.append(pb_utils.InferenceResponse(
                 output_tensors=[pb_utils.Tensor("TRANSCRIPT", out)]
+            ))
+        return responses
+
+
+
+    def execute(self, requests):
+        """
+        Hợp nhất tất cả requests vào một batch lớn:
+        - Pad AUDIO_SIGNAL theo T_max
+        - Giữ AUDIO_LENGTH gốc cho từng sample
+        - Chạy preprocessor/onnx/decoder 1 lần
+        - Cắt kết quả trả lại từng request theo đúng kích thước batch của request đó
+        """
+        # 1) Thu thập dữ liệu từ mọi request
+        per_req_batch = []     # số mẫu trong từng request
+        all_wavs = []          # list[np.ndarray (Ti,)]
+        all_lens = []          # list[int]
+        for req in requests:
+            x = pb_utils.get_input_tensor_by_name(req, "AUDIO_SIGNAL").as_numpy()  # (T,) hoặc (B,T)
+            L = pb_utils.get_input_tensor_by_name(req, "AUDIO_LENGTH").as_numpy()  # (1,) hoặc (B,1) / int32
+            # Chuẩn hoá shape
+            if x.ndim == 1:
+                x = x[None, :]
+            if L.ndim == 1:
+                L = L[:, None]
+            B = x.shape[0]
+            per_req_batch.append(B)
+            # tách từng sample để quản lý độ dài riêng
+            for i in range(B):
+                wav_i = x[i]
+                len_i = int(L[i, 0])
+                # cắt an toàn nếu độ dài thừa
+                wav_i = wav_i[:len_i]
+                all_wavs.append(wav_i.astype(np.float32, copy=False))
+                all_lens.append(len_i)
+
+        # 2) Pad về cùng chiều (N, T_max)
+        N = len(all_wavs)
+        if N == 0:
+            return [pb_utils.InferenceResponse(error=pb_utils.TritonError("Empty batch"))]
+        T_max = max(all_lens)
+        # Dùng Torch trực tiếp để tránh copy thêm lần nữa
+        with torch.no_grad():
+            sig = torch.zeros((N, T_max), dtype=torch.float32, device=self.device)
+            for i, wav_i in enumerate(all_wavs):
+                Ti = wav_i.shape[0]
+                if Ti > 0:
+                    sig[i, :Ti] = torch.from_numpy(wav_i).to(self.device)
+            sig_len = torch.tensor(all_lens, dtype=torch.int64, device=self.device)
+
+            # 3) Preprocess 1 lần
+            mel, mel_len = self.asr_model.preprocessor(input_signal=sig, length=sig_len)
+
+            # 4) ONNX greedy decode (encoder + joint) 1 lần
+            hyps = self.decoding_onnx(audio_signal=mel, length=mel_len)
+
+            # 5) NeMo decode -> texts (list[str] độ dài N)
+            decoded = self.asr_model.decoding.decode_hypothesis(hyps)
+            if isinstance(decoded, list):
+                texts_all = [getattr(h, "text", str(h)) for h in decoded]
+            else:
+                texts_all = [getattr(decoded, "text", str(decoded))]
+
+        # 6) Chia kết quả lại theo từng request & tạo response
+        responses = []
+        offset = 0
+        for req, bsz in zip(requests, per_req_batch):
+            chunk = texts_all[offset: offset + bsz]
+            offset += bsz
+            # TYPE_BYTES (khuyên dùng) -> encode UTF-8; nếu bạn dùng TYPE_STRING thì bỏ encode()
+            out_np = np.array([t.encode("utf-8") for t in chunk], dtype=np.object_)
+            responses.append(pb_utils.InferenceResponse(
+                output_tensors=[pb_utils.Tensor("TRANSCRIPT", out_np)]
             ))
         return responses
