@@ -4,6 +4,7 @@ import argparse, json, time, os
 import numpy as np
 import soundfile as sf
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Optional
 
 try:
     import librosa
@@ -55,7 +56,7 @@ def collate_batch(wavs: list[np.ndarray]):
 
 
 def infer_batch(triton: grpcclient.InferenceServerClient, model: str, batch_paths: list[str],
-                warmup: int = 0, sr: int = 16000):
+                warmup: int = 0, sr: int = 16000, model_version: Optional[str] = None):
     # 1) load
     wavs, lens = [], []
     for p in batch_paths:
@@ -85,11 +86,11 @@ def infer_batch(triton: grpcclient.InferenceServerClient, model: str, batch_path
 
     # warmup
     for _ in range(warmup):
-        _ = triton.infer(model, [inp_signal, inp_len], outputs=[out])
+        _ = triton.infer(model, [inp_signal, inp_len], outputs=[out], model_version=model_version)
 
     # 4) measure
     t0 = time.perf_counter()
-    resp = triton.infer(model, [inp_signal, inp_len], outputs=[out])
+    resp = triton.infer(model, [inp_signal, inp_len], outputs=[out], model_version=model_version)
     dt_ms = (time.perf_counter() - t0) * 1000.0
 
     # 5) decode
@@ -128,6 +129,7 @@ def main():
     ap.add_argument("--warmup", type=int, default=1, help="Warmup mỗi batch")
     ap.add_argument("--concurrency", type=int, default=1, help="Số luồng gửi đồng thời")
     ap.add_argument("--sr", type=int, default=16000, help="Sample rate model (mặc định 16k)")
+    ap.add_argument("--model-version", default=None, help="Chạy đúng phiên bản model Triton (ví dụ 1 hoặc 2)")
     args = ap.parse_args()
 
     paths = load_from_manifest(args.manifest, limit=args.limit)
@@ -141,7 +143,9 @@ def main():
         with ThreadPoolExecutor(max_workers=args.concurrency) as ex:
             fut2info = {}
             for i, b in enumerate(batches):
-                fut = ex.submit(infer_batch, triton, args.model, b, args.warmup, args.sr)
+                fut = ex.submit(
+                    infer_batch, triton, args.model, b, args.warmup, args.sr, args.model_version
+                )
                 fut2info[fut] = (i, b)
             for fut in as_completed(fut2info):
                 i, b = fut2info[fut]
@@ -158,7 +162,7 @@ def main():
                 print(f"[BATCH {i}] latency: {dt:.2f} ms for {len(b)} utt")
     else:
         for i, b in enumerate(batches):
-            outs, dt = infer_batch(triton, args.model, b, args.warmup, args.sr)
+            outs, dt = infer_batch(triton, args.model, b, args.warmup, args.sr, args.model_version)
             total_ms += dt
             total_samples += len(b)
             for j, (p, t) in enumerate(zip(b, outs)):

@@ -1,6 +1,8 @@
 name: "rnnt_greedy"
 backend: "python"
 max_batch_size: 32
+version_policy: { specific { versions: 1 versions: 2 } }
+
 
 input [
   { name: "AUDIO_SIGNAL", data_type: TYPE_FP32, dims: [ -1 ] },   # 1-D PCM float32

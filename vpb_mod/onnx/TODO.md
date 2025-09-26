@@ -98,6 +98,8 @@ docker run --rm \
   tritonserver --model-repository=/models
 
 
+docker run --shm-size=8g --rm --net=host   -e DEVICE=cpu   -v "$PWD:/models"   my_triton_rnnt:cpu
+
 
 
 
@@ -157,3 +159,32 @@ python client_batch_infer.py \
   --batch-size 8 \
   --concurrency 8 \
   --warmup 1
+
+=====
+manifest_vpb_right_2/valid_meta_nemo.jsonl
+
+python client_batch_infer.py --server localhost:8001 --model rnnt_greedy --model-version 1 --manifest /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta_nemo.jsonl --limit 64 --batch-size 8 --concurrency 1 --warmup 1
+
+== Summary ==
+Batches: 4, Total utt: 29
+Avg time / batch: 14853.11 ms
+Avg time / utt  : 2048.71 ms
+
+== Summary ==
+Batches: 8, Total utt: 64
+Avg time / batch: 398.11 ms
+Avg time / utt  : 49.76 ms
+
+=====
+
+python client_batch_infer.py --server localhost:8001 --model rnnt_greedy --model-version 2 --manifest /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta_nemo.jsonl --limit 64 --batch-size 8 --concurrency 1 --warmup 1
+
+== Summary ==
+Batches: 8, Total utt: 64
+Avg time / batch: 366.28 ms
+Avg time / utt  : 45.78 ms
+
+== Summary ==
+Batches: 4, Total utt: 29
+Avg time / batch: 14186.25 ms
+Avg time / utt  : 1956.72 ms
