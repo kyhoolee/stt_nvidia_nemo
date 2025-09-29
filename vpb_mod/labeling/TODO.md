@@ -36,3 +36,10 @@ python -m vpb_mod.labeling._2_filter_snr \
 python -m vpb_mod.labeling._2_filter_snr \
   /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/test_meta_nemo.with_snr.jsonl \
   --percentile 60
+
+
+========
+
+/home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/train_meta_nemo.with_snr.top.jsonl
+/home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/valid_meta_nemo.with_snr.top.jsonl
+/home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/test_meta_nemo.with_snr.top.jsonl
