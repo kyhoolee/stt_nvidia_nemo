@@ -43,3 +43,41 @@ python -m vpb_mod.labeling._2_filter_snr \
 /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/train_meta_nemo.with_snr.top.jsonl
 /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/valid_meta_nemo.with_snr.top.jsonl
 /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/test_meta_nemo.with_snr.top.jsonl
+
+=========
+
+
+python add_model_text_to_manifests.py \
+  --nemo /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_bigset_full_sched_eqv/2025-09-17_11-50-52/checkpoints/vpb_asr_fastconformer_bigset_full_sched_eqv.nemo \
+  --manifests \
+    /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/train_meta_nemo.with_snr.top.jsonl \
+    /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/valid_meta_nemo.with_snr.top.jsonl \
+    /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/test_meta_nemo.with_snr.top.jsonl \
+  --batch-size 16 \
+  --precision 32 \
+  --out-suffix .with_model
+
+
+============
+
+
+python -m vpb_mod.labeling._3_fcm_label \
+  --nemo /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_bigset_full_sched_eqv/2025-09-17_11-50-52/checkpoints/vpb_asr_fastconformer_bigset_full_sched_eqv.nemo \
+  --manifests \
+    /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/train_meta_nemo.with_snr.top.jsonl \
+    /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/valid_meta_nemo.with_snr.top.jsonl \
+    /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/test_meta_nemo.with_snr.top.jsonl \
+  --batch-size 8 \
+  --precision 32 \
+  --out-suffix .with_model
+
+
+
+
+python -m vpb_mod.labeling._3_fcm_label \
+  --nemo /home/ubuntu/work/nemo_work/_1_small_vi_ds/experiments/vpb_ft/vpb_asr_fastconformer_bigset_full_sched_eqv/2025-09-17_11-50-52/checkpoints/vpb_asr_fastconformer_bigset_full_sched_eqv.nemo \
+  --manifests \
+    /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/test_meta_nemo.with_snr.top.jsonl \
+  --batch-size 16 \
+  --precision 32 \
+  --out-suffix .with_model

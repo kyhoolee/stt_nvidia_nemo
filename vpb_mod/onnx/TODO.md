@@ -201,3 +201,6 @@ docker run --shm-size=8g --rm --net=host   -e DEVICE=cpu   -v "$PWD:/models"   m
 /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/test_meta_nemo.jsonl
 /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/train_meta_nemo.jsonl
 /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/valid_meta_nemo.jsonl
+
+
+tmux new -f vpb_client
