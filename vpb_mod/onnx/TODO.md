@@ -188,3 +188,16 @@ Avg time / utt  : 45.78 ms
 Batches: 4, Total utt: 29
 Avg time / batch: 14186.25 ms
 Avg time / utt  : 1956.72 ms
+
+
+======
+
+
+docker run --shm-size=8g --rm --net=host   -e DEVICE=cpu   -v "$PWD:/models"   my_triton_rnnt:cpu
+
+
+/home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta_nemo.jsonl
+
+/home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/test_meta_nemo.jsonl
+/home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/train_meta_nemo.jsonl
+/home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/valid_meta_nemo.jsonl
