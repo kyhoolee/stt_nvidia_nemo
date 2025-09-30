@@ -195,6 +195,14 @@ Avg time / utt  : 1956.72 ms
 
 docker run --shm-size=8g --rm --net=host   -e DEVICE=cpu   -v "$PWD:/models"   my_triton_rnnt:cpu
 
+python client_batch_infer.py --server localhost:8001 --model rnnt_greedy --model-version 2 --manifest /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/valid_meta_nemo.jsonl --limit 64 --batch-size 8 --concurrency 1 --warmup 1
+
+
+python pack_manifest_subset.py \
+  --manifest /home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/valid_meta_nemo.jsonl \
+  --out-dir /home/ubuntu/work/share/vpb_poc_qc_user_64 \
+  --limit 64
+
 
 /home/ubuntu/work/clean_dataset_vpb/manifest/manifest_vpb_right_2/valid_meta_nemo.jsonl
 

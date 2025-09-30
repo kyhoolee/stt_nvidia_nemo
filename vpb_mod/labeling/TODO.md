@@ -81,3 +81,10 @@ python -m vpb_mod.labeling._3_fcm_label \
   --batch-size 16 \
   --precision 32 \
   --out-suffix .with_model
+
+
+/home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/valid_meta_nemo.with_snr.top.with_model.jsonl
+/home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/test_meta_nemo.with_snr.top.with_model.jsonl
+/home/ubuntu/work/clean_dataset_vpb/manifest/poc_qc_user/train_meta_nemo.with_snr.top.with_model.jsonl
+
+
